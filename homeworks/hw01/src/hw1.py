@@ -1,10 +1,61 @@
 import numpy as np
+import math
+
 import matplotlib.pyplot as plt
+
+enable_debug_graphing = False  # Enables some of the debug plotting
+
+
+class LambdaResults(object):
+
+  def __init__(self):
+    self._k_values = []
+    self._err_results = []
+
+  def add_result(self, k, err_result):
+    self._k_values.append(k)
+    self._err_results.append(err_result)
+
+  def _build_all_training(self):
+    return [result.training for result in self._err_results]
+
+  def _build_all_validation(self):
+    return [result.validation for result in self._err_results]
+
+  def plot(self, degree):
+    """
+    Generates a plot of the effect of lambda on the accuracy.
+
+    :param degree: Polynomial degree to plot.
+    :type degree: int
+    """
+    x = self._k_values
+
+    calc_mean = lambda results, d: [res.mean(1)[d] for res in results]
+    calc_var = lambda results, d: [res.var(1)[d] for res in results]
+    # Build the result data
+    train_results = self._build_all_training()
+    plt.errorbar(x, calc_mean(train_results, degree),
+                 calc_var(train_results, degree), label="training")
+
+    validation_results = self._build_all_validation()
+    plt.errorbar(x, calc_mean(validation_results, degree),
+                 calc_var(validation_results, degree), label="validation")
+
+    test_errs = [result.test[degree] for result in self._err_results]
+    plt.plot(x, test_errs, label="test")
+
+    # Define the graph information
+    plt.xlabel("Polynomial Degree")
+    plt.ylabel("RMS Error")
+    plt.ylim(ymin=0)  # Error is always positive
+    plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
+    plt.title("Effect of $\lambda$ on the Training, Validation, and Test Errors")
+    plt.show()
+    plt.close()
 
 
 class ErrorsStruct(object):
-
-
 
   def __init__(self, min_degree, num_degrees, k):
     """
@@ -23,28 +74,39 @@ class ErrorsStruct(object):
     self.validation = np.zeros([num_degrees, k])
     self.test = np.zeros(num_degrees)
 
-  def _calc_training_mean(self):
+  def calc_training_mean(self):
     return self.training.mean(1)
 
-  def _calc_training_var(self):
+  def calc_training_var(self):
     return self.training.var(1)
 
-  def _calc_validation_mean(self):
+  def calc_validation_mean(self):
     return self.validation.mean(1)
 
-  def _calc_validation_var(self):
+  def calc_validation_var(self):
     return self.validation.var(1)
 
   def plot(self):
+    """
+    Plot the relationship between polynomial order and error
+    """
+
     x = range(self._min_degree, self._max_degree + 1)
-    plt.errorbar(x, self._calc_training_mean(),
-                 self._calc_training_var(), label="training")
-    plt.errorbar(x, self._calc_validation_mean(),
-                 self._calc_validation_var(), 0.2, label="validation")
-    plt.errorbar(x, self.test, 0.2, label="test")
+    plt.errorbar(x, self.calc_training_mean(),
+                 self.calc_training_var(), label="training")
+    plt.errorbar(x, self.calc_validation_mean(),
+                 self.calc_validation_var(), label="validation")
+    plt.plot(x, self.test, label="test")
+
+    # Setup the graph itself
+    plt.xlabel("Polynomial Degree")
+    plt.ylabel("Regularized Error")
+    plt.ylim(ymin=0)  # Error is always positive
+    plt.legend()
     plt.show()
 
 
+# noinspection PyPep8Naming
 def run(params):
   """
   Calculates the training and test error for different number of degree polynomials
@@ -52,27 +114,49 @@ def run(params):
   :param params: Regression parameters
   """
 
+  # Separate the independent and dependent variables
   all_train_inputs = params.training_data[:, 0]
   all_train_t = params.training_data[:, 1]
+  all_test_inputs = params.test_data[:, 0]
   all_test_t = params.test_data[:, 1]
 
-  size_training = all_train_inputs.size
-  fold_size = size_training/params.k
+  # Define the lambda settings
+  LAMBDA_STEP = 5  # ToDo: Lambda step size is too large
+  LAMBDA_MIN = 0
+  LAMBDA_MAX = 13
+  lambda_range = np.arange(LAMBDA_MIN, LAMBDA_MAX, LAMBDA_STEP)
 
-  lambda_w = 0  # ToDo: Fix the value of lambda
+  # Create the results structure
+  err_results = LambdaResults()
+
+  # Test all the lambda.
+  for lambda_w in lambda_range:
+    lambda_err = _cross_validate_degree(params.min_degree, params.max_degree, params.k, lambda_w,
+                                        all_train_inputs, all_train_t, all_test_inputs, all_test_t)
+    err_results.add_result(lambda_w, lambda_err)
+  DEGREE_TO_PLOT = 19
+  err_results.plot(DEGREE_TO_PLOT)
+
+
+def _cross_validate_degree(min_degree, max_degree, k, lambda_w,
+                           all_train_inputs, all_train_t,
+                           all_test_inputs, all_test_t):
+
+  size_training = all_train_inputs.size
+  fold_size = size_training / k
 
   # Initialize the training error
-  num_degrees = params.max_degree + 1 - params.min_degree
-  err = ErrorsStruct(params.min_degree, num_degrees, params.k)
+  num_degrees = max_degree + 1 - min_degree
+  err_results = ErrorsStruct(min_degree, num_degrees, k)
 
   # Test each degree
-  for degree in xrange(params.min_degree, params.max_degree+1):
-    degree_id = degree - params.min_degree
+  for degree in xrange(min_degree, max_degree+1):
+    degree_id = degree - min_degree
 
     # Perform the cross validation.
-    for fold_id in xrange(0, params.k):
+    for fold_id in xrange(0, k):
       fold_start = fold_id * fold_size
-      fold_end = (fold_start + fold_size) if fold_id < params.k - 1 else size_training
+      fold_end = (fold_start + fold_size) if fold_id < k - 1 else size_training
 
       # Build x and t
       concat_test_data = np.concatenate([all_train_inputs[0:fold_start],
@@ -87,17 +171,23 @@ def run(params):
       # Determine the validation error
       fold_err = _determine_training_and_test_error(lambda_w, train_x, train_t,
                                                     validation_x, validation_t)
-      err.training[degree_id,fold_id] = fold_err[0]
-      err.validation[degree_id, fold_id] = fold_err[0]
+      err_results.training[degree_id, fold_id] = fold_err[0]
+      err_results.validation[degree_id, fold_id] = fold_err[1]
 
     # Determine the test error for the current degree
     all_train_x = _build_input_data_matix(degree, all_train_inputs)
-    test_x = _build_input_data_matix(degree, params.test_data[:, 0])
+    test_x = _build_input_data_matix(degree, all_test_inputs)
     # No need for the full training error.
-    _, err.test[degree] = _determine_training_and_test_error(lambda_w, all_train_x, all_train_t,
-                                                             test_x, all_test_t)
-  err.plot()
-  x = 2
+    # ToDo: Determine why test error is the least
+    global enable_debug_graphing
+    enable_debug_graphing = True
+    _, err_results.test[degree] = _determine_training_and_test_error(lambda_w, train_x, train_t,
+                                                                     test_x, all_test_t)
+    enable_debug_graphing = False
+
+  if enable_debug_graphing:
+    err_results.plot()
+  return err_results
 
 
 def _determine_training_and_test_error(lambda_w, train_x, train_t, test_x, test_t):
@@ -126,12 +216,47 @@ def _determine_training_and_test_error(lambda_w, train_x, train_t, test_x, test_
   w_star = np.linalg.pinv(np.matmul(train_x, train_x.transpose()) + lambda_w * identity_matrix)
   w_star = np.matmul(w_star, train_x) * train_t
 
+  # Debug Code for Looking at the Training Result
+  global enable_debug_graphing
+  if enable_debug_graphing and degree > 0:
+    x = test_x[1, :]
+    plt.scatter(x, test_t, label="Test Target")
+    plt.scatter(x, np.matmul(test_x.transpose(), w_star), label="Test Predicted")
+
+    x = train_x[1, :]
+    plt.scatter(x, train_t, label="Train Target")
+    plt.scatter(x, np.matmul(train_x.transpose(), w_star), label="Train Predicted")
+
+    plt.ylabel("X")
+    plt.ylabel("Y")
+    plt.legend()
+    plt.show()
+    plt.close()
+
   # Calculate the errors and return it
-  calc_error = lambda x, t: np.linalg.norm(x.transpose() * w_star - t, 2) + lambda_w * np.linalg.norm(w_star[1:degree+1])
-  train_error = calc_error(train_x, train_t)
-  test_error = calc_error(test_x, test_t)
+  train_error = _calc_rms_error(w_star, train_x, train_t)
+  test_error = _calc_rms_error(w_star, test_x, test_t)
 
   return train_error, test_error
+
+
+def _calc_rms_error(w_star, x, t):
+  """
+  Simple Helper Function for RMS Error
+  Calculates the E_RMS as = sqrt(2E(w)
+
+  :param w_star: Weight vector
+  :type w_star: numpy.ndarray
+  :param x: Input data tensor
+  :type x: numpy.ndarray
+  :param t: Input data vector
+  :type t: numpy.ndarray
+  :return: Error
+  :rtype: float
+  """
+  n = x.shape[1]
+  e_w_star = np.linalg.norm(x.transpose() * w_star - t, 2)
+  return math.sqrt(2 * e_w_star / n)
 
 
 def _build_input_data_matix(degree, input_data, first_row=0, last_row=None):
