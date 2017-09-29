@@ -4,16 +4,17 @@ import math
 import matplotlib.pyplot as plt
 
 enable_debug_graphing = False  # Enables some of the debug plotting
+degree_of_interest = 3
 
 
 class LambdaResults(object):
 
   def __init__(self):
-    self._k_values = []
+    self._lambda_vals = []
     self._err_results = []
 
-  def add_result(self, k, err_result):
-    self._k_values.append(k)
+  def add_result(self, lambda_w, err_result):
+    self._lambda_vals.append(lambda_w)
     self._err_results.append(err_result)
 
   def _build_all_training(self):
@@ -29,29 +30,38 @@ class LambdaResults(object):
     :param degree: Polynomial degree to plot.
     :type degree: int
     """
-    x = self._k_values
+    x = self._lambda_vals  # x-axis data
 
-    calc_mean = lambda results, d: [res.mean(1)[d] for res in results]
-    calc_var = lambda results, d: [res.var(1)[d] for res in results]
+    calc_mean = lambda results: [temp_res[degree].mean() for temp_res in results]
+    calc_var = lambda results: [temp_res[degree].var() for temp_res in results]
+
     # Build the result data
     train_results = self._build_all_training()
-    plt.errorbar(x, calc_mean(train_results, degree),
-                 calc_var(train_results, degree), label="training")
+    mean = []
+    for res in train_results:
+      data = res[degree]
+      temp_mean = data.mean()
+      mean.append(temp_mean)
+    plt.errorbar(x, mean,
+                 calc_var(train_results), label="training")
 
     validation_results = self._build_all_validation()
-    plt.errorbar(x, calc_mean(validation_results, degree),
-                 calc_var(validation_results, degree), label="validation")
+    plt.errorbar(x, calc_mean(validation_results),
+                 calc_var(validation_results), label="validation")
 
     test_errs = [result.test[degree] for result in self._err_results]
     plt.plot(x, test_errs, label="test")
 
     # Define the graph information
-    plt.xlabel("Polynomial Degree")
+    plt.xlabel("$\lambda$")
     plt.ylabel("RMS Error")
-    plt.ylim(ymin=0)  # Error is always positive
+    _, y_max = plt.ylim()
+    plt.ylim(ymin=0, ymax=min(y_max, 5))  # Error is always positive
     plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
-    plt.title("Effect of $\lambda$ on the Training, Validation, and Test Errors")
-    plt.show()
+    plt.title("Effect of $\lambda$ on the Learning Errors using a %d-Degree Polynomial" % degree)
+    plt.legend()
+    #plt.show()
+    plt.savefig('effect_lambda_for_degree=%02d_polynomial.pdf' % (degree), bbox_inches='tight')
     plt.close()
 
 
@@ -121,9 +131,9 @@ def run(params):
   all_test_t = params.test_data[:, 1]
 
   # Define the lambda settings
-  LAMBDA_STEP = 5  # ToDo: Lambda step size is too large
+  LAMBDA_STEP = 1  # ToDo: Lambda step size is too large
   LAMBDA_MIN = 0
-  LAMBDA_MAX = 13
+  LAMBDA_MAX = 10
   lambda_range = np.arange(LAMBDA_MIN, LAMBDA_MAX, LAMBDA_STEP)
 
   # Create the results structure
@@ -134,13 +144,31 @@ def run(params):
     lambda_err = _cross_validate_degree(params.min_degree, params.max_degree, params.k, lambda_w,
                                         all_train_inputs, all_train_t, all_test_inputs, all_test_t)
     err_results.add_result(lambda_w, lambda_err)
-  DEGREE_TO_PLOT = 19
-  err_results.plot(DEGREE_TO_PLOT)
+  global degree_of_interest
+  for d in range(0, 20, 3):
+    err_results.plot(d)
 
 
 def _cross_validate_degree(min_degree, max_degree, k, lambda_w,
                            all_train_inputs, all_train_t,
                            all_test_inputs, all_test_t):
+  """
+  Runs k-Fold cross validation using the specified test and training data.
+
+  :param min_degree: Minimum degree of the polynomial.  Must be greater than zero.
+  :param max_degree:
+  :param k: Number of folds in the cross validation.
+  :type k: int
+  :param lambda_w: Regularization constant
+  :type lambda_w: float
+  :param all_train_inputs:
+  :param all_train_t:
+  :param all_test_inputs:
+  :param all_test_t:
+  :return:
+  :rtype: ErrorsStruct
+  """
+  global enable_debug_graphing
 
   size_training = all_train_inputs.size
   fold_size = size_training / k
@@ -179,9 +207,8 @@ def _cross_validate_degree(min_degree, max_degree, k, lambda_w,
     test_x = _build_input_data_matix(degree, all_test_inputs)
     # No need for the full training error.
     # ToDo: Determine why test error is the least
-    global enable_debug_graphing
-    enable_debug_graphing = True
-    _, err_results.test[degree] = _determine_training_and_test_error(lambda_w, train_x, train_t,
+    enable_debug_graphing = False
+    _, err_results.test[degree] = _determine_training_and_test_error(lambda_w, all_train_x, all_train_t,
                                                                      test_x, all_test_t)
     enable_debug_graphing = False
 
@@ -217,8 +244,8 @@ def _determine_training_and_test_error(lambda_w, train_x, train_t, test_x, test_
   w_star = np.matmul(w_star, train_x) * train_t
 
   # Debug Code for Looking at the Training Result
-  global enable_debug_graphing
-  if enable_debug_graphing and degree > 0:
+  global enable_debug_graphing, degree_of_interest
+  if enable_debug_graphing and degree == degree_of_interest:
     x = test_x[1, :]
     plt.scatter(x, test_t, label="Test Target")
     plt.scatter(x, np.matmul(test_x.transpose(), w_star), label="Test Predicted")
@@ -230,6 +257,8 @@ def _determine_training_and_test_error(lambda_w, train_x, train_t, test_x, test_
     plt.ylabel("X")
     plt.ylabel("Y")
     plt.legend()
+    _, y_max = plt.ylim()
+    plt.ylim(ymin=0, ymax=min(y_max, 30))
     plt.show()
     plt.close()
 
@@ -253,14 +282,21 @@ def _calc_rms_error(w_star, x, t):
   :type t: numpy.ndarray
   :return: Error
   :rtype: float
+
+  >>> _calc_rms_error(np.matrix([2,3]).reshape(2,1), np.matrix([[2,4,6],[3,5,7]]).reshape(2,3), np.matrix([13,23,33]).reshape(3,1))
+  0.0
   """
   n = x.shape[1]
-  e_w_star = np.linalg.norm(x.transpose() * w_star - t, 2)
-  return math.sqrt(2 * e_w_star / n)
+  errs = np.matmul(x.transpose(), w_star)
+  errs = errs - t
+  e_w_star = 0.5 * errs.transpose() * errs
+  return math.sqrt(2.0 * e_w_star[0] / n)
 
 
 def _build_input_data_matix(degree, input_data, first_row=0, last_row=None):
   """
+  Creates a (degree+1) by n matrix (where n = last_row-first_row) that stores the polynomial data
+  used as "X" when solving for the ideal weight function.
 
   :param degree: Polynomial degree
   :type degree: int
@@ -289,3 +325,8 @@ def _build_input_data_matix(degree, input_data, first_row=0, last_row=None):
   for d in xrange(1, degree+1):
     output[d, :] = np.power(x, d).transpose()
   return output
+
+
+if __name__ == "__main__":
+  import doctest
+  doctest.testmod()
