@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 
 enable_debug_graphing = False  # Enables some of the debug plotting
-degree_of_interest = 3
+degree_of_interest = 5
 
 
 class LambdaResults(object):
@@ -55,13 +55,13 @@ class LambdaResults(object):
     # Define the graph information
     plt.xlabel("$\lambda$")
     plt.ylabel("RMS Error")
-    _, y_max = plt.ylim()
-    plt.ylim(ymin=0, ymax=min(y_max, 5))  # Error is always positive
+    y_min, y_max = plt.ylim()
+    plt.ylim(ymin=max(y_min, 0), ymax=min(y_max, 5))  # Error is always positive
     plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
     plt.title("Effect of $\lambda$ on the Learning Errors using a %d-Degree Polynomial" % degree)
     plt.legend()
-    #plt.show()
-    plt.savefig('effect_lambda_for_degree=%02d_polynomial.pdf' % (degree), bbox_inches='tight')
+    # plt.show()
+    plt.savefig("effect_lambda_for_degree=%02d_polynomial.pdf" % degree, bbox_inches='tight')
     plt.close()
 
 
@@ -111,7 +111,8 @@ class ErrorsStruct(object):
     # Setup the graph itself
     plt.xlabel("Polynomial Degree")
     plt.ylabel("Regularized Error")
-    plt.ylim(ymin=0)  # Error is always positive
+    y_min, _ = plt.ylim()
+    plt.ylim(ymin=max(y_min,0))  # Error is always positive
     plt.legend()
     plt.show()
 
@@ -131,9 +132,9 @@ def run(params):
   all_test_t = params.test_data[:, 1]
 
   # Define the lambda settings
-  LAMBDA_STEP = 1  # ToDo: Lambda step size is too large
+  LAMBDA_STEP = .1  # ToDo: Lambda step size is too large
   LAMBDA_MIN = 0
-  LAMBDA_MAX = 10
+  LAMBDA_MAX = 1
   lambda_range = np.arange(LAMBDA_MIN, LAMBDA_MAX, LAMBDA_STEP)
 
   # Create the results structure
@@ -145,7 +146,7 @@ def run(params):
                                         all_train_inputs, all_train_t, all_test_inputs, all_test_t)
     err_results.add_result(lambda_w, lambda_err)
   global degree_of_interest
-  for d in range(0, 20, 3):
+  for d in range(0, 20, 1):
     err_results.plot(d)
 
 
@@ -237,11 +238,12 @@ def _determine_training_and_test_error(lambda_w, train_x, train_t, test_x, test_
   """
 
   degree = train_x.shape[0] - 1
-  identity_matrix = np.identity(degree + 1, dtype=np.float32)
+  identity_matrix = np.identity(degree + 1, dtype=np.float64)
 
   # w* = ((X(X^T) - lambda * I)^-1) Xt
-  w_star = np.linalg.pinv(np.matmul(train_x, train_x.transpose()) + lambda_w * identity_matrix)
-  w_star = np.matmul(w_star, train_x) * train_t
+  x_transpose_product = np.matmul(train_x, train_x.transpose())
+  w_star = np.linalg.inv(x_transpose_product + lambda_w * identity_matrix)
+  w_star = np.matmul(np.matmul(w_star, train_x), train_t)
 
   # Debug Code for Looking at the Training Result
   global enable_debug_graphing, degree_of_interest
@@ -257,8 +259,9 @@ def _determine_training_and_test_error(lambda_w, train_x, train_t, test_x, test_
     plt.ylabel("X")
     plt.ylabel("Y")
     plt.legend()
-    _, y_max = plt.ylim()
-    plt.ylim(ymin=0, ymax=min(y_max, 30))
+    y_min, y_max = plt.ylim()
+
+    plt.ylim(ymin=max(0,y_min), ymax=min(y_max, 30))
     plt.show()
     plt.close()
 
@@ -317,10 +320,10 @@ def _build_input_data_matix(degree, input_data, first_row=0, last_row=None):
     last_row = len(input_data)
 
   num_rows = last_row - first_row
-  output = np.zeros([degree + 1, num_rows], dtype=np.float32)
+  output = np.zeros([degree + 1, num_rows], dtype=np.float64)
 
   # Transfer to a data matrix
-  output[0, :] = np.ones(num_rows, dtype=np.float32)  # Offset term
+  output[0, :] = np.ones(num_rows, dtype=np.float64)  # Offset term
   x = input_data[first_row:last_row]
   for d in xrange(1, degree+1):
     output[d, :] = np.power(x, d).transpose()
