@@ -26,14 +26,17 @@ function compare_train_test_single_lambda(train_data, test_data, degree, lambda)
     scatter(train_data(:,1),train_data(:,2),train_dot_size,'black','filled')
     scatter(train_data(:,1),y_train,train_dot_size,'red','filled')
     hold off;
-    legend('Test Target','Test Predicted','Train Target','Train Predicted');
+    leg = legend('Test Target','Test Predicted','Train Target','Train Predicted');
+    set(leg,'Location','Best')  % Prevent legend overlap with the data
     
     % Format the plot
     xlabel('X');
     ylabel('Target');
     title(['Learner Output for ' int2str(degree) '-Polynomial with \lambda=' num2str(lambda,'%1.2f')]);
-    filename = ['img/test_train_compare_d=' int2str(degree) '_lambda=' num2str(lambda,'%1.2f') '.eps' ];
-    print(filename,'-deps');
+    set(gcf, 'Color', 'w'); % Make the background white
+    
+    filename = ['img/test_train_compare_d=' int2str(degree) '_lambda=' num2str(lambda,'%9.2f') '.pdf' ];
+    export_fig(filename)
 end
 
 
@@ -58,7 +61,8 @@ function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test
     errorbar(lambdas,valid_avg_errs(:,1),valid_avg_errs(:,2));
     plot(lambdas, test_errs);
     hold off;
-    legend('Train','Validation','Test');
+    leg = legend('Train','Validation','Test');
+    set(leg,'Location','Best')  % Prevent legend overlap with the data
     
     % Format the plot
     xlabel('\lambda');
@@ -66,5 +70,6 @@ function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test
     title(['Effect of \lambda on the Learning Errors for a ' int2str(degree) '-Polynomial']);
     set(gca,'XScale','log') % Log scale
     set(gca,'YScale','log') % Log scale
-    print -deps img/lambda_sweep;
+    filename = ['img/lambda_sweep_degree=' int2str(degree) '.pdf' ];
+    export_fig(filename);
 end
