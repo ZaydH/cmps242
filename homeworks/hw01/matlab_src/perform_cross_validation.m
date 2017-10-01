@@ -7,16 +7,14 @@ function [train_err,validation_err,test_err,y_train,y_test]= perform_cross_valid
     test_err=zeros(length(lambdas));
     
     % Make the cross validation index splits
-    if k > 0
-        cvFolds = crossvalind('Kfold',length(train_x),k);
-    end
+    cvFolds = crossvalidind_zayd(length(train_x),k);
         
     % Test all the lambdas
     for cnt_lam = 1:length(lambdas)
         lambda = lambdas(cnt_lam);
         for i = 1:k
             % build the test and validation sets
-            v_ids = (cvFolds==i); % Row Ids for the training set
+            v_ids = (cvFolds == i); % Row Ids for the training set
             t_ids = ~v_ids;
             % Perform regression then store the outputs
             [y_train,y_v]=get_regression_outputs(train_x(t_ids,:),train_t(t_ids,:), ...
@@ -30,3 +28,13 @@ function [train_err,validation_err,test_err,y_train,y_test]= perform_cross_valid
         test_err(cnt_lam)=rms(y_test - test_t);
     end
 end
+
+
+% Uniform or near uniform random split for cross validation.
+function cv_folds = crossvalidind_zayd(n,k)
+    id_list = randperm(n);
+    cv_folds = zeros(n);
+    for i = 1:n
+        cv_folds(id_list(i)) = mod(i,k) + 1;
+    end
+end 
