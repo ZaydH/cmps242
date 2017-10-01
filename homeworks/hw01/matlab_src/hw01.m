@@ -1,4 +1,4 @@
-function hw01(degree, lambdas, k)
+function hw01(degree, lambdas, k, ignoreBias)
    % Disable singular warning but be a good citizen and restore original
    % state at the end.
    orig_state = warning;
@@ -8,24 +8,24 @@ function hw01(degree, lambdas, k)
    test_data=importdata("test.txt");
 
    for test_lambda=lambdas
-       compare_train_test_single_lambda(train_data, test_data, degree, test_lambda)
+       compare_train_test_single_lambda(train_data, test_data, degree, test_lambda, ignoreBias)
    end
    
    % K fold
-   sweep_lambda(train_data, test_data, degree, lambdas, k)
+   sweep_lambda(train_data, test_data, degree, lambdas, k, ignoreBias)
    % Leave One Out
-   sweep_lambda(train_data, test_data, degree, lambdas, size(train_data,1))
+   sweep_lambda(train_data, test_data, degree, lambdas, size(train_data,1), ignoreBias)
    
    % Restore original warning state
    warning(orig_state);
 end
 
 
-function compare_train_test_single_lambda(train_data, test_data, degree, lambda)
+function compare_train_test_single_lambda(train_data, test_data, degree, lambda, ignoreBias)
 
    [~,~,~,y_train,y_test]=perform_cross_validation(train_data(:,1),train_data(:,2), ...
                                                    test_data(:,1),test_data(:,2), ...
-                                                   degree, lambda, 0);
+                                                   degree, lambda, 0, ignoreBias);
     % Plot the scatters and configure how they will appear
     test_dot_size = 5;
     yellowish = [.8,.6,0];
@@ -88,11 +88,11 @@ function lambda_str=generate_lambda_string(lambda)
 end 
 
 
-function sweep_lambda(train_data, test_data, degree, lambdas, k)
+function sweep_lambda(train_data, test_data, degree, lambdas, k, ignoreBias)
    % Get the cross validation errors
    [train_err,valid_err,test_err,~,~]=perform_cross_validation(train_data(:,1),train_data(:,2), ...
                                                                test_data(:,1),test_data(:,2), ...
-                                                               degree, lambdas, k);
+                                                               degree, lambdas, k, ignoreBias);
    
    % Get the average errors
    train_avg_err = [mean(train_err,2), var(train_err')']; %#ok<UDIM>
