@@ -48,12 +48,13 @@ function compare_train_test_single_lambda(train_data, test_data, degree, lambda)
     export_fig(full_file_path)
     
     % Allow for smart y-axis so the extremes do not dominate.
-    ymin_compressed = 1; 
-    ymax_compressed = 5;
-    if min(y_test) < ymin_compressed || max(y_test) > ymax_compressed
+    ymin_fitted = 1; 
+    ymax_fitted = 5;
+    if min(y_test) < ymin_fitted || max(y_test) > ymax_fitted
         filename_comp = [file_name '_compressed'];
         full_file_path = [ file_folder filename_comp file_extension ];
-        ylim([ymin_compressed ymax_compressed])
+        ylim([ymin_fitted ymax_fitted])
+        set(leg,'Location','Best')  % Legend location needs to be reset now the axes changed.
         export_fig(full_file_path)
     end
     
@@ -89,9 +90,12 @@ end
 
 
 function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test_errs, k)
-    errorbar(lambdas,train_avg_errs(:,1),train_avg_errs(:,2));
+    
+    y_neg = build_neg_error_bar(train_avg_errs,.01)
+    errorbar(lambdas,train_avg_errs(:,1),y_neg,train_avg_errs(:,2));
     hold on; % Allow multiple plots simultaneously
-    errorbar(lambdas,valid_avg_errs(:,1),valid_avg_errs(:,2));
+    y_neg = build_neg_error_bar(valid_avg_errs,.01)
+    errorbar(lambdas,valid_avg_errs(:,1),y_neg,valid_avg_errs(:,2));
     plot(lambdas, test_errs);
     hold off;
     leg = legend('Train','Validation','Test');
@@ -110,10 +114,17 @@ function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test
     xlim([0 max(lambdas)]);
     xlabel('\lambda');
     ylabel('RMS Error');
-    title(['Effect of \lambda on the Learning Errors for a ' int2str(degree) ...
+    title(['Effect of \lambda on Learning a ' int2str(degree) ...
            '-Polynomial for ' title_str ' Cross Validation']);
     set(gca,'XScale','log') % Log scale
     set(gca,'YScale','log') % Log scale
     filename = [ 'img/lambda_sweep_' filename_k '_degree=' int2str(degree) '.pdf'];
     export_fig(filename);
 end
+
+
+% Matlab is clipping the negative bars
+% So force it to appear "near" zero.
+function min_err=build_neg_error_bar(err_vals,min_val)
+    min_err=min(err_vals(:,1)-min_val, err_vals(:,2));
+end 
