@@ -6,7 +6,7 @@ function [y_train,y_test]=get_regression_outputs(train_x, train_t, ...
     if lambda ~= 0
         x_prod = x_prod + lambda * eye(degree+1);
     end
-    weights = x_prod ^(-1) * X * train_t;
+    weights = linsolve(x_prod, X * train_t);
     % Get the predicted values for the training and test sets
     y_train = X' * weights;
     X_test = generate_polynomial_tensor(test_x,degree);
