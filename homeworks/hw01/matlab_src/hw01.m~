@@ -117,7 +117,7 @@ function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test
     xlabel('\lambda');
     ylabel('RMS Error');
     title({['Effect of \lambda on Learning a ' int2str(degree) '-Degree'], ...
-           ['Polynomial with ' title_str ' Cross Validation']});
+           ['Polynomial with ' title_str ' Cross Validation']);
     set(gca,'XScale','log') % Log scale
     set(gca,'YScale','log') % Log scale
     filename = [ 'img/lambda_sweep_' filename_k '_degree=' int2str(degree) '.pdf'];
