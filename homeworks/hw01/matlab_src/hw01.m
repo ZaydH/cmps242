@@ -1,4 +1,9 @@
 function hw01(degree, lambdas, k)
+   % Disable singular warning but be a good citizen and restore original
+   % state at the end.
+   orig_state = warning;
+   warning('off','MATLAB:nearlySingularMatrix');
+   
    train_data=importdata("train.txt");
    test_data=importdata("test.txt");
 
@@ -10,6 +15,9 @@ function hw01(degree, lambdas, k)
    sweep_lambda(train_data, test_data, degree, lambdas, k)
    % Leave One Out
    sweep_lambda(train_data, test_data, degree, lambdas, size(train_data,1))
+   
+   % Restore original warning state
+   warning(orig_state);
 end
 
 
@@ -44,19 +52,21 @@ function compare_train_test_single_lambda(train_data, test_data, degree, lambda)
                  '_lambda=' generate_lambda_string(lambda)];
     file_extension = '.pdf';
     full_file_path = [ file_folder file_name file_extension ];
-    set(gca,'FontSize', 18);
+    set(gca,'FontSize', 26);
     set(leg,'Location','Best')  % Prevent legend overlap with the data
     export_fig(full_file_path)
     
     % Allow for smart y-axis so the extremes do not dominate.
-    ymin_fitted = 1; 
-    ymax_fitted = 5;
-    if min(y_test) < ymin_fitted || max(y_test) > ymax_fitted
-        filename_comp = [file_name '_fitted'];
-        full_file_path = [ file_folder filename_comp file_extension ];
-        ylim([ymin_fitted ymax_fitted])
-        set(leg,'Location','Best')  % Legend location needs to be reset now the axes changed.
-        export_fig(full_file_path)
+    if degree > 10
+        ymin_fitted = 1; 
+        ymax_fitted = 5;
+        if min(y_test) < ymin_fitted || max(y_test) > ymax_fitted
+            filename_comp = [file_name '_fitted'];
+            full_file_path = [ file_folder filename_comp file_extension ];
+            ylim([ymin_fitted ymax_fitted])
+            set(leg,'Location','Best')  % Legend location needs to be reset now the axes changed.
+            export_fig(full_file_path)
+        end
     end
     
 end
@@ -68,12 +78,13 @@ function lambda_str=generate_lambda_string(lambda)
     if lambda == 0
         lambda_str = num2str(lambda);
         return;
-    elseif lambda>=1
-        precision = ceil(log10(lambda));
-    else
-        precision = 3;
     end
-    lambda_str = num2str(lambda,precision);
+    power = round(log2(lambda));
+    if power ~= 1
+        lambda_str = [ '2^{' num2str(power) '}'];
+    else
+        lambda_str = '2'; % Prevent unnecessary power when lambda = 2
+    end 
 end 
 
 
@@ -120,10 +131,21 @@ function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test
            ['Polynomial with ' title_str ' Cross Validation']});
     set(gca,'XScale','log') % Log scale
     set(gca,'YScale','log') % Log scale
-    filename = [ 'img/lambda_sweep_' filename_k '_degree=' int2str(degree) '.pdf'];
+    
+    % Create the image
+    image_path = 'img/';
+    filename = ['lambda_sweep_' filename_k '_degree=' int2str(degree)];
+    file_ext = '.pdf';
+    full_file_path = [ image_path filename file_ext];
     set(gca,'FontSize', 18);
     set(leg,'Location','Best')  % Prevent legend overlap with the data
-    export_fig(filename);
+    export_fig(full_file_path);
+    
+    % Export the data
+    all_errs = [lambdas' train_avg_errs(:,1) valid_avg_errs(:,1)  test_errs];
+    file_ext = '.csv';
+    full_file_path = [ filename file_ext];
+    dlmwrite(full_file_path, all_errs', ',');
 end
 
 

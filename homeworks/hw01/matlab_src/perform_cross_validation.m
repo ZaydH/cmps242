@@ -4,7 +4,7 @@ function [train_err,validation_err,test_err,y_train,y_test]= perform_cross_valid
     % Construct the data structure to store the results
     train_err=zeros([length(lambdas),k]);
     validation_err=zeros([length(lambdas),k]);
-    test_err=zeros(length(lambdas));
+    test_err=zeros(length(lambdas),1);
     
     % Make the cross validation index splits
     cvFolds = crossvalidind_zayd(length(train_x),k);
