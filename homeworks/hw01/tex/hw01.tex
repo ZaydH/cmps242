@@ -42,6 +42,7 @@
 \title{\textbf{CMPS242 Homework \#1 \textendash{} Polynomial Learning}}
 \author{Andrew Stolman \\~\\ \& \\~\\Zayd Hammoudeh}
 
+\graphicspath{{img/}}
 \begin{document}
   \maketitle
   
@@ -79,6 +80,7 @@
   \end{equation}\label{eq:tensorFunction}
   
   \noindent
+  %this following paragraph isn't quite right, the equation which follows it minimizes the regularized error function, not RMS, and we actually haven't so far stated what the regularized error function is
   As proven in the homework description, the weight vector,~$\wstar$, that minimizes the root mean square~(RMS) error of Eq.~\eref{eq:tensorFunction} is
   
   \begin{equation}
@@ -97,7 +99,7 @@
   \end{equation}
   
   \noindent
-  This approach generally has lower error for this homework (by up to two orders of magnitude when $n=19$).  From a purely theoretical perspective, our revised technique is equivalent.
+  This approach generally has lower error for this homework (by up to two orders of magnitude when $n=19$).  From a theoretical perspective, our revised technique is equivalent.
       
   \section{Effect of the Regularizer~$\lambda$}
   
@@ -162,7 +164,7 @@
   
   As mentioned previously, our system learns a polynomial function.  Figure~\ref{fig:learnerTargetAndPredicted} compares the target (i.e.,~actual) and learned/predicted values for both the training and test sets.  Note that subfigures~\subref{fig:learnedZeroLambda},~\subref{fig:learnedTwoPowN8Lambda}, and~\subref{fig:learnedTwoPowN7Lambda} are for~$\lambda$ values of~$0$,~$2^{-8}$, and~$2^{-7}$ respectively.  These result visually align with the RMS errors reported in sections~\ref{sec:selectOptimalRegularizer} and~\ref{sec:cvFoldCount}.  Recall that~${\lambda=0}$ had a suboptimal test error; the cause of this can be seen in the slight hook in the graph when~$x$ is close to zero as well as the overshoot at the local maximum around~${x=6}$.  Similarly, the results for~$\lambda$ equal to~$2^{-8}$ and~$2^{-7}$ are very similar with no perceptible differences; this is expected as their test errors differed by less than~$0.6\%$.
   
-  \begin{figure*}[b]
+  \begin{figure*}[h]
     \centering
     \includeLambdaPlot{0}{0.3\textwidth}{fig:learnedZeroLambda}
     ~ 
@@ -172,6 +174,25 @@
     \caption{Comparison of the Target and Predicted Values for Different Values of $\lambda$}\label{fig:learnerTargetAndPredicted}
   \end{figure*}
 
+\section{Regularizing Without Bias}
+We repeated the above process but modified the error function so that the constant term of the polynomial model would not be penalized. This is achieved by calculating the following error function:
+\[ Err(\mathbf{w}) = ||\mathbf{X}^{T} \mathbf{w}-\mathbf{t}||^{2} + \lambda \langle \mathbf{0}_{1}, \mathbf{w} \rangle^{2}\]
+where $\mathbf{0}_{1}$ refers to the vector with a zero in this first index and 1 everywhere else. Taking the derivative and setting it zero and solving gives us
+\[ \wstar=(XX^{\text{T}} + \lambda I^{*})^{-1}Xt \textrm{,}\]
+where $I^{*}$ is the identity matrix with the first row set to all zeros. 
 
+The results are summarized in figure \ref{fig:withoutbias}.
+
+\begin{figure*}[h]
+\centering
+\begin{subfigure}[h]{ 0.5\linewidth}
+\includegraphics [width=\linewidth ]{lambda_sweep_without_bias}
+\end{subfigure}
+\begin{subfigure}[h]{ 0.5\linewidth}
+\includegraphics [width=\linewidth ]{without_bias_comparison}
+\end{subfigure}
+\label{fig:withoutbias}
+\caption{Results for estimation without the bias term}
+\end{figure*}
 
 \end{document}
