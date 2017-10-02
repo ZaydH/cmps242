@@ -27,12 +27,12 @@
 \renewcommand\thesection{\arabic{section}} % Prevent chapter number in section number.
 
 \newcommand{\eref}[1]{(\ref{#1})}
-\newcommand{\wstar}{\vec{w}^{\star}}
+\newcommand{\wstar}{\mathbf{w}^{\star}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\includeLambdaPlot}[3]{  
 \begin{subfigure}[t]{#2}
   \centering
-  \includegraphics[width=1.0\textwidth]{img/test_train_compare_d=9_lambda=#1.pdf}
+  \includegraphics[width=1.0\textwidth]{test_train_compare_d=9_lambda=#1.pdf}
   \caption{$\lambda=#1$}\label{#3}
 \end{subfigure}}
 
@@ -64,27 +64,28 @@
   \end{equation}
   
   \noindent
-  is dimension~$n+1$.  Given a member of the vector space,~${\vec{x} \in P}$, the resulting polynomial function is:
+  is dimension~$n+1$.  Given a member of the vector space,~${\mathbf{x} \in P}$, the resulting polynomial function is:
   
   \begin{equation}
-    y=\vec{w}^{\text{T}}\vec{x},
+    y=\mathbf{w}^{\text{T}}\mathbf{x},
   \end{equation}\label{eq:polynomial}
   
   \noindent
-  where $\vec{w}$ is a vector of scalar weights with dimension~$n+1$.
+  where $\mathbf{w}$ is a vector of scalar weights with dimension~$n+1$.
   
-  Given a set of examples, $(x_{i},t_{i})$,~$i=1...m$, define~$X$ as an $(n+1)$~by~$m$ matrix whose $i^{\text{th}}$ column is the vector in space~$P$ that corresponds to example value~$x_{i}$.  Define  $\vec{t}$ as the vector whose value at index~$i$ is~$t_{i}$.  The linear system in Eq.~\eref{eq:polynomial} then becomes:
+  Given a set of examples, $(x_{i},t_{i})$,~$i=1...m$, define~$\mathbf{X}$ as an $(n+1)$~by~$m$ matrix whose $i^{\text{th}}$ column is the vector in space~$P$ that corresponds to example value~$x_{i}$.  Define  $\mathbf{t}$ as the vector whose value at index~$i$ is~$t_{i}$.  The linear system in Eq.~\eref{eq:polynomial} then becomes:
   
   \begin{equation}
-    \vec{y}=\vec{w}^{\text{T}}X
+    \mathbf{y}=\mathbf{w}^{\text{T}}\mathbf{X}
   \end{equation}\label{eq:tensorFunction}
   
   \noindent
   %this following paragraph isn't quite right, the equation which follows it minimizes the regularized error function, not RMS, and we actually haven't so far stated what the regularized error function is
-  As proven in the homework description, the weight vector,~$\wstar$, that minimizes the root mean square~(RMS) error of Eq.~\eref{eq:tensorFunction} is
+  % You are right.  Thank you for catching it.  Fixed.
+  As proven in the homework description, the weight vector,~$\wstar$, that minimizes the regularized error is
   
   \begin{equation}
-    \wstar=(XX^{\text{T}} + \lambda I)^{-1}Xt,
+    \wstar=(\mathbf{X}\mathbf{X}^{\text{T}} + \lambda I)^{-1}\mathbf{X}\mathbf{t},
   \end{equation}\label{eq:wstarDef}
   
   \noindent
@@ -92,10 +93,10 @@
   
   \subsection{Improving the Calculation of $\wstar$ through Linear Solving}
   
-  In the homework dataset, values in~$X$ range approximately from~${2*10^{-7}}$ to~${8*10^{8}}$.  Hence, calculating~$\wstar$ is greatly affected by floating point errors.  As such, when trying to find the inverse matrix ${(XX^{\text{T}} + \lambda I)^{-1}}$, Matlab warns that the matrix is ``\texttt{near singular or badly scaled}''  and further warns the ``results may be inaccurate.''  Python reports a similar warning.  As such, rather than finding~$\wstar$ through straight matrix multiplication, our implementation instead finds~$\wstar$ by solving the linear system:
+  In the homework dataset, values in~$\mathbf{X}$ range approximately from~${2*10^{-7}}$ to~${8*10^{8}}$.  Hence, calculating~$\wstar$ is greatly affected by floating point errors.  As such, when trying to find the inverse matrix ${(\mathbf{X}\mathbf{X}^{\text{T}} + \lambda I)^{-1}}$, Matlab warns that the matrix is ``\texttt{near singular or badly scaled}''  and further warns the ``results may be inaccurate.''  Python reports a similar warning.  As such, rather than finding~$\wstar$ through straight matrix multiplication, our implementation instead finds~$\wstar$ by solving the linear system:
     
   \begin{equation}
-    (XX^{\text{T}} + \lambda I)\wstar=Xt
+    (\mathbf{X}\mathbf{X}^{\text{T}} + \lambda I)\wstar=\mathbf{X}\mathbf{t}
   \end{equation}
   
   \noindent
@@ -109,13 +110,13 @@
     \centering
     \begin{subfigure}[t]{0.45\textwidth}
       \centering
-      \includegraphics[width=1.0\textwidth]{img/lambda_sweep_k=10_degree=9.pdf}
+      \includegraphics[width=1.0\textwidth]{lambda_sweep_k=10_degree=9.pdf}
       \caption{$k=10$}\label{fig:tenFoldCv}
     \end{subfigure}%
     ~ 
     \begin{subfigure}[t]{0.45\textwidth}
       \centering
-      \includegraphics[width=1.0\textwidth]{img/lambda_sweep_leave_one_out_degree=9.pdf}
+      \includegraphics[width=1.0\textwidth]{lambda_sweep_leave_one_out_degree=9.pdf}
       \caption{Leave-One-Out}\label{fig:leaveOneOutCv}
     \end{subfigure}
     \caption{Effect of $\lambda$ and Cross Validation Fold Count when Learning a $9^{\text{th}}$-Order Polynomial}\label{fig:effectLambda}
@@ -128,7 +129,7 @@
   
   \begin{table}[b]
     \centering
-    \caption{Learning Errors for Different Values of~$\lambda$ for 10-Fold Cross-Validation}\label{tab:lambda10FoldError}
+    \caption{Learning errors for different values of~$\lambda$ for 10-fold cross-validation}\label{tab:lambda10FoldError}
     \label{my-label}
     \begin{tabular}{c||c|c|c|c|c|c|c}
       \hline
@@ -149,7 +150,7 @@
   
    \begin{table}[tb]
     \centering
-    \caption{Learning Errors for Different Values of~$\lambda$ for Leave-One-Out Cross-Validation}\label{tab:lambdaLooError}
+    \caption{Learning errors for different values of~$\lambda$ for leave-one-out cross-validation}\label{tab:lambdaLooError}
     \begin{tabular}{c||c|c|c|c|c|c|c}
       \hline
       $\lambda$  & 0     & $2^{-10}$ & $2^{-9}$ & $2^{-8}$ & $\mathbf{2^{-7}}$ & $2^{-6}$ & $2^{-5}$ \\ \hline\hline
@@ -171,17 +172,23 @@
     \includeLambdaPlot{2^{-8}}{0.3\textwidth}{fig:learnedTwoPowN8Lambda}
     ~
     \includeLambdaPlot{2^{-7}}{0.3\textwidth}{fig:learnedTwoPowN7Lambda}
-    \caption{Comparison of the Target and Predicted Values for Different Values of $\lambda$}\label{fig:learnerTargetAndPredicted}
+    \caption{Comparison of the target and predicted values for different values of $\lambda$}\label{fig:learnerTargetAndPredicted}
   \end{figure*}
 
 \section{Regularizing Without Bias}
 We repeated the above process but modified the error function so that the constant term of the polynomial model would not be penalized. This is achieved by calculating the following error function:
+
 \[ Err(\mathbf{w}) = ||\mathbf{X}^{T} \mathbf{w}-\mathbf{t}||^{2} + \lambda \langle \mathbf{0}_{1}, \mathbf{w} \rangle^{2}\]
-where $\mathbf{0}_{1}$ refers to the vector with a zero in this first index and 1 everywhere else. Taking the derivative and setting it zero and solving gives us
-\[ \wstar=(XX^{\text{T}} + \lambda I^{*})^{-1}Xt \textrm{,}\]
+
+\noindent
+where $\mathbf{0}_{1}$ refers to the vector with a zero in this first index and 1 everywhere else. Taking the derivative, setting it zero, and solving gives us
+
+\[ \wstar=(\mathbf{X}\mathbf{X}^{\text{T}} + \lambda I^{*})^{-1}\mathbf{X}\mathbf{t} \textrm{,}\]  
+
+\noindent
 where $I^{*}$ is the identity matrix with the first row set to all zeros. 
 
-The results are summarized in figure \ref{fig:withoutbias}.
+The results are summarized in Figure~\ref{fig:withoutbias}.
 
 \begin{figure*}[h]
 \centering
@@ -191,8 +198,7 @@ The results are summarized in figure \ref{fig:withoutbias}.
 \begin{subfigure}[h]{ 0.5\linewidth}
 \includegraphics [width=\linewidth ]{without_bias_comparison}
 \end{subfigure}
-\label{fig:withoutbias}
-\caption{Results for estimation without the bias term}
+\caption{Results for estimation without the bias term}\label{fig:withoutbias}
 \end{figure*}
 
 \end{document}
