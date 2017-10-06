@@ -180,27 +180,66 @@
     \caption{Comparison of the target and predicted values for different values of $\lambda$}\label{fig:learnerTargetAndPredicted}
   \end{figure*}
 
-\section{Regularizing Without Bias}
-We repeated the above process but modified the error function so that the constant term of the polynomial model would not be penalized. This is achieved by calculating the following error function:
+  \section{Regularizing Without Bias}
+  
+  We repeated the above process but modified the error function so that the constant term of the polynomial model would not be penalized. This is achieved by calculating the following error function:
+  
+  \[ Err(\mathbf{w}) = ||\mathbf{X}^{T} \mathbf{w}-\mathbf{t}||^{2} + \lambda || I^* \mathbf{w}||^2\]
+  
+  \noindent
+  where $I^{*}$ is the identity matrix with the first row set to all zeros.  Taking the derivative, setting it zero, and solving gives us
+  
+  \[ \wstar=(\mathbf{X}\mathbf{X}^{\text{T}} + \lambda I^{*})^{-1}\mathbf{X}\mathbf{t} \textrm{.}\]  
+  
+  Table~\ref{tab:noBiasRegularization} shows the relationship between the learning errors when regularization did not include bias.  These results are also plotted in Figure~\ref{fig:withoutbias}.  Note that the variance and average RMS error both decreased when there was no bias regularization; the shift was particularly pronounced at larger values of~$\lambda$.  The ideal value of~$\lambda$ also shifted higher to~$2^{-3}$.
+  
+  \begin{table}[b]
+    \centering
+    \caption{Learning errors for different values of~$\lambda$ with k=10 and Bias Regularization Excluded}\label{tab:noBiasRegularization}
+    \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+      \hline
+      $\lambda$  & 0     & $2^{-10}$ & $2^{-9}$ & $2^{-8}$ & $2^{-7}$ & $2^{-6}$ & $2^{-5}$ & $2^{-4}$ & $\mathbf{2^{-3}}$ & $2^{-2}$ \\ \hline\hline
+      Training   & \textbf{0.057} & 0.059      & 0.060     & 0.061     & 0.062     & 0.062    & 0.063   & 0.064  & 0.065  & 0.068 \\ \hline
+      Validation & 0.206 & 0.136      & 0.126     & 0.118     & 0.111     & 0.105    & 0.101   & 0.099  & \textbf{0.0988} & 0.101 \\ \hline
+      Test       & 0.117 & 0.110      & 0.109     & 0.109     & 0.108     & 0.108    & 0.107   & 0.107  & \textbf{0.1068} & 0.107 \\ \hline
+    \end{tabular}
+  \end{table}
+  
+  \begin{figure*}[h]
+    \centering
+    \begin{subfigure}[h]{ 0.45\linewidth}
+      \includegraphics[width=\linewidth]{lambda_sweep_without_bias}
+    \end{subfigure}
+    \begin{subfigure}[h]{ 0.45\linewidth}
+      \includegraphics[width=\linewidth]{without_bias_comparison}
+    \end{subfigure}
+    \caption{Results for estimation without the bias term}\label{fig:withoutbias}
+  \end{figure*}
 
-\[ Err(\mathbf{w}) = ||\mathbf{X}^{T} \mathbf{w}-\mathbf{t}||^{2} + \lambda || I^* \mathbf{w}||^2\]
+  \subsection{Visualizing the Benefit of Bias Removal}
+  
+  In the supplied training/test sets, the offset bias in the target was relatively insignificant so most of its effects could be learned via the higher orders of the polynomial; that is why eliminating the bias regularization did not significantly improve the results.  Consider a new target vector,~$\mathbf{t}'$, defined as:
+  
+  \begin{equation}
+    \forall_{1 \geq i \leq m} t'_i = t_i + 10^{9}\textrm{.}
+  \end{equation}
 
-\noindent
-where $I^{*}$ is the identity matrix with the first row set to all zeros.  Taking the derivative, setting it zero, and solving gives us
-
-\[ \wstar=(\mathbf{X}\mathbf{X}^{\text{T}} + \lambda I^{*})^{-1}\mathbf{X}\mathbf{t} \textrm{.}\]  
-
-The results are summarized in Figure~\ref{fig:withoutbias}.  Note that the variance and average RMS error both decreased when there was no bias regularization; the shift was particularly pronounced at larger values of~$\lambda$.  The ideal value of~$\lambda$ also shifted higher to approximately~$1$.
-
-\begin{figure*}[h]
-\centering
-\begin{subfigure}[h]{ 0.5\linewidth}
-\includegraphics [width=\linewidth ]{lambda_sweep_without_bias}
-\end{subfigure}
-\begin{subfigure}[h]{ 0.5\linewidth}
-\includegraphics [width=\linewidth ]{without_bias_comparison}
-\end{subfigure}
-\caption{Results for estimation without the bias term}\label{fig:withoutbias}
-\end{figure*}
-
+  \noindent
+  The shift of one~billion was selected deliberately as it should dominate all other weights. 
+  
+  Figure~\ref{fig:shiftEffectWithWithoutRegularizer} shows the learning performance on~$\mathbf{t}'$ with and without bias included in regularization.  $\lambda$~was set to~$2^{-8}$; this regularizer is quite small (reducing the shift's effect) and was selected to match the best performance in the unshifted data.  Despite these two advantages, the test RMS error with bias regularization included increased from~$1.08*10^{-1}$ to~$1.21*10^{6}$, i.e.,~seven orders of magnitude.  In contrast, the target shift led to no change when regularization excluded the bias.
+  
+  \begin{figure*}[h]
+    \centering
+    \begin{subfigure}[h]{0.45\linewidth}
+      \includegraphics[width=\linewidth]{shift_without_bias_correction}
+      \caption{Bias Included in Regularization}
+    \end{subfigure}
+    \begin{subfigure}[h]{0.47\linewidth}
+      \includegraphics[width=\linewidth]{shift_with_bias_correction}
+      \caption{Bias Excluded in Regularization}
+    \end{subfigure}
+    \caption{Effect of a Target Shift of~$10^{9}$ on Learning With and Without Regularizer Bias Correction}\label{fig:shiftEffectWithWithoutRegularizer}
+  \end{figure*}
+  
 \end{document}

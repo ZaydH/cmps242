@@ -1,23 +1,48 @@
-function hw01(degree, lambdas, k, ignoreBias)
-   % Disable singular warning but be a good citizen and restore original
-   % state at the end.
-   orig_state = warning;
-   warning('off','MATLAB:nearlySingularMatrix');
-   
-   train_data=importdata("train.txt");
-   test_data=importdata("test.txt");
+function hw01(degree, lambdas, k, ignoreBias, offset_term)
+    % Performs the curve fitting in homework 1.
+    %
+    % Course Information:
+    %    * University of California Santa Cruz
+    %    * Prof. Manfred K. Warmuth
+    %    * Fall 2017
+    %    * https://classes.soe.ucsc.edu/cmps242/Fall17/
+    %
+    % Required Arguments:
+    %    degree - Order of the polynomial
+    %    lambdas - List of lambda values to test
+    %    k - Number of cross validation folds
+    %    ignoreBias - Boolean to determine whether to penalizes the w0
+    %                 term in regularization.
+    %
+    % Optional Arguments:
+    %    offset_term - Default "0".  Tests shifting the data.
 
-   for test_lambda=lambdas
-       compare_train_test_single_lambda(train_data, test_data, degree, test_lambda, ignoreBias)
-   end
-   
-   % K fold
-   sweep_lambda(train_data, test_data, degree, lambdas, k, ignoreBias)
-   % Leave One Out
-   sweep_lambda(train_data, test_data, degree, lambdas, size(train_data,1), ignoreBias)
-   
-   % Restore original warning state
-   warning(orig_state);
+    REQUIRED_ARGUMENT_COUNT = 4;
+
+    % Disable singular warning but be a good citizen and restore original
+    % state at the end.
+    orig_state = warning;
+    warning('off','MATLAB:nearlySingularMatrix');
+
+    train_data=importdata("train.txt");
+    test_data=importdata("test.txt");
+
+    if nargin > REQUIRED_ARGUMENT_COUNT && ~isempty(offset_term)
+        train_data(:,2) = train_data(:,2) + offset_term;
+        test_data(:,2) = test_data(:,2) + offset_term;
+    end
+
+    for test_lambda=lambdas
+        compare_train_test_single_lambda(train_data, test_data, degree, test_lambda, ignoreBias)
+    end
+
+    % K fold
+    sweep_lambda(train_data, test_data, degree, lambdas, k, ignoreBias)
+    % Leave One Out
+    sweep_lambda(train_data, test_data, degree, lambdas, size(train_data,1), ignoreBias)
+
+    % Restore original warning state
+    warning(orig_state);
 end
 
 
@@ -59,8 +84,8 @@ function compare_train_test_single_lambda(train_data, test_data, degree, lambda,
     
     % Allow for smart y-axis so the extremes do not dominate.
     if degree > 10
-        ymin_fitted = 1; 
-        ymax_fitted = 5;
+        ymin_fitted = min(train_data(:,2), train_data(:,2)) - 0.5; 
+        ymax_fitted = max(train_data(:,2), train_data(:,2)) + 0.5; 
         if min(y_test) < ymin_fitted || max(y_test) > ymax_fitted
             filename_comp = [file_name '_fitted'];
             full_file_path = [ file_folder filename_comp file_extension ];
@@ -70,6 +95,17 @@ function compare_train_test_single_lambda(train_data, test_data, degree, lambda,
         end
     end
     
+%     % Create a histogram of the squared error.
+%     numOfBins = 100;
+%     [histFreq, histXout] = hist((y_test-test_data(:,2)).^2, numOfBins);
+%     bar(histXout, histFreq/sum(histFreq)*100);
+%     set(gca,'FontSize', 26);
+%     ylabel('Frequency (%)');
+%     file_name = ['test_err_hist=' int2str(degree) ...
+%                  '_lambda=' generate_lambda_string(lambda)];
+%     xlabel('Test Sample Squared Error')
+%     full_file_path = [ file_folder file_name file_extension ];
+%     export_fig(full_file_path)
 end
 
 
@@ -90,18 +126,18 @@ end
 
 
 function sweep_lambda(train_data, test_data, degree, lambdas, k, ignoreBias)
-   % Get the cross validation errors
-   [train_err,valid_err,test_err,~,~]=perform_cross_validation(train_data(:,1),train_data(:,2), ...
+    % Get the cross validation errors
+    [train_err,valid_err,test_err,~,~]=perform_cross_validation(train_data(:,1),train_data(:,2), ...
                                                                test_data(:,1),test_data(:,2), ...
                                                                degree, lambdas, k, ignoreBias);
-   
-   % Get the average errors
-   train_avg_err = [mean(train_err,2), var(train_err')']; %#ok<UDIM>
-   valid_avg_err = [mean(valid_err,2), var(valid_err')']; %#ok<UDIM>
-   
-   % Plot the results
-   if (k~=size(train_data,1)); folds=k; else; folds=NaN; end
-   plot_lambda_sweep(degree, lambdas, train_avg_err, valid_avg_err, test_err, folds);
+
+    % Get the average errors
+    train_avg_err = [mean(train_err,2), var(train_err')']; %#ok<UDIM>
+    valid_avg_err = [mean(valid_err,2), var(valid_err')']; %#ok<UDIM>
+
+    % Plot the results
+    if (k~=size(train_data,1)); folds=k; else; folds=NaN; end
+    plot_lambda_sweep(degree, lambdas, train_avg_err, valid_avg_err, test_err, folds);
 end
 
 
@@ -135,7 +171,7 @@ function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test
     
     % Create the image
     image_path = 'img/';
-    if ~exist(file_folder,'dir') mkdir(file_folder); end %#ok<SEPEX>
+    if ~exist(image_path,'dir') mkdir(image_path); end %#ok<SEPEX>
     filename = ['lambda_sweep_' filename_k '_degree=' int2str(degree)];
     file_ext = '.pdf';
     full_file_path = [ image_path filename file_ext];
