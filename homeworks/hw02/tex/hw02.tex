@@ -48,7 +48,7 @@
 
 \newcommand{\problem}[3]{\noindent \textit{Chapter \##1, Problem \##2}
   \\
-  \textbf{#3}}
+  \textbf{#3}  \\}
 
 \begin{document}
   \maketitle
@@ -93,10 +93,21 @@
     \Pr[g|orange] &= \frac{0.3*0.6}{0.36} \\
     \Pr[g|orange] &= \boxed{0.5}
   \end{aligncustom}
-  
+
+
+
+  %---------------------------------------------------%
   \newpage
   \problem{1}{9}{Show that the mode (i.e., the maximum) of the Gaussian distribution~(1.46) is given by~$\mu$.  Similarly, show that the mode of the multivariate Gaussian~(1.52) is given by~$\mathbf{mu}$.}
+  
+  \subproblem{a}{Show the maximum of the Gaussian distribution is given by~$\mu$.}
+  
+  
+  
+  \subproblem{b}{Show the maximum of the Gaussian distribution is given by~$\mathbf{mu}$.}
 
+
+  %---------------------------------------------------%
   \newpage
   \problem{1}{11}{By setting the derivatives of the log likelihood function~(1.54) with respect to~$\mu$ and $\sigma^2$ equal to zero, verify the results~(1.55) and~(1.56).}
   
@@ -113,17 +124,17 @@
   Take the partial derivative with respect to~$\mu$:
   
   \begin{aligncustom}
-    \frac{\partial}{\partial \mu} \left( -\frac{1}{2\sigma^2}\sum_{n=1}^{N}(x_{n}-\mu)^2-\frac{N}{2} \ln \sigma^2 -\frac{N}{2} \ln (2\pi) \right) &= \frac{-1}{2\sigma^2}\left( -1 * \sum_{n=1}^{N}(x_{n}-\mu) \right)  - 0 - 0 \\
-    &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)}{2\sigma^2} \\
-    &= \frac{\sum_{n=1}^{N} \left( x_{n} \right)}{2\sigma^2} - \frac{N*\mu}{2\sigma^2}\textrm{.}
+    \frac{\partial}{\partial \mu} \left( -\frac{1}{2\sigma^2}\sum_{n=1}^{N}(x_{n}-\mu)^2-\frac{N}{2} \ln \sigma^2 -\frac{N}{2} \ln (2\pi) \right) &= \frac{-1}{2\sigma^2}\left( 2 * -1 * \sum_{n=1}^{N}(x_{n}-\mu) \right)  - 0 - 0 \\
+    &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)}{\sigma^2} \\
+    &= \frac{\sum_{n=1}^{N} \left( x_{n} \right)}{\sigma^2} - \frac{N*\mu}{\sigma^2}\textrm{.}
   \end{aligncustom}
 
   The right side of the equation can be set equal to~$0$.  The denominator can be multiplied out resulting in:
   
   \begin{aligncustom}
-    0 &= \sum_{n=1}^{N}x_{n} - N*\mu \\
+    0 &= \sum_{n=1}^{N} \left( x_{n} \right) - N*\mu \\
     N*\mu &= \sum_{n=1}^{N}x_{n} \\
-    \mu &= \frac{\sum_{n=1}^{N}x_{n}}{N} ~~~\square
+    \mu &= \frac{1}{N}\sum_{n=1}^{N}x_{n} ~~~\square
   \end{aligncustom}
 
 
@@ -135,17 +146,25 @@
 
   \begin{aligncustom}
     \frac{\partial}{\partial \sigma} \left( -\frac{1}{2\sigma^2}\sum_{n=1}^{N}(x_{n}-\mu)^{2}-\frac{N}{2} \ln \sigma^2 -\frac{N}{2} \ln (2\pi) \right) &=   -\frac{1}{2}\sum_{n=1}^{N}(x_{n}-\mu)^{2} * (-2*\sigma^{-3})  -\frac{N}{2} \left( \frac{1}{\sigma^2} (2\sigma)  \right)  - 0 \\
-     &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)^{2}}{}{\sigma^{3}} -\frac{N}{\sigma}
+     &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)^{2}}{\sigma^{3}} -\frac{N}{\sigma}
   \end{aligncustom}
 
-  This equation can be set equal to~$0$ and everything multiplied by~$\sigma$ resulting in:
+  This equation is set equal to~$0$ and everything multiplied by~$\sigma$ resulting in:
   
   \begin{aligncustom}
     0 &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)^{2}}{\sigma^{2}} - N \\
     N &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)^{2}}{\sigma^{2}} \\
-    \sigma^{2} &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)^{2}}{N}  ~~~\square
+    \sigma^{2} &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)^{2}}{N} \textrm{.}
   \end{aligncustom}
 
+  The optimal value for~$\mu$ was found in part~(a) which can then substituted:
+  
+  \begin{aligncustom}
+    \sigma^{2} &= \frac{\sum_{n=1}^{N}(x_{n}-\mu_{ML})^{2}}{N} \textrm{.} ~~~\square
+  \end{aligncustom}
+
+
+  %---------------------------------------------------%
   \newpage
   \problem{1}{29}{Consider an $M$-state discrete random variable,~$x$, and use Jensen's inequality in the form~(1.115) to show that the entropy of its distribution~$p(x)$ satisfies~$\textrm{H}[x] \leq \ln M$.}
   
@@ -156,15 +175,56 @@
     \label{eq:q9eq115}
   \end{equation}
 
+
+  %---------------------------------------------------%
   \newpage
   \problem{1}{30}{Evaluate the Kullback-Leiber divergence~(1.113) between two Gaussians,~$p(x)=\mathscr{N}(x|\mu,\sigma^2)$ and~$q(x)=\mathscr{N}(x|m,s^2)$.}
 
+
+  %---------------------------------------------------%
   \newpage
   \problem{1}{31}{Consider two variables~$\mathbf{x}$ and~$\mathbf{y}$ having joint distribution~$p(\mathbf{x},\mathbf{y})$, show that the differential entropy of this pair of variables satisfies
   \[\textrm{H}[\mathbf{x},\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}]\]
   with equality if and only if,~$\mathbf{x}$ and~$\mathbf{y}$ are statistically independent.}
 
+
+  %---------------------------------------------------%
   \newpage
   \problem{1}{40}{By applying Jensen's inequality~(1.115) with~$f(x)=\ln x$, show that the arithmetic mean of a set of real numbers is never less than their geometrical mean.}
+  
+  For a set of numbers,~$\{x_1,...,x_M\}$, the arithmetic mean is defined as:
+  
+  \[ \frac{\sum_{i=1}^{M}x_i}{M} \]
+  
+  In contrast, for the same set of numbers, the geometric mean is defined as:
+  
+  \[ \left( \prod_{i=1}^{M}x_i \right)^\frac{1}{M}\textrm{.} \]
+  
+  Jensen's Inequality~(1.115) is defined as:
+  
+  \begin{equation}
+    f \left( \sum_{i=1}^M{\lambda_{i} f(x_i)} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)}\textrm{.}
+    \label{e40:q9eq115}
+  \end{equation}
+  
+  If we substitute for~$f(x)=\ln x$, this becomes:
+
+  \[ ln \left( \sum_{i=1}^M{\lambda_{i} \ln(x_i)} \right) \leq \sum_{i=1}^M{\lambda_{i} \ln(x_i)}\textrm{.} \]
+  
+  For Jensen's Inequality to hold, $\lambda$~must satisfy two conditions namely:~$\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  An obvious satisfying case is~$\lambda_i=1/M$ for all~$i$.  This then changes the equation to:
+  
+  \[ ln \left( \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \right) \leq \frac{1}{M}\sum_{i=1}^M{\ln(x_i)}\textrm{.} \]
+  
+  Using the properties of logarithms, the right side is transformable to a product via:
+  
+  \[ ln \left( \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \right) \leq \frac{1}{M}{\ln \left( \prod_{i=1}^M{x_i} \right)}\textrm{.} \]
+  
+  Using another property of logarithms, the fraction on the right side can be brought inside the logarithm as:
+  
+  \[ ln \left( \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \right) \leq \ln \left( \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M} \right) \textrm{.} \]
+  
+  Both sides are then raised to the power of~$e$ completing the proof that it is never less than.
+  
+    \[ \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \leq \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M}  ~~~\square \]
 
 \end{document}
