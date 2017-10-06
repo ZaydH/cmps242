@@ -1,0 +1,8 @@
+# Ignore the generated figures in this folder
+img/*.pdf
+
+# Ignore self created test data
+*.csv
+
+# Ignore matlab temp files
+*.m~

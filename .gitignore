@@ -1,3 +1,9 @@
+# Ignore Mac temp file
+*.DS_Store
+
+# Ignore temporary Matlab files
+*.m~
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

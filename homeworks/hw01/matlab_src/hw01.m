@@ -48,6 +48,7 @@ function compare_train_test_single_lambda(train_data, test_data, degree, lambda,
     
     % Construct the graph without compressing the axes
     file_folder = 'img/';
+    if ~exist(file_folder,'dir') mkdir(file_folder); end %#ok<SEPEX>
     file_name = ['test_train_compare_d=' int2str(degree) ...
                  '_lambda=' generate_lambda_string(lambda)];
     file_extension = '.pdf';
@@ -134,6 +135,7 @@ function plot_lambda_sweep(degree, lambdas, train_avg_errs, valid_avg_errs, test
     
     % Create the image
     image_path = 'img/';
+    if ~exist(file_folder,'dir') mkdir(file_folder); end %#ok<SEPEX>
     filename = ['lambda_sweep_' filename_k '_degree=' int2str(degree)];
     file_ext = '.pdf';
     full_file_path = [ image_path filename file_ext];
