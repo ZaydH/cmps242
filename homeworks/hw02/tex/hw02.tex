@@ -4,7 +4,7 @@
 \usepackage[skip=4pt]{caption} % ``skip'' sets the spacing between the figure and the caption.
 \usepackage{pgfplots}   % Needed for plotting
 \usepackage{amsmath}    % Allows for piecewise functions using the ``cases'' construct
-\usepackage{mathrsfs}   % Use the ``\mathscr'' command in an equation.
+%\usepackage{mathrsfs}   % Use the ``\mathscr'' command in an equation.
 
 \usepackage[obeyspaces,spaces]{url} % Used for typesetting with the ``path'' command
 \usepackage[hidelinks]{hyperref}   % Make the cross references clickable hyperlinks
@@ -26,7 +26,7 @@
 \renewcommand{\headrulewidth}{0pt} % Eliminates line at the top of the page.
 \fancyfoot[LO]{CMPS242 \textendash{} Homework \#1} % Left
 \fancyfoot[CO]{\thepage} % Center
-\fancyfoot[RO]{Hammoudeh} %Right
+\fancyfoot[RO]{Zayd Hammoudeh} %Right
 
 % Change interline spacing.
 \renewcommand{\baselinestretch}{1.1}
@@ -102,10 +102,23 @@
   
   \subproblem{a}{Show the maximum of the Gaussian distribution is given by~$\mu$.}
   
+  In any single variable continuous function,~$f$, any point where the first derivative,~$f'=0$, is either a (local) maximum or minimum.
   
+  The first derivative of the Gaussian function is, via the chain rule:
   
-  \subproblem{b}{Show the maximum of the Gaussian distribution is given by~$\mathbf{mu}$.}
+  \[ f'(x|\mu,\sigma) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{\frac{-(x-\mu)^{2}}{2\sigma}} \left(\frac{-2}{2\sigma^2}(x-\mu) \right) \]
+  
+  This equation can then be set equal to~$0$ and simplified.
+  
+  \[ 0 = \frac{1}{\sqrt{2\pi\sigma^2}} \frac{1}{\sigma^2} e^{\frac{-(x-\mu)^{2}}{2\sigma}} (x-\mu) \]  
+  
+  The only root of this equation is when~$x=0$ making it the only critical point.  To determine specifically whether it is a maximum/minimum, consider the value of the first derivative.  Maxima have positive values before the critical point and negative afterwards.  In contrast, minima are negative value before the critical point and positive afterwards.  
+  
+  In the case of the univariate Gaussian, the only term that could be negative is~$(x-\mu)$ since the variance is squared~(it could not be negative anyway), and $e^{y}$~is always positive.  Clearly if~$x<\mu$, then~$(x-\mu)<0$; likewise, if~$x>\mu$, then~$(x-\mu)>0$.  Hence, $\mu$~is a maximum and in turn the mode.$~~~\square$
+  
+  \subproblem{b}{Show the maximum of the Gaussian distribution is given by~$\mathbf{\mu}$.}
 
+  In any single variable continuous function,~$f$, maxima or minima occur at the point where all partial derivatives equal~$0$.
 
   %---------------------------------------------------%
   \newpage
@@ -171,16 +184,39 @@
   Equation~(1.115) in the textbook (page~56) states:
   
   \begin{equation}
-    f \left( \sum_{i=1}^M{\lambda_{i} f(x_i)} \right) =\sum_{i=1}^M{\lambda_{i} f(x_i)}
+    f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) =\sum_{i=1}^M{\lambda_{i} f(x_i)}
     \label{eq:q9eq115}
   \end{equation}
+  
+  A probability distribution,~$p(x)$, satisfy the two criteria of~$\lambda$ namely: $\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  This transforms Jensen's Inequality to:
+  
+  \[ f \left( \sum_{i=1}^M{p(x_{i}) x_i} \right) =\sum_{i=1}^M{p(x_{i}) f(x_i)} \]
 
 
   %---------------------------------------------------%
   \newpage
-  \problem{1}{30}{Evaluate the Kullback-Leiber divergence~(1.113) between two Gaussians,~$p(x)=\mathscr{N}(x|\mu,\sigma^2)$ and~$q(x)=\mathscr{N}(x|m,s^2)$.}
+  \problem{1}{30}{Evaluate the Kullback-Leiber divergence~(1.113) between two Gaussians,~$p(x)=\mathcal{N}(x|\mu,\sigma^2)$ and~$q(x)=\mathcal{N}(x|m,s^2)$.}
 
-
+  For two continuous probability distributions,~$p$ and~$q$, the Kullback-Leiber divergence is defined as:
+  
+  \[ \textrm{KL}(p||q) = -\int {p(\textbf{x}) \ln \frac{q(\textbf{x})}{p(\textbf{x})} } d\textbf{x} \textrm{.}\]
+  
+  Substituting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous function to:
+  
+  \begin{aligncustom}
+    \ln \left( \frac{q(\textbf{x})}{p(\textbf{x})} \right) &= \ln \left(  \frac{\frac{1}{\sqrt{2\pi s^2}}e^{\frac{-(x-m)^2}{2s^2}}}{\frac{1}{\sqrt{2\pi \sigma^2}}e^{\frac{-(x-\mu)^2}{2 \sigma^2}}}  \right) \\~\\
+    &= \ln \left(  \frac{\sqrt{\sigma^2}}{\sqrt{s^2}} e^{\frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}} \right) \\~\\
+    &= \ln \left(  \frac{\sigma}{s} e^{\frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}} \right)\\~\\
+    &= \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}
+  \end{aligncustom}
+  
+  Substituting that back into the KL divergence yields:
+  
+  \begin{aligncustom}
+    \textrm{KL}(p||q) &= -\int {p(\textbf{x}) \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \textrm{.} \\~\\
+    &= -\int {\frac{1}{\sqrt{2 \pi \sigma^2}} e^{\frac{-(x-\mu)^2}{2 \sigma^2}} \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \textrm{.}
+  \end{aligncustom}
+  
   %---------------------------------------------------%
   \newpage
   \problem{1}{31}{Consider two variables~$\mathbf{x}$ and~$\mathbf{y}$ having joint distribution~$p(\mathbf{x},\mathbf{y})$, show that the differential entropy of this pair of variables satisfies
@@ -203,28 +239,28 @@
   Jensen's Inequality~(1.115) is defined as:
   
   \begin{equation}
-    f \left( \sum_{i=1}^M{\lambda_{i} f(x_i)} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)}\textrm{.}
+    f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)}\textrm{.}
     \label{e40:q9eq115}
   \end{equation}
   
   If we substitute for~$f(x)=\ln x$, this becomes:
 
-  \[ ln \left( \sum_{i=1}^M{\lambda_{i} \ln(x_i)} \right) \leq \sum_{i=1}^M{\lambda_{i} \ln(x_i)}\textrm{.} \]
+  \[ \ln \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} \ln(x_i)}\textrm{.} \]
   
   For Jensen's Inequality to hold, $\lambda$~must satisfy two conditions namely:~$\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  An obvious satisfying case is~$\lambda_i=1/M$ for all~$i$.  This then changes the equation to:
   
-  \[ ln \left( \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \right) \leq \frac{1}{M}\sum_{i=1}^M{\ln(x_i)}\textrm{.} \]
+  \[ \ln \left( \frac{\sum_{i=1}^{M}{x_i}}{M} \right) \leq \frac{1}{M}\sum_{i=1}^M{\ln(x_i)}\textrm{.} \]
   
   Using the properties of logarithms, the right side is transformable to a product via:
   
-  \[ ln \left( \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \right) \leq \frac{1}{M}{\ln \left( \prod_{i=1}^M{x_i} \right)}\textrm{.} \]
+  \[ \ln \left( \frac{\sum_{i=1}^{M}{x_i}}{M} \right) \leq \frac{1}{M}{\ln \left( \prod_{i=1}^M{x_i} \right)}\textrm{.} \]
   
   Using another property of logarithms, the fraction on the right side can be brought inside the logarithm as:
   
-  \[ ln \left( \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \right) \leq \ln \left( \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M} \right) \textrm{.} \]
+  \[ \ln \left( \frac{\sum_{i=1}^{M}{x_i}}{M} \right) \leq \ln \left( \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M} \right) \textrm{.} \]
   
   Both sides are then raised to the power of~$e$ completing the proof that it is never less than.
   
-    \[ \frac{\sum_{i=1}^{M}{\ln(x_i)}}{M} \leq \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M}  ~~~\square \]
+    \[ \frac{\sum_{i=1}^{M}{x_i}}{M} \leq \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M}  ~~~\square \]
 
 \end{document}
