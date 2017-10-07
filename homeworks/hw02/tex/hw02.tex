@@ -45,6 +45,10 @@
 \title{\textbf{CMPS242 Homework \#2 -- Chapter \# Exercises}}
 \author{Zayd Hammoudeh}
 
+%---------------------------------------------------%
+% Define the Environments for the Problem Inclusion %
+%---------------------------------------------------%
+\newcounter{subProbCount} % Initialize the subproblem counter
 \newenvironment{problem}[2]
   {%
     \par%
@@ -55,17 +59,19 @@
   }
   {
     \par\medskip
+    \setcounter{subProbCount}{1} % Reset the subproblem counter
   }
-
-\newenvironment{subproblem}[1]
+\newenvironment{subproblem}
 {%
   \par%
   \medskip
   \leftskip=0pt\rightskip=0pt%
   \bfseries  
-  (#1) \hangindent=\hangindentdistance \hangafter=1 \tabto{\hangindentdistance}
+  % Print the subproblem count and offset to the left
+  (\alph{subProbCount}) \hangindent=\hangindentdistance \hangafter=1 \tabto{\hangindentdistance}
 }
 {
+  \stepcounter{subProbCount} % Increment the subproblem counter
   \par\medskip
 }
 
@@ -83,7 +89,7 @@
     Suppose that we have three colored boxes, $r$~(red), $b$~(blue), and $g$~(green).  Box~$r$ contains $3$~apples, $4$~oranges, and $3$~limes; box$~b$ contains $1$~apple, $1$~orange, and $0$~limes; box~$g$ contains $3$~apples, $3$~oranges, and $4$~limes.
   \end{problem}
   
-  \begin{subproblem}{a}
+  \begin{subproblem}
     If a box is chosen at random with probabilities, $p(r)=0.2$, $p(b)=0.2$, and~$p(g)=0.6$, and a piece of fruit is removed from the box (with equal probability of selecting any of the items in the box), then what is the probability of selecting an apple?
   \end{subproblem}
   
@@ -99,7 +105,7 @@
     \Pr[apple] &= \boxed{0.34}
   \end{aligncustom}
 
-  \begin{subproblem}{b}
+  \begin{subproblem}
     If we observe that the selected fruit is in fact an orange, what is the probability that it came from the green box?
   \end{subproblem}
   
@@ -134,7 +140,7 @@
     Show that the mode (i.e.,~the maximum) of the Gaussian distribution~(1.46) is given by~$\mu$.  Similarly, show that the mode of the multivariate Gaussian~(1.52) is given by~$\mathbf{\mu}$.
   \end{problem}
   
-  \begin{subproblem}{a}
+  \begin{subproblem}
     Show the maximum of the Gaussian distribution is given by~$\mu$.
   \end{subproblem}
   
@@ -162,8 +168,7 @@
   \end{equation}
   
 
-  
-  \begin{subproblem}{b}
+  \begin{subproblem}
     Show the mode of the multivariate Gaussian distribution is given by~$\bm{\mu}$.
   \end{subproblem}
   
@@ -232,7 +237,7 @@
     \ln p(\textbf{x}|\mu,\sigma^2)=-\frac{1}{2\sigma^2}\sum_{n=1}^{N}(x_{n}-\mu)^2-\frac{N}{2} \ln \sigma^2 -\frac{N}{2} \ln (2\pi)
   \end{equation}
   
-  \begin{subproblem}{a}
+  \begin{subproblem}
     Verify Equation~(1.55) that:
       \[ \mu_{ML} = \frac{1}{N}\sum_{n=1}^{N}x_{n} \]
   \end{subproblem}
@@ -254,7 +259,7 @@
   \end{aligncustom}
 
 
-  \begin{subproblem}{b}
+  \begin{subproblem}
     Verify Equation~(1.56) that:
     \[ \sigma_{ML}^2 = \frac{1}{N}\sum_{n=1}^{N} \left( x_{n} - \mu_{ML} \right)^{2} \]
   \end{subproblem}
