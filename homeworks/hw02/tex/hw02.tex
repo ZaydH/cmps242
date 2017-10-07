@@ -84,7 +84,7 @@
   \end{problem}
   
   \begin{subproblem}{a}
-    If a box is chosen at random with probabilities, $p(r)=0.2$, $p(b)=0.2$, and~$p(g)=0.6$, and a piece of fruit is removed from the box (with equal probability of select any of the items in the box), then what is the probability of selecting an apple?
+    If a box is chosen at random with probabilities, $p(r)=0.2$, $p(b)=0.2$, and~$p(g)=0.6$, and a piece of fruit is removed from the box (with equal probability of selecting any of the items in the box), then what is the probability of selecting an apple?
   \end{subproblem}
   
   Define~$B$ as the set of all boxes (i.e.,~red, blue, and green).  Then, the probability of selecting an apple can be found via:
@@ -131,10 +131,10 @@
   %---------------------------------------------------%
   \newpage
   \begin{problem}{1}{9}
-    Show that the mode (i.e., the maximum) of the Gaussian distribution~(1.46) is given by~$\mu$.  Similarly, show that the mode of the multivariate Gaussian~(1.52) is given by~$\mathbf{mu}$.
+    Show that the mode (i.e.,~the maximum) of the Gaussian distribution~(1.46) is given by~$\mu$.  Similarly, show that the mode of the multivariate Gaussian~(1.52) is given by~$\mathbf{\mu}$.
   \end{problem}
   
-  \begin{subproblem}
+  \begin{subproblem}{a}
     Show the maximum of the Gaussian distribution is given by~$\mu$.
   \end{subproblem}
   
@@ -164,7 +164,7 @@
 
   
   \begin{subproblem}{b}
-    Show the maximum of the Gaussian distribution is given by~$\bm{\mu}$.
+    Show the mode of the multivariate Gaussian distribution is given by~$\bm{\mu}$.
   \end{subproblem}
   
   The multivariate Gaussian distribution is shown in Eq.~\eqref{eq:multivariateGaussian}.  $\mathbf{x}$~is an $n$-dimensional input vector while $\bm{\mu}$~is the $n$-dimensional mean vector.  $\Sigma$~is the $n \times n$~covariance matrix.
@@ -174,10 +174,10 @@
     \label{eq:multivariateGaussian}
   \end{equation}
 
-  Similar to the technique used in part~(a), the maximizing value of a strictly positive function is also the maximizing value of the function's natural log.  Hence, Eq.~\eqref{eq:multivariateGaussian} becomes:
+  Similar to the technique used in part~(a), the maximizing (mode) value of a strictly positive function is also the maximizing value of the function's natural log.  Hence, Eq.~\eqref{eq:multivariateGaussian} becomes:
   
   \begin{aligncustom}
-    \ln \left\{ \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma) \right\}  &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\~\\
+    \ln \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma)  &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\~\\
     &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}}} \right) + \ln \left( \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\~\\
     &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}}} \right) - \frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)  \textrm{.}
   \end{aligncustom}
@@ -293,8 +293,33 @@
   
   A probability distribution,~$p(x)$, satisfies the two Jensen Inequality criteria of~$\lambda$ namely:~$\forall_{i}\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  This transforms Jensen's Inequality to:
   
-  \[ f \left( \sum_{i=1}^M{p(x_{i}) x_i} \right) \leq \sum_{i=1}^M{p(x_{i}) f(x_i)} \textrm{.} \]
+  \begin{equation}
+    f \left( \sum_{i=1}^M{p(x_{i}) x_i} \right) \leq \sum_{i=1}^M{p(x_{i}) f(x_i)} \textrm{.}
+    \label{eq:mStateJensen}
+  \end{equation}
 
+  Recall that a random variable is a function,~${X : \Omega \rightarrow \mathbb{R}}$, where $\Omega$~is the sample space and $\mathbb{R}$~is the set of real numbers.  For this proof, define
+  
+  \[ x_{i} = \frac{1}{p(x_i)} \textrm{.} \]
+  
+  This can be substituted into Eq.~\eqref{eq:mStateJensen} yielding:
+  
+  \begin{aligncustom}
+    f \left( \sum_{i=1}^{M} {p(x_{i}) \frac{1}{p(x_{i} ) } } \right)  &\leq  \sum_{i=1}^{M}{p(x_{i}) f \left( \frac{1}{p(x_{i})} \right) } \\~\\
+    f \left( \sum_{i=1}^M{1} \right) &\leq \sum_{i=1}^M{p(x_{i}) f \left( \frac{1}{p(x_{i})} \right)} \\~\\
+    f \left( M \right) &\leq \sum_{i=1}^M{p(x_{i}) f \left( \frac{1}{p(x_{i})} \right)} \textrm{.}
+  \end{aligncustom}
+
+  Define $f(x)=\ln \left( \frac{1}{x} \right)$ yielding:
+  
+  \[ \ln \left( \frac{1}{M} \right) \leq \sum_{i=1}^{M}{p(x_{i}) \ln p(x_i) } \textrm{.} \]
+
+  Multiplying both sides by~$-1$ and using the definition of entropy~$H[x] = -\sum p(x) \ln p(x)$ completes the proof.
+  
+  \begin{aligncustom} 
+    -\ln \left( \frac{1}{M} \right) &\geq -\sum_{i=1}^M{p(x_{i}) \ln \frac{1}{p(x_i)} } \\~\\
+    \ln M &\geq \mathbf{H}[x] \textrm{.} ~~~\square
+  \end{aligncustom}
 
   %---------------------------------------------------%
   \newpage
