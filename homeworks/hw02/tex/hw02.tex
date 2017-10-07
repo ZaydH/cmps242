@@ -25,7 +25,7 @@
 \pagestyle{fancy}
 \fancyhf{} % Clears both the header and footer
 \renewcommand{\headrulewidth}{0pt} % Eliminates line at the top of the page.
-\fancyfoot[LO]{CMPS242 \textendash{} Homework \#1} % Left
+\fancyfoot[LO]{CMPS242 \textendash{} Homework \#2} % Left
 \fancyfoot[CO]{\thepage} % Center
 \fancyfoot[RO]{Zayd Hammoudeh} %Right
 
@@ -103,10 +103,10 @@
   
   \subproblem{a}{Show the maximum of the Gaussian distribution is given by~$\mu$.}
   
-  The maximum of a function is equal to the maximum of its logarithm.  Below, the ``$\ln$''~function is applied to the Gaussian function.
+  The maximizing value of a strictly positive function is equal to the maximizing value of its logarithm.  Below, the ``$\ln$''~function is applied to the Gaussian function.
   
   \begin{aligncustom}
-    \mathcal{N}(x|\mu,\sigma) &= \frac{1}{\sqrt{2\pi\sigma^2}}\exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \\~\\
+    \mathcal{N}(x|\mu,\sigma) &:= \frac{1}{\sqrt{2\pi\sigma^2}}\exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \\~\\
     \ln \left( \mathcal{N}(x|\mu,\sigma) \right) &= \ln \left( \frac{1}{\sqrt{2\pi\sigma^2}}\exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \right) \\~\\
     &= \ln \left( \frac{1}{\sqrt{2\pi\sigma^2}} \right) + \ln \left( \exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \right) \\~\\
     &= \ln \left( \frac{1}{\sqrt{2\pi\sigma^2}} \right) + \frac{-(x-\mu)^2}{2\sigma^2}
@@ -130,17 +130,58 @@
   
   \subproblem{b}{Show the maximum of the Gaussian distribution is given by~$\bm{\mu}$.}
   
-  The multivariate Gaussian distribution is defined in Eq.~\eqref{eq:multivariateGaussian}.  $\mathbf{x}$~is an $n$-dimensional input vector while $\bm{\mu}$~is the $n$~mean vector.  $\Sigma$~is the $n~\times~n$~covariance matrix.
+  The multivariate Gaussian distribution is shown in Eq.~\eqref{eq:multivariateGaussian}.  $\mathbf{x}$~is an $n$-dimensional input vector while $\bm{\mu}$~is the $n$-dimensional mean vector.  $\Sigma$~is the $n \times n$~covariance matrix.
     
   \begin{equation}
-    p(\mathbf{x} | \bm{\mu}, \Sigma) = \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\}
+    \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma) := \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\}
     \label{eq:multivariateGaussian}
   \end{equation}
 
+  Similar to the technique used in part~(a), the maximizing value of a strictly positive function is also the maximizing value of the function's natural log.  Hence, Eq.~\eqref{eq:multivariateGaussian} becomes:
+  
+  \begin{aligncustom}
+    \ln \left\{ \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma) \right\}  &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\~\\
+    &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}}} \right) + \ln \left( \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\~\\
+    &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}}} \right) - \frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)  \textrm{.}
+  \end{aligncustom}
 
-  In any multivariate continuous function, maxima or minima occur at the point where all partial derivatives equal~$0$.  This can be rewritten as:
+  The gradient of an $n$-dimensional function,~$f(\mathbf{x})$, is an $n$-dimensional vector as defined in Eq.~\eqref{eq:gradientF}.
   
+  \begin{equation}
+    \nabla f(\mathbf{x}) = \left\langle \frac{\partial}{\partial x_1}, ..., \frac{\partial}{\partial x_n} \right\rangle
+    \label{eq:gradientF}
+  \end{equation}
+
+  Take the derivative of previously found log of the normal distribution and set it equal to the~$\mathbf{0}$ which yields Eq.~\eqref{eq:partialMultivarGaussian}.
   
+  \begin{align}
+    \mathbf{0} = \frac{\partial}{\partial \mathbf{x}} \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma) &= \mathbf{0} + \frac{\partial}{\partial \mathbf{x}} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)\\
+    0 &= \frac{\partial}{\partial \mathbf{x}} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)
+    \label{eq:partialMultivarGaussian}
+  \end{align}
+  
+  If~$\mathbf{y} = \mathbf{x}-\bm{\mu}$ and~$A=\Sigma^{-1}$, then Eq.~\eqref{eq:partialMultivarGaussian} becomes:
+  
+  \begin{equation}
+    \mathbf{0} = \frac{\partial}{\partial \mathbf{y}} \mathbf{y}^{\textrm{T}} A \mathbf{y}
+    \label{eq:substituteMatrixProd}
+  \end{equation}
+
+  This matches the well known derivative identity that:
+  
+  \[ \frac{\partial}{\partial \mathbf{y}} \mathbf{y}^{\textrm{T}} A \mathbf{y} = (A^{\textrm{T}} + A)y \textrm{.}\]
+    
+  Hence, Eq.~\eqref{eq:substituteMatrixProd} simplifies to:
+  
+  \[ \mathbf{0} = (A^{\textrm{T}} + A)\mathbf{y} \textrm{.} \]
+
+  Substituting back in for~$\mathbf{y}$ completes the proof via:
+  
+  \begin{aligncustom}
+    (A^{\textrm{T}} + A)(\mathbf{x} - \bm{\mu}) &= \mathbf{0} \\~\\
+    \mathbf{x} - \bm{\mu} &= \mathbf{0} \\~\\
+    \mathbf{x} &= \bm{\mu} \textrm{.} ~~~\square
+  \end{aligncustom}
 
   %---------------------------------------------------%
   \newpage
@@ -218,7 +259,7 @@
 
   For two continuous probability distributions,~$p$ and~$q$, the Kullback-Leibler divergence is defined as:
   
-  \[ \textrm{KL}(p||q) = -\int {p(\textbf{x}) \ln \frac{q(\textbf{x})}{p(\textbf{x})} } d\textbf{x} \textrm{.}\]
+  \[ \textrm{KL}(p||q) := -\int {p(\textbf{x}) \ln \frac{q(\textbf{x})}{p(\textbf{x})} } d\textbf{x} \textrm{.}\]
   
   Substituting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous function to:
   
