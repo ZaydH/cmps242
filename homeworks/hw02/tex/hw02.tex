@@ -103,19 +103,30 @@
   
   \subproblem{a}{Show the maximum of the Gaussian distribution is given by~$\mu$.}
   
-  In any single variable continuous function,~$f$, any point where the first derivative,~$f'=0$, is either a (local) maximum or minimum.
+  The maximum of a function is equal to the maximum of its logarithm.  Below, the ``$\ln$''~function is applied to the Gaussian function.
   
-  The first derivative of the Gaussian function is, via the chain rule:
+  \begin{aligncustom}
+    \mathcal{N}(x|\mu,\sigma) &= \frac{1}{\sqrt{2\pi\sigma^2}}\exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \\~\\
+    \ln \left( \mathcal{N}(x|\mu,\sigma) \right) &= \ln \left( \frac{1}{\sqrt{2\pi\sigma^2}}\exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \right) \\~\\
+    &= \ln \left( \frac{1}{\sqrt{2\pi\sigma^2}} \right) + \ln \left( \exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \right) \\~\\
+    &= \ln \left( \frac{1}{\sqrt{2\pi\sigma^2}} \right) + \frac{-(x-\mu)^2}{2\sigma^2}
+  \end{aligncustom}
+
+  The derivative can be applied and set to~$0$ as shown in Eq.~\eqref{eq:derivativeGaussian}.
   
-  \[ f'(x|\mu,\sigma) = \frac{1}{\sqrt{2\pi\sigma^2}} e^{\frac{-(x-\mu)^{2}}{2\sigma}} \left(\frac{-2}{2\sigma^2}(x-\mu) \right) \]
+  \begin{equation}
+    0 = \frac{d}{dx} \ln \left( \mathcal{N}(x|\mu,\sigma) \right) = 0 - \frac{2(x-\mu)}{2\sigma^2}
+    \label{eq:derivativeGaussian} 
+  \end{equation}
   
-  This equation can then be set equal to~$0$ and simplified.
+  Eq.~\eqref{eq:derivativeGaussian} can be simplified yielding the final result as shown in Eq.~\eqref{eq:univariateGaussianFinal}.
   
-  \[ 0 = \frac{1}{\sqrt{2\pi\sigma^2}} \cdot \frac{1}{\sigma^2} \cdot e^{\frac{-(x-\mu)^{2}}{2\sigma}} \cdot (x-\mu) \]  
+  \begin{equation}
+    x = \mu ~~~\square
+    \label{eq:univariateGaussianFinal}
+  \end{equation}
   
-  The only root of this equation is when~$x=0$ making it the only critical point.  To determine specifically whether it is a maximum/minimum, consider the value of the first derivative.  Maxima have positive values before the critical point and negative afterwards.  In contrast, minima are negative value before the critical point and positive afterwards.  
-  
-  In the case of the univariate Gaussian, the only term that could be negative is~$(x-\mu)$ since the variance is squared~(it could not be negative anyway), and $e^{y}$~is always positive.  Clearly if~$x<\mu$, then~$(x-\mu)<0$; likewise, if~$x>\mu$, then~$(x-\mu)>0$.  Hence, $\mu$~is a maximum and in turn the mode.$~~~\square$
+
   
   \subproblem{b}{Show the maximum of the Gaussian distribution is given by~$\bm{\mu}$.}
   
