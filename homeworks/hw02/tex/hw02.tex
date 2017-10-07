@@ -11,6 +11,7 @@
 \usepackage[bottom]{footmisc} % Prevents the table going below the footnote
 \usepackage{nccmath}    % Needed in the workaround for the ``aligncustom'' environment
 \usepackage{amssymb}    % Used for black QED symbol   
+\usepackage{bm}    % Allows for bolding math symbols.
 
 \usepackage{tabto}     % Allows to tab to certain point on a line
 
@@ -110,15 +111,25 @@
   
   This equation can then be set equal to~$0$ and simplified.
   
-  \[ 0 = \frac{1}{\sqrt{2\pi\sigma^2}} \frac{1}{\sigma^2} e^{\frac{-(x-\mu)^{2}}{2\sigma}} (x-\mu) \]  
+  \[ 0 = \frac{1}{\sqrt{2\pi\sigma^2}} \cdot \frac{1}{\sigma^2} \cdot e^{\frac{-(x-\mu)^{2}}{2\sigma}} \cdot (x-\mu) \]  
   
   The only root of this equation is when~$x=0$ making it the only critical point.  To determine specifically whether it is a maximum/minimum, consider the value of the first derivative.  Maxima have positive values before the critical point and negative afterwards.  In contrast, minima are negative value before the critical point and positive afterwards.  
   
   In the case of the univariate Gaussian, the only term that could be negative is~$(x-\mu)$ since the variance is squared~(it could not be negative anyway), and $e^{y}$~is always positive.  Clearly if~$x<\mu$, then~$(x-\mu)<0$; likewise, if~$x>\mu$, then~$(x-\mu)>0$.  Hence, $\mu$~is a maximum and in turn the mode.$~~~\square$
   
-  \subproblem{b}{Show the maximum of the Gaussian distribution is given by~$\mathbf{\mu}$.}
+  \subproblem{b}{Show the maximum of the Gaussian distribution is given by~$\bm{\mu}$.}
+  
+  The multivariate Gaussian distribution is defined in Eq.~\eqref{eq:multivariateGaussian}.  $\mathbf{x}$~is an $n$-dimensional input vector while $\bm{\mu}$~is the $n$~mean vector.  $\Sigma$~is the $n~\times~n$~covariance matrix.
+    
+  \begin{equation}
+    p(\mathbf{x} | \bm{\mu}, \Sigma) = \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\}
+    \label{eq:multivariateGaussian}
+  \end{equation}
 
-  In any single variable continuous function,~$f$, maxima or minima occur at the point where all partial derivatives equal~$0$.
+
+  In any multivariate continuous function, maxima or minima occur at the point where all partial derivatives equal~$0$.  This can be rewritten as:
+  
+  
 
   %---------------------------------------------------%
   \newpage
@@ -170,7 +181,7 @@
     \sigma^{2} &= \frac{\sum_{n=1}^{N}(x_{n}-\mu)^{2}}{N} \textrm{.}
   \end{aligncustom}
 
-  The optimal value for~$\mu$ was found in part~(a) which can then substituted:
+  The optimal value for~$\mu$ was found in part~(a) which can then be substituted into the previous equation yielding:
   
   \begin{aligncustom}
     \sigma^{2} &= \frac{\sum_{n=1}^{N}(x_{n}-\mu_{ML})^{2}}{N} \textrm{.} ~~~\square
@@ -183,21 +194,18 @@
   
   Equation~(1.115) in the textbook (page~56) states:
   
-  \begin{equation}
-    f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) =\sum_{i=1}^M{\lambda_{i} f(x_i)}
-    \label{eq:q9eq115}
-  \end{equation}
+  \[f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)} \textrm{.}\]
   
-  A probability distribution,~$p(x)$, satisfy the two criteria of~$\lambda$ namely: $\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  This transforms Jensen's Inequality to:
+  A probability distribution,~$p(x)$, satisfies the two Jensen Inequality criteria of~$\lambda$ namely:~$\forall_{i}\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  This transforms Jensen's Inequality to:
   
-  \[ f \left( \sum_{i=1}^M{p(x_{i}) x_i} \right) =\sum_{i=1}^M{p(x_{i}) f(x_i)} \]
+  \[ f \left( \sum_{i=1}^M{p(x_{i}) x_i} \right) \leq \sum_{i=1}^M{p(x_{i}) f(x_i)} \textrm{.} \]
 
 
   %---------------------------------------------------%
   \newpage
-  \problem{1}{30}{Evaluate the Kullback-Leiber divergence~(1.113) between two Gaussians,~$p(x)=\mathcal{N}(x|\mu,\sigma^2)$ and~$q(x)=\mathcal{N}(x|m,s^2)$.}
+  \problem{1}{30}{Evaluate the Kullback-Leibler divergence~(1.113) between two Gaussians,~$p(x)=\mathcal{N}(x|\mu,\sigma^2)$ and~$q(x)=\mathcal{N}(x|m,s^2)$.}
 
-  For two continuous probability distributions,~$p$ and~$q$, the Kullback-Leiber divergence is defined as:
+  For two continuous probability distributions,~$p$ and~$q$, the Kullback-Leibler divergence is defined as:
   
   \[ \textrm{KL}(p||q) = -\int {p(\textbf{x}) \ln \frac{q(\textbf{x})}{p(\textbf{x})} } d\textbf{x} \textrm{.}\]
   
@@ -213,9 +221,14 @@
   Substituting that back into the KL divergence yields:
   
   \begin{aligncustom}
-    \textrm{KL}(p||q) &= -\int {p(\textbf{x}) \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \textrm{.} \\~\\
-    &= -\int {\frac{1}{\sqrt{2 \pi \sigma^2}} e^{\frac{-(x-\mu)^2}{2 \sigma^2}} \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \textrm{.}
+    \textrm{KL}(p||q) &= -\int {p(\textbf{x}) \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \\~\\
+    &= -\int {\frac{1}{\sqrt{2 \pi \sigma^2}} e^{\frac{-(x-\mu)^2}{2 \sigma^2}} \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \\~\\
+    &= -\frac{1}{\sqrt{2 \pi \sigma^2}} \int { e^{\frac{-(x-\mu)^2}{2 \sigma^2}} \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \textrm{.}
   \end{aligncustom}
+
+
+
+
   
   %---------------------------------------------------%
   \newpage
@@ -223,7 +236,15 @@
   \[\textrm{H}[\mathbf{x},\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}]\]
   with equality if and only if,~$\mathbf{x}$ and~$\mathbf{y}$ are statistically independent.}
 
-
+  The joint entropy of two variables can be written in terms of the marginal entropies of each each variable as well as the mutual information.  This is shown in Eq.~\eqref{eq:jointEntropyWithMutual}.
+  
+  \begin{equation}
+    \textrm{H}[\mathbf{x},\mathbf{y}] = \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] - \textrm{I}[x;y] \textrm{.}
+    \label{eq:jointEntropyWithMutual}
+  \end{equation}
+  
+  
+  
   %---------------------------------------------------%
   \newpage
   \problem{1}{40}{By applying Jensen's inequality~(1.115) with~$f(x)=\ln x$, show that the arithmetic mean of a set of real numbers is never less than their geometrical mean.}
@@ -238,10 +259,7 @@
   
   Jensen's Inequality~(1.115) is defined as:
   
-  \begin{equation}
-    f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)}\textrm{.}
-    \label{e40:q9eq115}
-  \end{equation}
+  \[ f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)}\textrm{.}\]
   
   If we substitute for~$f(x)=\ln x$, this becomes:
 
