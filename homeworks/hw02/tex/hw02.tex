@@ -42,25 +42,42 @@
 %--------------------------------------------------
 
 
-\title{\textbf{CMPS242 Homework \#2 -- Chapter \# Exercises}}
+\title{\textbf{CMPS242 Homework \#2 -- Chapter \#1 Exercises}}
 \author{Zayd Hammoudeh}
 
 %---------------------------------------------------%
 % Define the Environments for the Problem Inclusion %
 %---------------------------------------------------%
-\newcounter{subProbCount} % Initialize the subproblem counter
+\newcounter{subProbCount}       % Initialize the subproblem counter
+\newcounter{extraProbCount}     % Initialize the special problem counter
+\setcounter{extraProbCount}{0}  % Set it to zero.  It is incremented in the ``extraproblem'' environment.
+\newenvironment{problemshell}{
+  \par%
+  \medskip
+  \leftskip=0pt\rightskip=0pt%
+}
+{
+  \par\medskip
+  \setcounter{subProbCount}{1} % Reset the subproblem counter
+}
+\newenvironment{extraproblem}{
+  \stepcounter{extraProbCount} % Increment the subproblem counter
+  \begin{problemshell}
+    \noindent \textit{Extra Problem \#\arabic{extraProbCount}} \\
+    \bfseries
+}
+{
+  \end{problemshell}
+}
 \newenvironment{problem}[2]
-  {%
-    \par%
-    \medskip
-    \leftskip=0pt\rightskip=0pt%
+{%
+  \begin{problemshell}
     \noindent \textit{Chapter \##1, Problem \##2} \\
     \bfseries  
-  }
-  {
-    \par\medskip
-    \setcounter{subProbCount}{1} % Reset the subproblem counter
-  }
+}
+{
+  \end{problemshell}
+}
 \newenvironment{subproblem}
 {%
   \par%
@@ -334,15 +351,33 @@
 
   For two continuous probability distributions,~$p$ and~$q$, the Kullback-Leibler divergence is defined as:
   
-  \[ \textrm{KL}(p||q) := -\int {p(\textbf{x}) \ln \frac{q(\textbf{x})}{p(\textbf{x})} } d\textbf{x} \textrm{.}\]
+  \[ \textrm{KL}(p||q) := \int {p(x) \ln p(x)} dx - \int {p(x) \ln q(x)} dx \textrm{.}\]
   
-  Substituting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous function to:
+  This simplifies to:
+  
+  \[\textrm{KL}(p||q) := -\mathbf{H}[p] - \int {p(x) \ln q(x)} dx \]
+  
+  Substituting the definition of~$q(x)$ yields:
+  
+  \begin{aligncustom}
+    \int {p(x) \ln q(x)} dx &= \int {p(x) \ln \left( \frac{1}{\sqrt{2\pi s^2}}e^{\frac{-(x-m)^2}{2s^2}} \right) } dx \textrm{.}
+  \end{aligncustom}
+
+  This can be reduced via:
+  
+  \begin{aligncustom}
+    \int {p(x) \ln q(x)} dx  &= \int {p(x) \left( \ln \left( \frac{1}{\sqrt{2\pi s^2}} \right)  + \ln \left(e^{\frac{-(x-m)^2}{2s^2}} \right) \right) } dx \\~\\
+    &= -\frac{1}{2} \ln \left( 2\pi s^2 \right) \int {p(x)} dx + \int {p(x) \frac{-(x-m)^2}{2s^2} } dx \\~\\
+    &= -\frac{1}{2} \ln \left( 2\pi s^2 \right) + \int {p(x) \frac{-(x-m)^2}{2s^2} } dx 
+  \end{aligncustom}
+
+ting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous function to:
   
   \begin{aligncustom}
     \ln \left( \frac{q(\textbf{x})}{p(\textbf{x})} \right) &= \ln \left(  \frac{\frac{1}{\sqrt{2\pi s^2}}e^{\frac{-(x-m)^2}{2s^2}}}{\frac{1}{\sqrt{2\pi \sigma^2}}e^{\frac{-(x-\mu)^2}{2 \sigma^2}}}  \right) \\~\\
     &= \ln \left(  \frac{\sqrt{\sigma^2}}{\sqrt{s^2}} e^{\frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}} \right) \\~\\
     &= \ln \left(  \frac{\sigma}{s} e^{\frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}} \right)\\~\\
-    &= \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}
+    &= \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \textrm{.}
   \end{aligncustom}
   
   Substituting that back into the KL divergence yields:
@@ -362,10 +397,10 @@
   \begin{problem}{1}{31}
     Consider two variables~$\mathbf{x}$ and~$\mathbf{y}$ having joint distribution~$p(\mathbf{x},\mathbf{y})$, show that the differential entropy of this pair of variables satisfies
     \[\textrm{H}[\mathbf{x},\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}]\]
-    with equality if and only if,~$\mathbf{x}$ and~$\mathbf{y}$ are statistically independent.
+    with equality if and only if~$\mathbf{x}$ and~$\mathbf{y}$ are statistically independent.
   \end{problem}
 
-  The joint entropy of two variables can be written in terms of the marginal entropies of each variable as well as the mutual information,~$\mathbf{I}[\mathbf{x},\mathbf{y}]$.  This is shown in Eq.~\eqref{eq:jointEntropyWithMutual}.
+  The joint entropy of two variables can be written in terms of their marginal entropies of and their mutual information,~$\mathbf{I}[\mathbf{x},\mathbf{y}]$.  This is shown in Eq.~\eqref{eq:jointEntropyWithMutual}.
   
   \begin{equation}
     \textrm{H}[\mathbf{x},\mathbf{y}] = \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] - \textrm{I}[\mathbf{x};\mathbf{y}] \textrm{.}
@@ -380,7 +415,7 @@
   \end{equation}
   
   \noindent
-  with equality only in the case that~$\mathbf{x}$ and~$\mathbf{y}$ are independent~(see (2.90)~on page~28 of the second edition).  Given Eq.~\eqref{eq:mutualInformationGreater0} and mutual information's non-negativity, it is clear that:
+  with equality only in the case that~$\mathbf{x}$ and~$\mathbf{y}$ are independent~(see (2.90)~on page~28 of the second edition of Cover \&~Thomas).  Given Eq.~\eqref{eq:mutualInformationGreater0} and mutual information's non-negativity, it is clear that:
   
   \[ \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] - \textrm{I}[\mathbf{x};\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] \textrm{.} \]
   
@@ -390,7 +425,7 @@
     \textrm{H}[\mathbf{x},\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] \textrm{.}
   \end{equation}
   
-  Equality only holds when the mutual independence is~$0$, which is only the case in independence.~~~$\square$
+  Equality holds when~$\mathbf{I}[\mathbf{x};\mathbf{y}]=0$, which only occurs when~$\mathbf{X}$ and~$\mathbf{Y}$ are independent per Cover \&~Thomas.~~~$\square$
   
   %---------------------------------------------------%
   \newpage
@@ -429,5 +464,32 @@
   Both sides are then raised to the power of~$e$ completing the proof that it is never less than.
   
   \[ \frac{\sum_{i=1}^{M}{x_i}}{M} \leq \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M}  ~~~\square \]
+
+  %---------------------------------------------------%
+  \newpage
+  \begin{extraproblem}
+    Prove that the sum of two convex functions is also convex.
+  \end{extraproblem} 
+   
+  A function,~$f(x)$, is convex over an interval~$(a,b)$ if for every ${x_{1},x_{2} \in (a,b)}$ and ${0 \leq \lambda \leq 1}$,
+  
+  \begin{equation}
+    f(\lambda x_{1} + (1-\lambda) x_{2}) \leq \lambda f(x_{1}) + (1-\lambda) f(x_{2}) \textrm{.}
+  \end{equation}
+
+  Define a second function,~$g(x)$, to be convex and a third function,~$h(x)=f(x)+g(x)$.  Add the definition of convexity for~$f$ to the definition of convexity for~$g$ as in Eq.~\eqref{eq:convexEquation}.
+  
+  \begin{equation}
+    f(\lambda x_{1} + (1-\lambda) x_{2}) + g(\lambda x_{1} + (1-\lambda) x_{2}) \leq \lambda f(x_{1}) + (1-\lambda) f(x_{2}) + \lambda g(x_{1}) + (1-\lambda) g(x_{2}) \textrm{.}
+    \label{eq:convexEquation}
+  \end{equation}
+  
+  This can be rearranged due to the associativity and commutativity of addition.
+  
+  \[(f(\lambda x_{1} + (1-\lambda) x_{2}) + g(\lambda x_{1} + (1-\lambda) x_{2})) \leq \lambda (f(x_{1}) ) + g(x_{1})) + (1-\lambda) (f(x_{2}) + g(x_{2})) \textrm{.}\]
+
+  Substituting using the definition of~$h(x)$ proves convexity via:
+  
+  \[ h(\lambda x_{1} + (1-\lambda) x_{2}) \leq \lambda h(x_{1}) + (1-\lambda) h(x_{2}) \textrm{.} ~~~\square \]
 
 \end{document}
