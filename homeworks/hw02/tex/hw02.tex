@@ -288,14 +288,33 @@
   \[\textrm{H}[\mathbf{x},\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}]\]
   with equality if and only if,~$\mathbf{x}$ and~$\mathbf{y}$ are statistically independent.}
 
-  The joint entropy of two variables can be written in terms of the marginal entropies of each each variable as well as the mutual information.  This is shown in Eq.~\eqref{eq:jointEntropyWithMutual}.
+  The joint entropy of two variables can be written in terms of the marginal entropies of each each variable as well as the mutual information,~$\mathbf{I}[\mathbf{x},\mathbf{y}]$.  This is shown in Eq.~\eqref{eq:jointEntropyWithMutual}.
   
   \begin{equation}
-    \textrm{H}[\mathbf{x},\mathbf{y}] = \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] - \textrm{I}[x;y] \textrm{.}
+    \textrm{H}[\mathbf{x},\mathbf{y}] = \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] - \textrm{I}[\mathbf{x};\mathbf{y}] \textrm{.}
     \label{eq:jointEntropyWithMutual}
   \end{equation}
   
+  Cover \&~Thomas show that mutual information has the relationship:
   
+  \begin{equation}
+    \mathbf{I}[\mathbf{x},\mathbf{y}] \geq 0
+    \label{eq:mutualInformationGreater0}
+  \end{equation}
+  
+  with equality only in the case that~$\mathbf{x}$ and~$\mathbf{y}$ are independent~(see (2.90)~on page~28 of the second edition).  
+  
+  Given Eq.~\eqref{eq:mutualInformationGreater0} and mutual informations non-negativity, it is clear that:
+  
+  \[ \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] - \textrm{I}[\mathbf{x};\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] \textrm{.} \]
+  
+  This in turn can be combined with Eq.~\eqref{eq:jointEntropyWithMutual} yielding:
+  
+  \begin{equation}
+    \textrm{H}[\mathbf{x},\mathbf{y}] \leq \textrm{H}[\mathbf{x}] + \textrm{H}[\mathbf{y}] \textrm{.}
+  \end{equation}
+  
+  Equality only holds when the mutual independence is~$0$, which is only the case in independence.~~~$\square$
   
   %---------------------------------------------------%
   \newpage
