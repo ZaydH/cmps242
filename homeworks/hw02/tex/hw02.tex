@@ -109,8 +109,12 @@
   \begin{subproblem}
     If a box is chosen at random with probabilities, $p(r)=0.2$, $p(b)=0.2$, and~$p(g)=0.6$, and a piece of fruit is removed from the box (with equal probability of selecting any of the items in the box), then what is the probability of selecting an apple?
   \end{subproblem}
+
+  Recall the Law of Total Probability establishes that a set of disjoint events,~$B_1,...B_n$, that partition the sample space,~$S$, (i.e.,~$\bigcup_(i=1)^{n}B_i=S$ and~$\forall_{i,j} B_i \cap B_j = \emptyset$), then for any event~$A$ in~$S$:
   
-  Define~$B$ as the set of all boxes (i.e.,~red, blue, and green).  Then, the probability of selecting an apple can be found via:
+  \[ \Pr[A] = \sum_{i=1}^{n} \Pr[B_i] * \Pr[A | B_i] \]
+  
+  Hence, define~$B$ as the set of all boxes (i.e.,~red, blue, and green).  Then, the probability of selecting an apple can be found via:
   
   \[\Pr[apple]=\sum_{b_i \in B}\Pr[apple|b_{i}]*\Pr[b_i]\textrm{.}\]
   
@@ -133,7 +137,7 @@
     \label{eq:orangeBayes}
   \end{equation}
   
-  The prior probability of orange,~$\Pr[o]$ is:
+  Using again the Law of Total Probability, the prior probability of selecting an zzzorange,~$\Pr[o]$, is:
   
   \begin{aligncustom}
     \Pr[orange] &= \Pr[orange|r]*\Pr[r] + \Pr[orange|b]*\Pr[b] + \Pr[orange|g]*\Pr[g] \\
@@ -161,7 +165,7 @@
     Show the maximum of the Gaussian distribution is given by~$\mu$.
   \end{subproblem}
   
-  The maximizing value of a strictly positive function is equal to the maximizing value of its logarithm.  Below, the ``$\ln$''~function is applied to the Gaussian function.
+  The maximizing value of a strictly positive function is equal to the maximizing value of the logarithm of the function.  Below, ``$\ln$''~is applied to the Gaussian formula.
   
   \begin{aligncustom}
     \mathcal{N}(x|\mu,\sigma) &:= \frac{1}{\sqrt{2\pi\sigma^2}}\exp \left\{ \frac{-(x-\mu)^2}{2\sigma^2} \right\} \\~\\
@@ -198,11 +202,12 @@
 
   Similar to the technique used in part~(a), the maximizing (mode) value of a strictly positive function is also the maximizing value of the function's natural log.  Hence, Eq.~\eqref{eq:multivariateGaussian} becomes:
   
-  \begin{aligncustom}
-    \ln \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma)  &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\~\\
-    &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}}} \right) + \ln \left( \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\~\\
+  \begin{align}
+    \ln \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma)  &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}} | \Sigma | ^ {1/2} } \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\[2em]
+    &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}}} \right) + \ln \left( \exp\left\{-\frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right) \right\} \right) \\[2em]
     &= \ln \left( \frac{1}{(2\pi)^{\frac{n}{2}}} \right) - \frac{1}{2} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)  \textrm{.}
-  \end{aligncustom}
+    \label{eq:logMultivariateGaussian}
+  \end{align}
 
   The gradient of an $n$-dimensional function,~$f(\mathbf{x})$, is an $n$-dimensional vector as defined in Eq.~\eqref{eq:gradientF}.
   
@@ -210,12 +215,12 @@
     \nabla f(\mathbf{x}) = \left\langle \frac{\partial}{\partial x_1}, ..., \frac{\partial}{\partial x_n} \right\rangle
     \label{eq:gradientF}
   \end{equation}
-
-  Take the derivative of previously found log of the normal distribution and set it equal to the~$\mathbf{0}$ which yields Eq.~\eqref{eq:partialMultivarGaussian}.
+  
+  A multivariate function is maximized when its gradient equals the zero vector~(i.e.,~$\mathbf{0}$).  Hence, take the derivative of Eq.~\eqref{eq:logMultivariateGaussian} and set it equal to the zero vector, which yields Eq.~\eqref{eq:partialMultivarGaussian}.
   
   \begin{align}
-    \mathbf{0} = \frac{\partial}{\partial \mathbf{x}} \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma) &= \mathbf{0} + \frac{\partial}{\partial \mathbf{x}} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)\\
-    0 &= \frac{\partial}{\partial \mathbf{x}} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)
+    \mathbf{0} = \frac{\partial}{\partial \mathbf{x}} \mathcal{N}(\mathbf{x} | \bm{\mu}, \Sigma) &= \mathbf{0} + \frac{\partial}{\partial \mathbf{x}} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)\\[1em]
+    \mathbf{0} &= \frac{\partial}{\partial \mathbf{x}} \left(\mathbf{x}-\bm{\mu} \right)^{\textrm{T}}\Sigma^{-1}\left(\mathbf{x}-\bm{\mu}\right)
     \label{eq:partialMultivarGaussian}
   \end{align}
   
@@ -320,7 +325,7 @@
     \label{eq:mStateJensen}
   \end{equation}
 
-  Recall that a random variable is a function,~${X : \Omega \rightarrow \mathbb{R}}$, where $\Omega$~is the sample space and $\mathbb{R}$~is the set of real numbers.  For this proof, define
+  Recall that a random variable is a function,~${X : \Omega \rightarrow \mathbb{R}}$, where $\Omega$~is the sample space~(in this case~${|\Omega| = M}$) and $\mathbb{R}$~is the set of real numbers.  For this proof, define
   
   \[ x_{i} = \frac{1}{p(x_i)} \textrm{.} \]
   
@@ -336,7 +341,7 @@
   
   \[ \ln \left( \frac{1}{M} \right) \leq \sum_{i=1}^{M}{p(x_{i}) \ln p(x_i) } \textrm{.} \]
 
-  Multiplying both sides by~$-1$ and using the definition of entropy~$H[x] = -\sum p(x) \ln p(x)$ completes the proof.
+  Multiplying both sides by~$-1$~(which inverts the inequality) and using the definition of entropy~$H[x] = -\sum p(x) \ln p(x)$ completes the proof.
   
   \begin{aligncustom} 
     -\ln \left( \frac{1}{M} \right) &\geq -\sum_{i=1}^M{p(x_{i}) \ln \frac{1}{p(x_i)} } \\~\\
@@ -435,7 +440,7 @@ ting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous functio
   
   For a set of numbers,~$\{x_1,...,x_M\}$, the arithmetic mean is defined as:
   
-  \[ \frac{\sum_{i=1}^{M}x_i}{M} \]
+  \[ \frac{\sum_{i=1}^{M}x_i}{M} \textrm{.} \]
   
   In contrast, for the same set of numbers, the geometric mean is defined as:
   
@@ -445,11 +450,11 @@ ting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous functio
   
   \[ f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)}\textrm{.}\]
   
-  If we substitute for~$f(x)=\ln x$, this becomes:
+  If we substitute for~$f(x)=\ln x$, the inequality becomes:
 
   \[ \ln \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} \ln(x_i)}\textrm{.} \]
   
-  For Jensen's Inequality to hold, $\lambda$~must satisfy two conditions namely:~$\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  An obvious satisfying case is~$\lambda_i=1/M$ for all~$i$.  This then changes the equation to:
+  For Jensen's Inequality to hold, $\lambda$~must satisfy two conditions namely:~$\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  An obvious satisfying case is~$\lambda_i=1/M$ for all~$i=1...M$.  This then changes the equation to:
   
   \[ \ln \left( \frac{\sum_{i=1}^{M}{x_i}}{M} \right) \leq \frac{1}{M}\sum_{i=1}^M{\ln(x_i)}\textrm{.} \]
   
@@ -457,11 +462,11 @@ ting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous functio
   
   \[ \ln \left( \frac{\sum_{i=1}^{M}{x_i}}{M} \right) \leq \frac{1}{M}{\ln \left( \prod_{i=1}^M{x_i} \right)}\textrm{.} \]
   
-  Using another property of logarithms, the fraction on the right side can be brought inside the logarithm as:
+  Using another property of logarithms, the multiplying scalar,~$\frac{1}{M}$ can be brought inside the logarithm as:
   
   \[ \ln \left( \frac{\sum_{i=1}^{M}{x_i}}{M} \right) \leq \ln \left( \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M} \right) \textrm{.} \]
   
-  Both sides are then raised to the power of~$e$ completing the proof that it is never less than.
+  Both sides are then raised to the power of~$e$ completing the proof.
   
   \[ \frac{\sum_{i=1}^{M}{x_i}}{M} \leq \left( \prod_{i=1}^M{x_i}\right)^\frac{1}{M}  ~~~\square \]
 
@@ -474,17 +479,17 @@ ting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous functio
   A function,~$f(x)$, is convex over an interval~$(a,b)$ if for every ${x_{1},x_{2} \in (a,b)}$ and ${0 \leq \lambda \leq 1}$,
   
   \begin{equation}
-    f(\lambda x_{1} + (1-\lambda) x_{2}) \leq \lambda f(x_{1}) + (1-\lambda) f(x_{2}) \textrm{.}
+    f\left(\lambda x_{1} + (1-\lambda) x_{2} \right) \leq \lambda f(x_{1}) + (1-\lambda) f(x_{2}) \textrm{.}
   \end{equation}
 
-  Define a second function,~$g(x)$, to be convex and a third function,~$h(x)=f(x)+g(x)$.  Add the definition of convexity for~$f$ to the definition of convexity for~$g$ as in Eq.~\eqref{eq:convexEquation}.
+  Given a second convex function,~$g(x)$, and an additional function,~$h(x)=f(x)+g(x)$, add the definition of convexity for~$f$ to the definition of convexity for~$g$ as shown in Eq.~\eqref{eq:convexEquation}.
   
   \begin{equation}
     f(\lambda x_{1} + (1-\lambda) x_{2}) + g(\lambda x_{1} + (1-\lambda) x_{2}) \leq \lambda f(x_{1}) + (1-\lambda) f(x_{2}) + \lambda g(x_{1}) + (1-\lambda) g(x_{2}) \textrm{.}
     \label{eq:convexEquation}
   \end{equation}
   
-  This can be rearranged due to the associativity and commutativity of addition.
+  This can be rearranged due to the associativity and commutativity of real valued addition.
   
   \[(f(\lambda x_{1} + (1-\lambda) x_{2}) + g(\lambda x_{1} + (1-\lambda) x_{2})) \leq \lambda (f(x_{1}) ) + g(x_{1})) + (1-\lambda) (f(x_{2}) + g(x_{2})) \textrm{.}\]
 
