@@ -4,6 +4,9 @@
 # Ignore temporary Matlab files
 *.m~
 
+# Ignore Microsoft Office temp files.
+~*.*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
