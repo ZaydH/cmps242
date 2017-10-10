@@ -91,6 +91,7 @@
   \stepcounter{subProbCount} % Increment the subproblem counter
   \par\medskip
 }
+\newcommand{\KL}{\textrm{KL}}
 
 %\newcommand{\problem}[3]{\noindent \textit{Chapter \##1, Problem \##2}
 %  \\
@@ -212,7 +213,7 @@
   The gradient of an $n$-dimensional function,~$f(\mathbf{x})$, is an $n$-dimensional vector as defined in Eq.~\eqref{eq:gradientF}.
   
   \begin{equation}
-    \nabla f(\mathbf{x}) = \left\langle \frac{\partial}{\partial x_1}, ..., \frac{\partial}{\partial x_n} \right\rangle
+    \nabla f(\mathbf{x}) = \left\langle \frac{\partial f}{\partial x_1}, ..., \frac{\partial f}{\partial x_n} \right\rangle
     \label{eq:gradientF}
   \end{equation}
   
@@ -356,45 +357,49 @@
 
   For two continuous probability distributions,~$p$ and~$q$, the Kullback-Leibler divergence is defined as:
   
-  \[ \textrm{KL}(p||q) := \int {p(x) \ln p(x)} dx - \int {p(x) \ln q(x)} dx \textrm{.}\]
+  \[ {\KL(p||q) := \int p(x) \ln \frac{p(x)}{q(x)}} dx \textrm{.}\]
   
-  This simplifies to:
-  
-  \[\textrm{KL}(p||q) := -\mathbf{H}[p] - \int {p(x) \ln q(x)} dx \]
-  
-  Substituting the definition of~$q(x)$ yields:
+  Let's simplify the logarithm first.  Substituting for~$p(x)$ and~$q(x)$ yields:
   
   \begin{aligncustom}
-    \int {p(x) \ln q(x)} dx &= \int {p(x) \ln \left( \frac{1}{\sqrt{2\pi s^2}}e^{\frac{-(x-m)^2}{2s^2}} \right) } dx \textrm{.}
+    \ln \left( \frac{p(x)}{q(x)} \right) &= \ln \left(  \frac{ \frac{1}{\sqrt{2 \pi \sigma^2}} \exp \left( {-\frac{(x-\mu)^2}{2\sigma^2}} \right) } { \frac{1}{\sqrt{2 \pi s^2}} \exp \left( {-\frac{(x-m)^2}{2s^2}} \right) }  \right) \\~\\
+    &=  \ln \left( \frac{s}{\sigma} \exp \left( -\frac{(x-\mu)^2}{2\sigma^2} + \frac{(x-m)^2}{2s^2} \right) \right) \\~\\
+    &=  \ln \left( \frac{s}{\sigma} \right) + \ln \left( \exp \left( -\frac{(x-\mu)^2}{2\sigma^2} + \frac{(x-m)^2}{2s^2} \right) \right) \\~\\
+    &=  \ln \left( \frac{s}{\sigma} \right) - \frac{(x-\mu)^2}{2\sigma^2} + \frac{(x-m)^2}{2s^2} \textrm{.}
   \end{aligncustom}
 
-  This can be reduced via:
+  Substituting this back into the original equation yields:
+  
+  \[ \KL(p||q) = \int p(x) \left( \ln \left( \frac{s}{\sigma} \right) - \frac{(x-\mu)^2}{2\sigma^2} + \frac{(x-m)^2}{2s^2} \right) dx \textrm{.} \]
+  
+  Expand the equation for simplification.  
+  
+  \begin{equation}
+    \KL(p||q) = \int p(x) \ln \left( \frac{s}{\sigma} \right) - p(x) \frac{(x^2 - 2 \cdot x \cdot \mu + \mu^2)}{2\sigma^2} + p(x)  \frac{(x^2 -2 \cdot x \cdot m + m^2)}{2s^2} dx \textrm{.}
+    \label{eq:expandedKL}
+  \end{equation}
+  
+  Given~$p(x)=\mathcal{N}(x|\mu,\sigma^2)$, a few useful identities are in Eq.~\eqref{eq:intPdf}, \eqref{eq:intExpectation},~and~\eqref{eq:intXsquared}.
+  
+  \begin{align}
+    \int c \cdot p(x) dx &= 1 \label{eq:intPdf}\\[1em]
+    \int x \cdot p(x) dx &= \mu \label{eq:intExpectation}\\[1em]
+    \int x^2 \cdot p(x) dx &= \mu^2 + \sigma^2 \label{eq:intXsquared}
+  \end{align}
+  
+  Using these identities, Eq.~\eqref{eq:expandedKL} simplifies to:
   
   \begin{aligncustom}
-    \int {p(x) \ln q(x)} dx  &= \int {p(x) \left( \ln \left( \frac{1}{\sqrt{2\pi s^2}} \right)  + \ln \left(e^{\frac{-(x-m)^2}{2s^2}} \right) \right) } dx \\~\\
-    &= -\frac{1}{2} \ln \left( 2\pi s^2 \right) \int {p(x)} dx + \int {p(x) \frac{-(x-m)^2}{2s^2} } dx \\~\\
-    &= -\frac{1}{2} \ln \left( 2\pi s^2 \right) + \int {p(x) \frac{-(x-m)^2}{2s^2} } dx 
+    \KL(p||q) &= \ln \left( \frac{s}{\sigma} \right) - \frac{(\mu^2 + \sigma^2 - 2 \cdot \mu^2 + \mu^2)}{2\sigma^2} + \frac{(\mu^2 + \sigma^2 -2 \cdot \mu \cdot m + m^2)}{2s^2} \\~\\
+    &= \ln \left( \frac{s}{\sigma} \right) - \frac{1}{2} + \frac{\sigma^2 + (\mu - m) ^ 2 }{2s^2}
   \end{aligncustom}
 
-ting for~$p(x)$ and~$q(x)$ changes the natural logarithm in the previous function to:
+  If desired, the fraction can be pulled out resulting in the final form in Eq.~\eqref{eq:finalKL}.
   
-  \begin{aligncustom}
-    \ln \left( \frac{q(\textbf{x})}{p(\textbf{x})} \right) &= \ln \left(  \frac{\frac{1}{\sqrt{2\pi s^2}}e^{\frac{-(x-m)^2}{2s^2}}}{\frac{1}{\sqrt{2\pi \sigma^2}}e^{\frac{-(x-\mu)^2}{2 \sigma^2}}}  \right) \\~\\
-    &= \ln \left(  \frac{\sqrt{\sigma^2}}{\sqrt{s^2}} e^{\frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}} \right) \\~\\
-    &= \ln \left(  \frac{\sigma}{s} e^{\frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2}} \right)\\~\\
-    &= \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \textrm{.}
-  \end{aligncustom}
-  
-  Substituting that back into the KL divergence yields:
-  
-  \begin{aligncustom}
-    \textrm{KL}(p||q) &= -\int {p(\textbf{x}) \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \\~\\
-    &= -\int {\frac{1}{\sqrt{2 \pi \sigma^2}} e^{\frac{-(x-\mu)^2}{2 \sigma^2}} \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \\~\\
-    &= -\frac{1}{\sqrt{2 \pi \sigma^2}} \int { e^{\frac{-(x-\mu)^2}{2 \sigma^2}} \left( \ln \left(  \frac{\sigma}{s} \right) + \frac{-(x-m)^2}{2s^2}+\frac{(x-\mu)^2}{2 \sigma^2} \right) dx } \textrm{.}
-  \end{aligncustom}
-
-
-
+  \begin{equation}
+    \KL(p||q) = \frac{1}{2} \left( \ln \left( \frac{s^2}{\sigma^2} \right) - 1 + \frac{\sigma^2 + (\mu - m) ^ 2 }{s^2} \right)
+    \label{eq:finalKL}
+  \end{equation}
 
   
   %---------------------------------------------------%
