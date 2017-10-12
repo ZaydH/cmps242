@@ -111,11 +111,11 @@
     If a box is chosen at random with probabilities, $p(r)=0.2$, $p(b)=0.2$, and~$p(g)=0.6$, and a piece of fruit is removed from the box (with equal probability of selecting any of the items in the box), then what is the probability of selecting an apple?
   \end{subproblem}
 
-  Recall the Law of Total Probability establishes that a set of disjoint events,~$B_1,...B_n$, that partition the sample space,~$S$, (i.e.,~$\bigcup_(i=1)^{n}B_i=S$ and~$\forall_{i,j} B_i \cap B_j = \emptyset$), then for any event~$A$ in~$S$:
+  Recall the Law of Total Probability establishes that given a set of disjoint events,~$B_1,...B_n$, that partition the sample space,~$S$, (i.e.,~$\bigcup_{i=1}^{n}B_i=S$ and~$\forall_{i,j} B_i \cap B_j = \emptyset$), then for any event~$A$ in~$S$:
   
   \[ \Pr[A] = \sum_{i=1}^{n} \Pr[B_i] * \Pr[A | B_i] \]
   
-  Hence, define~$B$ as the set of all boxes (i.e.,~red, blue, and green).  Then, the probability of selecting an apple can be found via:
+  Hence, define~$B$ as the set of all boxes (i.e.,~red, blue, and green) where $b_i \in B$.  Then, the probability of selecting an apple can be found via:
   
   \[\Pr[apple]=\sum_{b_i \in B}\Pr[apple|b_{i}]*\Pr[b_i]\textrm{.}\]
   
@@ -315,39 +315,37 @@
     Consider an $M$-state discrete random variable,~$x$, and use Jensen's inequality in the form~(1.115) to show that the entropy of its distribution~$p(x)$ satisfies~$\textrm{H}[x] \leq \ln M$.
   \end{problem}
   
-  Equation~(1.115) in the textbook (page~56) states:
-  
-  \[f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)} \textrm{.}\]
-  
-  A probability distribution,~$p(x)$, satisfies the two Jensen Inequality criteria of~$\lambda$ namely:~$\forall_{i}\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  This transforms Jensen's Inequality to:
+  Equation~(1.115) in the textbook (page~56) states, that if the function $f$ is \textbf{convex}, then it holds that:
   
   \begin{equation}
-    f \left( \sum_{i=1}^M{p(x_{i}) x_i} \right) \leq \sum_{i=1}^M{p(x_{i}) f(x_i)} \textrm{.}
-    \label{eq:mStateJensen}
+    f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \leq \sum_{i=1}^M{\lambda_{i} f(x_i)} \textrm{.}\label{eq:jensenConvex}
   \end{equation}
-
-  Recall that a random variable is a function,~${X : \Omega \rightarrow \mathbb{R}}$, where $\Omega$~is the sample space~(in this case~${|\Omega| = M}$) and $\mathbb{R}$~is the set of real numbers.  For this proof, define
+  
+  However, if $f$ is \textbf{concave}, then the inequality is reversed meaning:
+  
+  \begin{equation}
+    f \left( \sum_{i=1}^M{\lambda_{i} x_i} \right) \geq \sum_{i=1}^M{\lambda_{i} f(x_i)} \textrm{.}\label{eq:jensenConcave}
+  \end{equation}
+  
+  Hence, given a probability distribution~$p(x)$, the entropy~$\mathbf{H}[x]$ is defined as:
+  
+  \begin{equation}
+    \mathbf{H}[x] = -\sum_{i=1}^{M} p(x_i) \ln p(x_i) = \sum_{i=1}^{M} p(x_i) \ln \frac{1}{p(x_i)}
+    \label{eq:preJensenEntropy}
+  \end{equation}
+    
+  A probability distribution,~$p(x)$, satisfies the two Jensen Inequality criteria of~$\lambda$ namely:~$\forall_{i}\lambda_i \geq 0$ and~$\sum_{i=1}^{M}\left( \lambda_i \right) = 1$.  Similar consider~$f$ to be~$\ln$ and define~$x$ as:
   
   \[ x_{i} = \frac{1}{p(x_i)} \textrm{.} \]
   
-  This can be substituted into Eq.~\eqref{eq:mStateJensen} yielding:
-  
+  Therefore, Eq.~\eqref{eq:preJensenEntropy} is in a form where it may appear that Eq.~\eqref{eq:jensenConvex} would be applied.  However, logarithms are concave functions.  Hence, use Eq.~\eqref{eq:jensenConcave}, yielding:
+
   \begin{aligncustom}
-    f \left( \sum_{i=1}^{M} {p(x_{i}) \frac{1}{p(x_{i} ) } } \right)  &\leq  \sum_{i=1}^{M}{p(x_{i}) f \left( \frac{1}{p(x_{i})} \right) } \\~\\
-    f \left( \sum_{i=1}^M{1} \right) &\leq \sum_{i=1}^M{p(x_{i}) f \left( \frac{1}{p(x_{i})} \right)} \\~\\
-    f \left( M \right) &\leq \sum_{i=1}^M{p(x_{i}) f \left( \frac{1}{p(x_{i})} \right)} \textrm{.}
+    \ln \left( \sum_{i=1}^M p(x_i) \frac{1}{p(x_i)} \right) &\geq \sum_{i=1}^{M} p(x_i) \ln \frac{1}{p(x_i)} = \mathbf{H}[x] \\~\\
+    \ln \left( \sum_{i=1}^M 1 \right) &\geq \mathbf{H}[x] \\~\\
+    \ln M &\geq \mathbf{H}[x] \textrm{.}~~~\square
   \end{aligncustom}
-
-  Define $f(x)=\ln \left( \frac{1}{x} \right)$ yielding:
-  
-  \[ \ln \left( \frac{1}{M} \right) \leq \sum_{i=1}^{M}{p(x_{i}) \ln p(x_i) } \textrm{.} \]
-
-  Multiplying both sides by~$-1$~(which inverts the inequality) and using the definition of entropy~$H[x] = -\sum p(x) \ln p(x)$ completes the proof.
-  
-  \begin{aligncustom} 
-    -\ln \left( \frac{1}{M} \right) &\geq -\sum_{i=1}^M{p(x_{i}) \ln \frac{1}{p(x_i)} } \\~\\
-    \ln M &\geq \mathbf{H}[x] \textrm{.} ~~~\square
-  \end{aligncustom}
+ 
 
   %---------------------------------------------------%
   \newpage
@@ -379,12 +377,12 @@
     \label{eq:expandedKL}
   \end{equation}
   
-  Given~$p(x)=\mathcal{N}(x|\mu,\sigma^2)$, a few useful identities are in Eq.~\eqref{eq:intPdf}, \eqref{eq:intExpectation},~and~\eqref{eq:intXsquared}.
+  Given~$p(x)=\mathcal{N}(x|\mu,\sigma^2)$ and a constant~$c$, a few useful identities are in Eq.~\eqref{eq:intPdf}, \eqref{eq:intExpectation},~and~\eqref{eq:intXsquared}.
   
   \begin{align}
-    \int c \cdot p(x) dx &= 1 \label{eq:intPdf}\\[1em]
-    \int x \cdot p(x) dx &= \mu \label{eq:intExpectation}\\[1em]
-    \int x^2 \cdot p(x) dx &= \mu^2 + \sigma^2 \label{eq:intXsquared}
+    \int c \cdot p(x) dx &= c \label{eq:intPdf}\\[1em]
+    \int c \cdot x \cdot p(x) dx &= c \cdot \mu \label{eq:intExpectation}\\[1em]
+    \int c \cdot x^2 \cdot p(x) dx &= c \cdot \mu^2 + c \cdot \sigma^2 \label{eq:intXsquared}
   \end{align}
   
   Using these identities, Eq.~\eqref{eq:expandedKL} simplifies to:
