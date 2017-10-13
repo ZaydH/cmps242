@@ -1,0 +1,46 @@
+\documentclass{report}
+
+\usepackage{fullpage}
+\usepackage[skip=4pt]{caption} % ``skip'' sets the spacing between the figure and the caption.
+\usepackage{pgfplots}   % Needed for plotting
+\usepackage{amsmath}    % Allows for piecewise functions using the ``cases'' construct
+\usepackage{graphics,subcaption, cleveref} % ``subcaption'' and ``cleveref'' are needed for subfigure
+\usepackage{grffile}   % Allows period in the graphics file name
+
+\usepackage[obeyspaces,spaces]{url} % Used for typesetting with the ``path'' command
+\usepackage[hidelinks]{hyperref}   % Make the cross references clickable hyperlinks
+\usepackage[bottom]{footmisc} % Prevents the table going below the footnote
+
+
+% Set up page formatting
+\usepackage{fancyhdr} % Used for every page footer and title.
+\pagestyle{fancy}
+\fancyhf{} % Clears both the header and footer
+\renewcommand{\headrulewidth}{0pt} % Eliminates line at the top of the page.
+\fancyfoot[LO]{CMPS242 \textendash{} Homework \#3} % Left
+\fancyfoot[CO]{\thepage} % Center
+\fancyfoot[RO]{Stolman, Sherman, \& Hammoudeh} %Right
+
+\renewcommand{\thesubfigure}{(\alph{subfigure})}
+\captionsetup[sub]{labelformat=simple}
+
+\renewcommand\thesection{\arabic{section}} % Prevent chapter number in section number.
+
+
+% Change interline spacing.
+\renewcommand{\baselinestretch}{1.1}
+
+\newcommand{\T}{^\textrm{T}}
+\title{\textbf{CMPS242 Homework \#3 \textendash{} Logistic Regression}}
+\author{Andrew Stolman, \\~\\ Benjamin Sherman, \\~\\ \& Zayd Hammoudeh}
+
+\graphicspath{{img/}}
+\begin{document}
+  \maketitle
+  
+ 
+  \section{Homework Objective}
+ 
+  \section{Experiment Setup}
+ 
+\end{document}
