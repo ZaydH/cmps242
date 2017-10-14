@@ -24,8 +24,8 @@ function hw01(degree, lambdas, k, ignoreBias, offset_term)
     orig_state = warning;
     warning('off','MATLAB:nearlySingularMatrix');
 
-    train_data=importdata("train.txt");
-    test_data=importdata("test.txt");
+    train_data=importdata('train.txt');
+    test_data=importdata('test.txt');
 
     if nargin > REQUIRED_ARGUMENT_COUNT && ~isempty(offset_term)
         train_data(:,2) = train_data(:,2) + offset_term;

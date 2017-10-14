@@ -3,7 +3,8 @@ import pandas as pd
 import string  # Used for the punctuation class
 import sklearn.feature_extraction.text as sklearntext
 
-def parse_input_data():
+
+def parse():
   train_data = parse_csv_data_file("train.csv")
   test_data = parse_csv_data_file("test.csv")
 
@@ -25,12 +26,12 @@ def count_vectorizer(df, col_name, vocab=None):
 
   :param df: Source data frame to vectorize
   :type df: pd.Dataframe
-  :param col_name: Name of the feature column in the Pandas dataframe
+  :param col_name: Name of the feature column in the pandas DataFrame
   :type col_name: string
   :param vocab: Dictionary of support dictionary words to mapping of index number
   :type vocab: dict
   :return: TF-IDF word matrix and vocabulary.
-  :rtype: Tuple(pd.Dataframe, dict)
+  :rtype: Tuple(pd.DataFrame, dict)
   """
   stop_words = nltk.corpus.stopwords.words('english')
   vectorizer = sklearntext.CountVectorizer(lowercase=True, stop_words=stop_words, vocabulary=vocab)
@@ -68,7 +69,7 @@ def parse_csv_data_file(csv_file_path):
   :type csv_file_path: str
 
   :return: Pandas data frame containing tokenized entries.
-  :rtype: pd.Dataframe
+  :rtype: pd.DataFrame
   """
   # Build the data as a pandas dataframe
   col_names = ['label', 'sms', 'sms1', 'sms2', 'sms3']
@@ -84,4 +85,4 @@ def parse_csv_data_file(csv_file_path):
 
 
 if __name__ == "__main__":
-  parse_input_data()
+  parse()
