@@ -2,30 +2,75 @@ import nltk
 import pandas as pd
 import string  # Used for the punctuation class
 import sklearn.feature_extraction.text as sklearntext
+import const
+
+
+def _print_data_sizes(train_data, test_data):
+  """
+  Prints Data Sizes
+
+  This function is used as a helper to print the training data sizes.
+  It is just used for making the Jupyter notebook more readable.
+
+  :param train_data: Training data set.
+  :type train_data: pd.DataFrame
+  :param test_data: Test data set.
+  :type test_data: pd.DataFrame
+  """
+  print ("Number of Training Samples: " + str(train_data.shape[0])
+         + "\nNumber of Test Samples: " + str(test_data.shape[0]))
 
 
 def parse():
+  """
+  SMS Data Parser
+
+  Parses the test and training sets.
+
+  :return: Parsed training and test data respectively.
+  :rtype: Tuple(pd.DataFrame)
+  """
   train_data = parse_csv_data_file("train.csv")
   test_data = parse_csv_data_file("test.csv")
 
   # Vectorizer and get the TF-IDF scores
   data_col_name = "sms"
-  train_data[data_col_name + "_tfidf"], train_vocab = count_vectorizer(train_data, data_col_name)
-  test_data[data_col_name + "_tfidf"], _ = count_vectorizer(test_data, data_col_name, train_vocab)
+  train_data[const.features], train_vocab = count_vectorizer(train_data, data_col_name)
+  test_data[const.features], _ = count_vectorizer(test_data, data_col_name, train_vocab)
+
+  # convert the target labels to 0/1 for learning ease.
+  label_col_name = "label"
+  configure_targets(train_data, label_col_name)
+  configure_targets(test_data, label_col_name)
+
+  # Helper function for the reader.
+  _print_data_sizes(train_data, test_data)
 
   return train_data, test_data
+
+
+def configure_targets(df, col_name):
+  """
+  Standardizes the format for ham/spam in the data frame.
+
+  :param df: Training or test data including target label
+  :type df: pd.DataFrame
+  :param col_name: Target column name in the Pandas DataFrame
+  :type col_name: str
+  """
+  df[const.target] = df[col_name].apply(lambda x: const.HAM if str(x).lower() == "ham" else const.SPAM)
 
 
 def count_vectorizer(df, col_name, vocab=None):
   """
   String Vectorizer With Optional Dictionary Support
 
-  Given a Pandas dataframe, this function will tokenizer using either the provided dictionary
+  Given a Pandas DataFrame, this function will tokenizer using either the provided dictionary
   or the one implicit to the data itself.  It then returns a matrix of the tf-idf
   scores of each of the words.
 
   :param df: Source data frame to vectorize
-  :type df: pd.Dataframe
+  :type df: pd.DataFrame
   :param col_name: Name of the feature column in the pandas DataFrame
   :type col_name: string
   :param vocab: Dictionary of support dictionary words to mapping of index number
@@ -71,12 +116,9 @@ def parse_csv_data_file(csv_file_path):
   :return: Pandas data frame containing tokenized entries.
   :rtype: pd.DataFrame
   """
-  # Build the data as a pandas dataframe
-  col_names = ['label', 'sms', 'sms1', 'sms2', 'sms3']
+  # Build the data as a pandas DataFrame
+  col_names = ['label', 'sms']
   df = pd.read_csv(csv_file_path, names=col_names, header=0, dtype=object)
-  df.fillna("", inplace=True)
-  df[col_names[1]] = df[col_names[1:]].apply(lambda x: '{} {} {} {}'.format(x[0], x[1], x[2], x[3]), axis=1)
-  df.drop(labels=col_names[2:], axis=1, inplace=True)
 
   # Perform string cleaning
   df[col_names[1]] = (df[col_names[1]].str.replace('[^\x00-\x7F]', '')  # Re-encode the string to remove illegal chars
