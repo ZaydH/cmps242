@@ -1,19 +1,20 @@
-from widgets import *
+import widgets
 import random
 import const
+import input_parser
 
 
 def run_hw03(train_data, test_data):
   # Extract the information from the widgets
-  k = k_widget.value
+  k = widgets.k_slider.value
   # Strategy pattern for which learner to run
-  if learning_alg_radio.value == const.GD_ALG:
+  if widgets.learning_alg_radio.value == const.GD_ALG:
     learner_func = run_gradient_descent_learner
-  elif learning_alg_radio.value == const.EG_ALG:
+  elif widgets.learning_alg_radio.value == const.EG_ALG:
     learner_func = run_eg_learner
   else:
     raise ValueError("Invalid learning algorithm")
-  num_train = train_data.shape(0)
+  num_train = train_data.shape[0]
   lambdas = [1, 2, 3]  # TODO: Define how lambdas will be extracted
 
   # Build the indices for each of the folds.
@@ -65,11 +66,13 @@ def perform_cross_validation(train_data, validation_sets, test_data, learner_fun
 
 
 def run_gradient_descent_learner(train_data, test_data, lambda_val):
-  pass #TODO: Implement the gradient descent learner
+  # TODO: Implement the gradient descent learner
+  pass
 
 
 def run_eg_learner(train_data, test_data, lambda_val):
-  pass #TODO: Implement the EG learner
+  # TODO: Implement the EG learner
+  pass
 
 
 def create_cross_validation_fold_sets(n, k):
@@ -86,12 +89,14 @@ def create_cross_validation_fold_sets(n, k):
   :return: List of the row indices for the k folds.
   :rtype: List[List[int]]
   """
-  indices = random.shuffle(range(0, n))
-  splits = k * [] # This will contain the indices of the split
+  indices = range(0, n)
+  random.shuffle(indices)
+
+  splits = [[] for _ in xrange(0, k)]
   for i in xrange(0, n):
     splits[i % k].append(indices[i])
   # For ease of use, sort the validation set.
-  for i in k:
+  for i in range(0, k):
     splits[i] = sorted(splits[i])
   return splits
 
@@ -108,16 +113,16 @@ def create_training_set_indices(validation_sets):
   :return:
   :rtype: List[List[int]]
   """
-  n = reduce(lambda x, y: x + len(y), validation_sets)
-  numb_folds = len(validation_sets)
-  splits = numb_folds * []
+  n = reduce(lambda x, y: x + len(y), validation_sets, 0)
+  num_folds = len(validation_sets)
+  splits = [[] for _ in xrange(0, num_folds)]
   # Iterate through the k folds
-  for fold_cnt in xrange(0, numb_folds):
+  for fold_cnt in xrange(0, num_folds):
     v_cnt = 0
     # Any samples not in the validation set should go into the
     # training set.
     for t_cnt in xrange(0, n):
-      if t_cnt == validation_sets[v_cnt]:
+      if v_cnt < len(validation_sets[fold_cnt]) and t_cnt == validation_sets[fold_cnt][v_cnt]:
         v_cnt += 1
         continue
       splits[fold_cnt].append(t_cnt)
@@ -125,6 +130,11 @@ def create_training_set_indices(validation_sets):
     # Debug code - just checking I did this right
     all_examples = set()
     all_examples.update(validation_sets[fold_cnt])
-    all_examples.update(validation_sets[fold_cnt])
+    all_examples.update(splits[fold_cnt])
     assert len(all_examples) == n
   return splits
+
+
+if __name__ == "__main__":
+  train_examples, test_examples = input_parser.parse()
+  run_hw03(train_examples, test_examples)

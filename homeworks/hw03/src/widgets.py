@@ -3,7 +3,7 @@ import ipywidgets
 from run_learner import *
 import const
 
-k_widget = ipywidgets.IntSlider(
+k_slider = ipywidgets.IntSlider(
     value=10,
     min=2,
     max=20,
