@@ -75,8 +75,8 @@ def perform_cross_validation(train_data, validation_sets,
   :param learner_func: Function that performs the learning
   :type learner_func: callable
 
-  :param learner_func: Calculates the cost function
-  :type learner_func: callable
+  :param loss_function: Function used to calculate the new weights
+  :type loss_function: callable
 
   :param eta: Learning rate
   :type eta: float
@@ -183,11 +183,12 @@ def regularized_error(train_x, train_t, lambda_val):
   :return: Associated weight vector
   :rtype: np.matrix
   """
-  identity_matrix = np.identity(train_x.shape[0], dtype=np.float64)
+  identity_matrix = np.identity(train_x.shape[1], dtype=np.float64)
+  identity_matrix[0,0] = 0  # Do not regularize the bias.
 
   # w* = ((X(X^T) - lambda * I)^-1) Xt
-  x_transpose_product = np.matmul(train_x, train_x.transpose())
-  return np.linalg.solve(x_transpose_product + lambda_val * identity_matrix, np.matmul(train_x, train_t))
+  x_transpose_product = np.matmul(train_x.transpose(), train_x)
+  return np.linalg.solve(x_transpose_product + lambda_val * identity_matrix, np.matmul(train_x.transpose(), train_t))
 
 
 def run_eg_learner(train_x, train_t, loss_function, lambda_val,
