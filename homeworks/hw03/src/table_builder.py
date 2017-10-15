@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-from IPython.display import display, HTML
+from run_learner import build_lambdas
+import math
 
 
 def _highlight_max(s):
@@ -8,30 +9,49 @@ def _highlight_max(s):
   return ['background-color: yellow; font-weight: bold;' if v else '' for v in is_max]
 
 
+def get_lambda_str(x):
+  return "$2^{%d}$" % (round(math.log(x, 2))) if x != 0 else str(x)
+
 def create_table():
-  np.random.seed(24)
-  column_names = ["$\lambda$", "Training", "Validation", "Testing"]
-  df = pd.DataFrame({'A': np.linspace(1, 10, 10)})
-  df = pd.concat([df, pd.DataFrame(np.random.randn(10, 4), columns=column_names)],
-                 axis=1)
-  df.iloc[0, 2] = np.nan
+  """
+  Pandas Table Creator
+
+  :return: Stylized Pandas table.
+  :rtype: pd.DataFrame
+  """
+  # Create the lambdas DataFrame
+  lambdas_str = [get_lambda_str(x) for x in build_lambdas()]
+  df = pd.DataFrame({'$\lambda$': lambdas_str})
+
+  # Create the errors DataFrame
+  column_names = ["Training", "Validation", "Test"]
+  df_errors = pd.DataFrame(np.random.randn(10, 3), columns=column_names)
+
+  # Merge the DataFrames
+  df = pd.concat([df, df_errors], axis=1)
+  # column_names = ["$\lambda$", "Training", "Validation", "Testing"]
+  # df = pd.DataFrame(np.random.randn(10, 4), columns=column_names)
   # Format the Pandas table for printing in Jupyter notebook.
-  df = (df.transpose().style.apply(_highlight_max, axis=1)
-                            .format("{:.2f}")
+  th_styles = [
+    dict(selector=".row_heading", props=[('color', 'black'),  # Ensure the headers have proper format
+                                         ('border-color', 'black'),
+                                         ('border-style', 'solid'),
+                                         ('border-width', '1px'),
+                                         ('text-align', 'center')]),
+    dict(selector=".col_heading", props=[('display', 'none')]),  # Hide the index row.
+  ]
+  df = (df.transpose().style.apply(_highlight_max, subset=pd.IndexSlice[column_names, :])
                             .set_properties(**{'color': 'black',
                                                'border-color': 'black',
                                                'border-style': 'solid',
-                                               'border-width': '1px'})
-                            .set_table_styles( # Hackish way to prevent the top row appearing appearing
-                                              [{'selector': '.col_heading',
-                                                'props': [('display', 'none')]},
-                                               {'selector': '.blank.level0',
-                                                'props': [('display', 'none')]}])
-        )
+                                               'border-width': '1px',
+                                               'text-align': 'center'})
+                            .set_table_styles(th_styles)
+                            .format("{:.4f}", subset=pd.IndexSlice[column_names, :])
+       )
   return df
 
 
 if __name__ == "__main__":
   """Debug only code."""
-  
   create_table()
