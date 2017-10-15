@@ -1,5 +1,6 @@
 import nltk
 import pandas as pd
+import numpy as np
 import string  # Used for the punctuation class
 import sklearn.feature_extraction.text as sklearntext
 import const
@@ -35,8 +36,8 @@ def parse():
 
   # Vectorizer and get the TF-IDF scores
   data_col_name = "sms"
-  train_data[const.features], train_vocab = count_vectorizer(train_data, data_col_name)
-  test_data[const.features], _ = count_vectorizer(test_data, data_col_name, train_vocab)
+  train_vectorize, train_vocab = count_vectorizer(train_data, data_col_name)
+  test_vectorize, _ = count_vectorizer(test_data, data_col_name, train_vocab)
 
   # convert the target labels to 0/1 for learning ease.
   label_col_name = "label"
@@ -46,7 +47,11 @@ def parse():
   # Helper function for the reader.
   _print_data_sizes(train_data, test_data)
 
-  return train_data, test_data
+  # Store the results in a dictionaries
+  train_target = np.matrix(train_data[const.target].values).transpose()
+  test_target = np.matrix(test_data[const.target].values).transpose()
+  return (np.hstack([train_target, train_vectorize]),
+          np.hstack([test_target, test_vectorize]))
 
 
 def configure_targets(df, col_name):
@@ -85,7 +90,7 @@ def count_vectorizer(df, col_name, vocab=None):
     vocab = vectorizer.vocabulary_
 
   tf_idf = sklearntext.TfidfTransformer().fit_transform(doc_word_matrix)
-  return tf_idf, vocab
+  return tf_idf.toarray(), vocab
 
 
 def remove_punctuation(s):

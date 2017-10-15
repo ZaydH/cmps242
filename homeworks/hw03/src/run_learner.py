@@ -7,11 +7,15 @@ import numpy as np
 
 def run_hw03(train_data, test_data):
   """
+  HW03 Learner
 
-  :param train_data: DataFrame containing the training data.
-  :type train_data: pd.DataFrame
-  :param test_data:
-  :type test_data: pd.DataFrame
+  Performs the learning for homework 3.
+
+  :param train_data: Matrix containing training feature and target values
+  :type train_data: np.matrix
+
+  :param test_data: Matrix containing test feature and target values
+  :type test_data: np.matrix
 
   :return:
   :rtype: List[np.matrix]
@@ -29,6 +33,8 @@ def run_hw03(train_data, test_data):
   eta = widgets.learning_rate_slider.value
   lambdas = build_lambdas()
 
+  loss_function = regularized_error # TODO Update support for multiple loss functions.
+
   # Build the results structures
   num_lambdas = len(lambdas)
   train_err = np.zeros([num_lambdas, 2])
@@ -41,14 +47,13 @@ def run_hw03(train_data, test_data):
   for idx, lambda_val in enumerate(lambdas):
     # Get cross validation results
     results = perform_cross_validation(train_data, validation_sets,
-                                       learner_func, eta, lambda_val)
+                                       learner_func, loss_function, eta, lambda_val)
     train_err[idx, :] = np.matrix(results[0:2])
     valid_err[idx, :] = np.matrix(results[2:])
 
     # Train on the full training set then verify against the test data.
     # Extract the training and test data
-    train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data,
-                                                                    test_data)
+    train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data)
     # Get the test error
     w_star = learner_func(train_x, train_t, eta, lambda_val)
     test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
@@ -57,7 +62,7 @@ def run_hw03(train_data, test_data):
 
 
 def perform_cross_validation(train_data, validation_sets,
-                             learner_func, eta, lambda_val):
+                             learner_func, loss_function, eta, lambda_val):
   """
   Execute Cross-Validation
 
@@ -68,6 +73,9 @@ def perform_cross_validation(train_data, validation_sets,
   :type validation_sets: List[List[int]]
 
   :param learner_func: Function that performs the learning
+  :type learner_func: callable
+
+  :param learner_func: Calculates the cost function
   :type learner_func: callable
 
   :param eta: Learning rate
@@ -95,7 +103,7 @@ def perform_cross_validation(train_data, validation_sets,
                                                                       training_sets[fold_cnt],
                                                                       validation_sets[fold_cnt])
     # Learn the function
-    w_star = learner_func(train_x, train_t, eta, lambda_val)
+    w_star = learner_func(train_x, train_t, loss_function, eta, lambda_val)
     train_err[fold_cnt] = calculate_rms_error(w_star, train_x, train_t)
     validation_err[fold_cnt] = calculate_rms_error(w_star, valid_x, valid_t)
 
@@ -152,7 +160,7 @@ def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_va
   :return: Final learned weight vector
   :rtype: np.matrix
   """
-  n = train_x.shape[0]
+  n = train_x.shape[1]
   w = initialize_weights(n)
   for i in range(0, num_epochs):
     w -= eta * (i ** const.ALPHA) * loss_function(train_x, train_t, lambda_val)
@@ -315,44 +323,39 @@ def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test
   :return: Numpy matrices for trainX, trainT, testX, testT
   :rtype: List[np.matrix]
   """
-  train_x = _build_numpy_matrix_from_pandas(train_df, const.features, train_row_indexes, True)
-  train_t = _build_numpy_matrix_from_pandas(train_df, const.target, train_row_indexes, False)
+  train_x, train_t = _build_x_and_target(train_df, train_row_indexes)
 
-  test_x = _build_numpy_matrix_from_pandas(test_df, const.features, test_row_indexes, True)
-  test_t = _build_numpy_matrix_from_pandas(test_df, const.target, test_row_indexes, False)
+  test_x, test_t = _build_x_and_target(test_df, test_row_indexes)
 
   return train_x, train_t, test_x, test_t
 
 
-def _build_numpy_matrix_from_pandas(df, col_name, row_indexes=None, prepend_offset=False):
+def _build_x_and_target(data_mat, row_indexes=None):
   """
   Pandas to NumPy Converter
 
-  :param df: Pandas DataFrame object whose information will be extracted into a NumPy matrix
-  :type df: pd.DataFrame
-
-  :param col_name: Name of the column to extract
-  :type col_name: str
+  :param data_mat: Matrix of the data.  First column is the target data. The rest is feature data/
+  :type data_mat: np.matrix
 
   :param row_indexes: List of rows to selects.  Can be ignored if all the rows are desired.
   :type row_indexes: List[int]
 
-  :param prepend_offset: Allows for an offset term of "1" to be added to all
-                         entries for learning the offset.
-  :type prepend_offset: bool
-
   :return: Final learned weight vector
   :rtype: np.matrix
   """
-  pd_as_np_matrix = df.as_matrix(col_name)
+  target_values = data_mat[:, 0]
+  x_values = data_mat[:, 1:]
+  # If appropriate, get only a subset of the rows
   if row_indexes is not None:
-    pd_as_np_matrix = pd_as_np_matrix[:, np.array(row_indexes)]
-  # Prepend an offset term as appropiate
-  if prepend_offset:
-    shape_matrix = pd_as_np_matrix.shape
-    ones_vector = np.ones([shape_matrix[0], 1])
-    pd_as_np_matrix = np.stack([ones_vector, pd_as_np_matrix], axis=-1)
-  return pd_as_np_matrix
+    rows_np = np.array(row_indexes)
+    x_values = x_values[rows_np, :]
+    target_values = target_values[rows_np, :]
+
+  # Prepend an offset term as appropriate
+  ones_vector = np.ones([x_values.shape[0], 1])
+  x_values = np.hstack([ones_vector, x_values])
+
+  return x_values, target_values
 
 
 if __name__ == "__main__":
