@@ -36,6 +36,7 @@ run_button = ipywidgets.Button(
   tooltip='Run Learning Algorithm with the specified paramters',
   icon='check'
 )
+run_button.on_click(run_all)
 
 
 learning_rate_slider = ipywidgets.FloatSlider(
@@ -63,4 +64,12 @@ lambdas_range_slider = ipywidgets.IntRangeSlider(
 lambdas_range_hbox = ipywidgets.HBox([ipywidgets.Label("Range of $\lambda$ in Form $2^{x}$: "),
                                       lambdas_range_slider])
 
-run_button.on_click(run_all)
+
+update_results_button = ipywidgets.Button(
+  description='Update Results',
+  disabled=False,
+  button_style='',  # 'success', 'info', 'warning', 'danger' or ''
+  tooltip='Update the table and graph',
+  icon='check'
+)
+update_results_button.on_click(run_all)

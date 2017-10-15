@@ -12,7 +12,7 @@ def _highlight_max(s):
 def get_lambda_str(x):
   return "$2^{%d}$" % (round(math.log(x, 2))) if x != 0 else str(x)
 
-def create_table():
+def create_table(train_err, validation_err, test_err):
   """
   Pandas Table Creator
 
@@ -25,7 +25,8 @@ def create_table():
 
   # Create the errors DataFrame
   column_names = ["Training", "Validation", "Test"]
-  df_errors = pd.DataFrame(np.random.randn(10, 3), columns=column_names)
+  data_arr = np.stack((train_err[:, 0], validation_err[:, 0], test_err[:, 0]), axis=-1)
+  df_errors = pd.DataFrame(data_arr, columns=column_names)
 
   # Merge the DataFrames
   df = pd.concat([df, df_errors], axis=1)
@@ -54,4 +55,6 @@ def create_table():
 
 if __name__ == "__main__":
   """Debug only code."""
-  create_table()
+  from run_learner import _build_random_results
+  training, validation, test = _build_random_results()
+  create_table(training, validation, test)

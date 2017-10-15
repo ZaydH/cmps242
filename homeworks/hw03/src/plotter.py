@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from run_learner import build_lambdas, _build_random_results
 from widgets import learning_alg_radio
 
+
 def create_plots(training_errors, validation_errors, test_errors):
   x = build_lambdas()
 
@@ -47,4 +48,5 @@ def _verify_data_sizes(training_errors, validation_errors, test_errors):
 
 if __name__ == "__main__":
   # Verify the plotter with random data
-  create_plots(_build_random_results())
+  training, validation, test = _build_random_results()
+  create_plots(training, validation, test)
