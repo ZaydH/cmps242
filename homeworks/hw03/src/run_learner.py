@@ -15,7 +15,7 @@ def run_hw03(train_data, test_data):
   else:
     raise ValueError("Invalid learning algorithm")
   num_train = train_data.shape[0]
-  lambdas = [1, 2, 3]  # TODO: Define how lambdas will be extracted
+  lambdas = build_lambdas()
 
   # Build the indices for each of the folds.
   validation_sets = create_cross_validation_fold_sets(num_train, k)
@@ -23,9 +23,12 @@ def run_hw03(train_data, test_data):
   for lambda_val in lambdas:
     perform_cross_validation(train_data, validation_sets, test_data, learner_func, lambda_val)
 
+  # TODO Remove debug results return.
+  return _build_random_results()
 
 def perform_cross_validation(train_data, validation_sets, test_data, learner_func, lambda_val):
   """
+  Execute Cross-Validation
 
   :param train_data: Pandas DataFrame containing all TRAINING data with labels and features.
   :type train_data: pd.DataFrame
@@ -73,6 +76,40 @@ def run_gradient_descent_learner(train_data, test_data, lambda_val):
 def run_eg_learner(train_data, test_data, lambda_val):
   # TODO: Implement the EG learner
   pass
+
+
+def build_lambdas():
+  """
+  Lambdas Builder
+
+  Builds the values of lambda to test based off the widget slide.
+
+  :return: Values of Lambda to test
+  :rtype: List[float]
+  """
+  return [0] + [2 ** x for x in range(widgets.lambdas_range_slider.value[0],
+                                      widgets.lambdas_range_slider.value[1]+1)]
+
+
+def _build_random_results():
+  """
+  Debug Results Generator
+
+  Builds debug results for testing while the program is being debugged.
+
+  :return: Training, validation, and test errors in a list respectively.
+  :rtype: List[np.matrix]
+  """
+  import numpy as np
+  lambdas = build_lambdas()
+  training = np.random.rand(len(lambdas), 2)
+  training[:, 0] = training[:, 0] + 1
+  validation = np.random.rand(len(lambdas), 2)
+  validation[:, 0] = validation[:, 0] + 1
+
+  test = np.random.rand(len(lambdas), 1)
+
+  return training, validation, test
 
 
 def create_cross_validation_fold_sets(n, k):
