@@ -4,6 +4,9 @@
 features = "tfidf_matrix"
 target = "target"
 
+# This is given in the homework assignment.
+ALPHA = 0.9
+
 # Learning Algorithm Names
 GD_ALG = "Gradient Descent"
 EG_ALG = "EG+/-"

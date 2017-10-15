@@ -2,9 +2,20 @@ import widgets
 import random
 import const
 import input_parser
+import numpy as np
 
 
 def run_hw03(train_data, test_data):
+  """
+
+  :param train_data: DataFrame containing the training data.
+  :type train_data: pd.DataFrame
+  :param test_data:
+  :type test_data: pd.DataFrame
+
+  :return:
+  :rtype: List[np.matrix]
+  """
   # Extract the information from the widgets
   k = widgets.k_slider.value
   # Strategy pattern for which learner to run
@@ -15,18 +26,38 @@ def run_hw03(train_data, test_data):
   else:
     raise ValueError("Invalid learning algorithm")
   num_train = train_data.shape[0]
+  eta = widgets.learning_rate_slider.value
   lambdas = build_lambdas()
+
+  # Build the results structures
+  num_lambdas = len(lambdas)
+  train_err = np.zeros([num_lambdas, 2])
+  valid_err = np.zeros([num_lambdas, 2])
+  test_err = np.zeros([num_lambdas, 1])
 
   # Build the indices for each of the folds.
   validation_sets = create_cross_validation_fold_sets(num_train, k)
 
-  for lambda_val in lambdas:
-    perform_cross_validation(train_data, validation_sets, test_data, learner_func, lambda_val)
+  for idx, lambda_val in enumerate(lambdas):
+    # Get cross validation results
+    results = perform_cross_validation(train_data, validation_sets,
+                                       learner_func, eta, lambda_val)
+    train_err[idx, :] = np.matrix(results[0:2])
+    valid_err[idx, :] = np.matrix(results[2:])
 
-  # TODO Remove debug results return.
-  return _build_random_results()
+    # Train on the full training set then verify against the test data.
+    # Extract the training and test data
+    train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data,
+                                                                    test_data)
+    # Get the test error
+    w_star = learner_func(train_x, train_t, eta, lambda_val)
+    test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
 
-def perform_cross_validation(train_data, validation_sets, test_data, learner_func, lambda_val):
+  return train_err, valid_err, test_err
+
+
+def perform_cross_validation(train_data, validation_sets,
+                             learner_func, eta, lambda_val):
   """
   Execute Cross-Validation
 
@@ -36,11 +67,11 @@ def perform_cross_validation(train_data, validation_sets, test_data, learner_fun
   :param validation_sets: Indices of the rows to be used for validation in each fold.
   :type validation_sets: List[List[int]]
 
-  :param test_data: Pandas DataFrame containing all TESTING data with labels and features.
-  :type test_data: pd.DataFrame
-
-  :param learner_func:
+  :param learner_func: Function that performs the learning
   :type learner_func: callable
+
+  :param eta: Learning rate
+  :type eta: float
 
   :param lambda_val: Regularization value to be used
   :type lambda_val: float
@@ -53,27 +84,106 @@ def perform_cross_validation(train_data, validation_sets, test_data, learner_fun
   k = len(validation_sets)
   training_sets = create_training_set_indices(validation_sets)
 
+  # Initialize the storage for the weights
+  train_err = np.zeros(k)
+  validation_err = np.zeros(k)
+
+  # Perform the K folds
   for fold_cnt in xrange(0, k):
-    print "Executing fold #" + str(fold_cnt)
-
     # Extract the training and test data
-    train_slice = train_data.iloc[training_sets[fold_cnt]]
-    valid_slice = train_data.iloc[validation_sets[fold_cnt]]
+    train_x, train_t, valid_x, valid_t = _extract_train_and_test_data(train_data, train_data,
+                                                                      training_sets[fold_cnt],
+                                                                      validation_sets[fold_cnt])
+    # Learn the function
+    w_star = learner_func(train_x, train_t, eta, lambda_val)
+    train_err[fold_cnt] = calculate_rms_error(w_star, train_x, train_t)
+    validation_err[fold_cnt] = calculate_rms_error(w_star, valid_x, valid_t)
 
-    learner_func(train_slice, valid_slice, lambda_val)
-
-    print "Fold #" + str(fold_cnt) + " completed."
-
-  # Train on the full training set then verify against the test data.
-  learner_func(train_data, test_data, lambda_val)
-
-
-def run_gradient_descent_learner(train_data, test_data, lambda_val):
-  # TODO: Implement the gradient descent learner
-  pass
+  return np.mean(train_err), np.var(train_err), np.mean(validation_err), np.var(validation_err)
 
 
-def run_eg_learner(train_data, test_data, lambda_val):
+def calculate_rms_error(w_star, x_tensor, t_vec):
+  """
+  RMS Calculator
+
+  Calculates the RMS error for the x_tensor and the target vector.
+
+  :param w_star: Learned weight vector
+  :type w_star: np.matrix
+
+  :param x_tensor: Input feature tensor.
+  :type x_tensor: np.matrix
+
+  :param t_vec: Array of target values
+  :type t_vec: np.matrix
+
+  :return: RMS error
+  :rtype: float
+  """
+  y = np.matmul(x_tensor, w_star)
+  err = np.power(y - t_vec, 2)
+
+  num_samples = x_tensor.shape[0]
+  return np.sum(err) / num_samples
+
+
+def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_val,
+                                 num_epochs=25):
+  """
+
+  :param train_x: X-tensor to be learned.
+  :type train_x: np.matrix
+
+  :param train_t: Target value for the learner.
+  :type train_t: np.matrix
+
+  :param loss_function: Function used for calculating the loss
+  :type loss_function: callable
+
+  :param eta: Learning rate
+  :type eta: float
+
+  :param lambda_val: Lambda regularization value
+  :type lambda_val: float
+
+  :param num_epochs: Number of training epochs
+  :type num_epochs: int
+
+  :return: Final learned weight vector
+  :rtype: np.matrix
+  """
+  n = train_x.shape[0]
+  w = initialize_weights(n)
+  for i in range(0, num_epochs):
+    w -= eta * (i ** const.ALPHA) * loss_function(train_x, train_t, lambda_val)
+  return w
+
+
+def regularized_error(train_x, train_t, lambda_val):
+  """
+  Regularized Error Calculator
+
+  :param train_x: Training X tensor
+  :type train_x: np.matrix
+
+  :param train_t: Training target value
+  :type train_t: np.matrix
+
+  :param lambda_val: Regularizer value
+  :type lambda_val: float
+
+  :return: Associated weight vector
+  :rtype: np.matrix
+  """
+  identity_matrix = np.identity(train_x.shape[0], dtype=np.float64)
+
+  # w* = ((X(X^T) - lambda * I)^-1) Xt
+  x_transpose_product = np.matmul(train_x, train_x.transpose())
+  return np.linalg.solve(x_transpose_product + lambda_val * identity_matrix, np.matmul(train_x, train_t))
+
+
+def run_eg_learner(train_x, train_t, loss_function, lambda_val,
+                   num_epochs=25):
   # TODO: Implement the EG learner
   pass
 
@@ -100,7 +210,6 @@ def _build_random_results():
   :return: Training, validation, and test errors in a list respectively.
   :rtype: List[np.matrix]
   """
-  import numpy as np
   lambdas = build_lambdas()
   training = np.random.rand(len(lambdas), 2)
   training[:, 0] = training[:, 0] + 1
@@ -170,6 +279,80 @@ def create_training_set_indices(validation_sets):
     all_examples.update(splits[fold_cnt])
     assert len(all_examples) == n
   return splits
+
+
+def initialize_weights(n):
+  """
+  Weight Vector Initializer
+
+  The weight vector selected may differ depending on the specfic learning
+  algorithm selected.
+
+  :param n: Number of dimensions in the weight vector
+  :type n: int
+  :return: Initial weight vector.
+  :rtype: np.matrix
+  """
+  return np.zeros([n, 1])
+
+
+def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test_row_indexes=None):
+  """
+  Test and Training Extractor
+
+  This is used to extract the train and test/validation data.  It builds them into
+  Numpy arrays.
+
+  :param train_df: Pandas DataFrame containing the training target and feature data
+  :type train_df: pd.DataFrame
+  :param test_df: Pandas DataFrame containing the test target and feature data
+  :type test_df: pd.DataFrame
+  :param train_row_indexes: List of row indices to select for the training data
+  :type train_row_indexes: List[int]
+  :param test_row_indexes: List of row indices to select for the test data
+  :type test_row_indexes: List[int]
+
+  :return: Numpy matrices for trainX, trainT, testX, testT
+  :rtype: List[np.matrix]
+  """
+  train_x = _build_numpy_matrix_from_pandas(train_df, const.features, train_row_indexes, True)
+  train_t = _build_numpy_matrix_from_pandas(train_df, const.target, train_row_indexes, False)
+
+  test_x = _build_numpy_matrix_from_pandas(test_df, const.features, test_row_indexes, True)
+  test_t = _build_numpy_matrix_from_pandas(test_df, const.target, test_row_indexes, False)
+
+  return train_x, train_t, test_x, test_t
+
+
+def _build_numpy_matrix_from_pandas(df, col_name, row_indexes=None, prepend_offset=False):
+  """
+  Pandas to NumPy Converter
+
+  :param df: Pandas DataFrame object whose information will be extracted into a NumPy matrix
+  :type df: pd.DataFrame
+
+  :param col_name: Name of the column to extract
+  :type col_name: str
+
+  :param row_indexes: List of rows to selects.  Can be ignored if all the rows are desired.
+  :type row_indexes: List[int]
+
+  :param prepend_offset: Allows for an offset term of "1" to be added to all
+                         entries for learning the offset.
+  :type prepend_offset: bool
+
+  :return: Final learned weight vector
+  :rtype: np.matrix
+  """
+  pd_as_np_matrix = df.as_matrix(col_name)
+  if row_indexes is not None:
+    pd_as_np_matrix = pd_as_np_matrix[:, np.array(row_indexes)]
+  # Prepend an offset term as appropiate
+  if prepend_offset:
+    shape_matrix = pd_as_np_matrix.shape
+    ones_vector = np.ones([shape_matrix[0], 1])
+    pd_as_np_matrix = np.stack([ones_vector, pd_as_np_matrix], axis=-1)
+  return pd_as_np_matrix
 
 
 if __name__ == "__main__":
