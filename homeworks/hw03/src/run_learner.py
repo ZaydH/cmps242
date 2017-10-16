@@ -33,7 +33,7 @@ def run_hw03(train_data, test_data):
   eta = widgets.learning_rate_slider.value
   lambdas = build_lambdas()
 
-  loss_function = regularized_error # TODO Update support for multiple loss functions.
+  loss_function = regularized_error  # TODO Update support for multiple loss functions.
 
   # Build the results structures
   num_lambdas = len(lambdas)
@@ -55,7 +55,7 @@ def run_hw03(train_data, test_data):
     # Extract the training and test data
     train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data)
     # Get the test error
-    w_star = learner_func(train_x, train_t, eta, lambda_val)
+    w_star = learner_func(train_x, train_t, loss_function, eta, lambda_val)
     test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
 
   return train_err, valid_err, test_err
@@ -162,12 +162,14 @@ def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_va
   """
   n = train_x.shape[1]
   w = initialize_weights(n)
-  for i in range(0, num_epochs):
-    w -= eta * (i ** const.ALPHA) * loss_function(train_x, train_t, lambda_val)
+  for t in range(1, num_epochs + 1 ): # Starting from zero is not possible because of aging term t ^ \alpha
+    w_star = loss_function(w, train_x, train_t, lambda_val)
+    w_change = eta * (t ** (-const.ALPHA)) * w_star
+    w -= w_change
   return w
 
 
-def regularized_error(train_x, train_t, lambda_val):
+def regularized_error(w, train_x, train_t, lambda_val):
   """
   Regularized Error Calculator
 
@@ -183,12 +185,33 @@ def regularized_error(train_x, train_t, lambda_val):
   :return: Associated weight vector
   :rtype: np.matrix
   """
-  identity_matrix = np.identity(train_x.shape[1], dtype=np.float64)
-  identity_matrix[0,0] = 0  # Do not regularize the bias.
+  num_samples = train_x.shape[0]
 
-  # w* = ((X(X^T) - lambda * I)^-1) Xt
-  x_transpose_product = np.matmul(train_x.transpose(), train_x)
-  return np.linalg.solve(x_transpose_product + lambda_val * identity_matrix, np.matmul(train_x.transpose(), train_t))
+  y_hat = np.matmul(train_x, w)
+  err = np.subtract(y_hat, train_t)
+  prod = np.matmul(err.transpose(), train_x).transpose()
+
+  # Normalize by the sample count
+  prod = np.divide(prod, num_samples)
+
+  # Calculate the regularizer
+  regularizer = np.multiply(lambda_val, w)
+
+  return np.add(prod, regularizer)
+
+
+
+def sigmoid_vec(z):
+  """
+
+  :param z:
+  :type z: np.matrix
+
+  :return:
+  :rtype: np.matrix
+  """
+  denom = np.add(1, np.exp(-1 * z))
+  return np.divide(1, denom)
 
 
 def run_eg_learner(train_x, train_t, loss_function, lambda_val,
@@ -302,7 +325,7 @@ def initialize_weights(n):
   :return: Initial weight vector.
   :rtype: np.matrix
   """
-  return np.zeros([n, 1])
+  return np.zeros([n, 1], dtype=np.float64)
 
 
 def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test_row_indexes=None):
