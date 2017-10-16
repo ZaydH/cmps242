@@ -1,0 +1,128 @@
+\documentclass{report}
+
+\usepackage{fullpage}
+\usepackage[skip=4pt]{caption} % ``skip'' sets the spacing between the figure and the caption.
+\usepackage{pgfplots}   % Needed for plotting
+\usepackage{amsmath}    % Allows for piecewise functions using the ``cases'' construct
+\usepackage{grffile}   % Allows period in the graphics file name
+
+\usepackage[obeyspaces,spaces]{url} % Used for typesetting with the ``path'' command
+\usepackage[hidelinks]{hyperref}   % Make the cross references clickable hyperlinks
+\usepackage[bottom]{footmisc} % Prevents the table going below the footnote
+\usepackage{color}
+
+
+% Set up page formatting
+\usepackage{fancyhdr} % Used for every page footer and title.
+\pagestyle{fancy}
+\fancyhf{} % Clears both the header and footer
+\renewcommand{\headrulewidth}{0pt} % Eliminates line at the top of the page.
+\fancyfoot[LO]{CMPS242 \textendash{} Homework \#3 Math Proposal} % Left
+\fancyfoot[CO]{\thepage} % Center
+\fancyfoot[RO]{Zayd Hammoudeh} %Right
+
+\renewcommand\thesection{\arabic{section}} % Prevent chapter number in section number.
+
+\newcommand{\eref}[1]{(\ref{#1})}
+\newcommand{\wstar}{\mathbf{w}^{\star}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\includeLambdaPlot}[3]{  
+\begin{subfigure}[t]{#2}
+  \centering
+  \includegraphics[width=1.0\textwidth]{test_train_compare_d=9_lambda=#1.pdf}
+  \caption{$\lambda=#1$}\label{#3}
+\end{subfigure}}
+
+% Change interline spacing.
+\renewcommand{\baselinestretch}{1.1}
+
+\newcommand{\T}{^\textrm{T}}
+\title{\textbf{CMPS242 Homework \#3 \textendash{} Mathematical Foundations of Logistic Regression}}
+\author{Zayd Hammoudeh}
+
+\begin{document}
+  %\maketitle
+
+  \section{Source}
+  
+  To the best of my recollection, the details of the logistic regression update rule math were not reviewed in class.  As such, I watchedß the lectures from \href{https://www.coursera.org/learn/neural-networks-deep-learning/home/week/2}{\color{purple} Andrew Ng's deep learning class}.  Here is what I \textit{believe} the update rule should be.  If there is an error in the logic, please let me know.
+  
+  \section{Glossary of Notation}
+  
+  \begin{itemize}
+    \item $\mathbf{w}_{t}$ -- Weight vector for epoch~$t$
+    \item $J(\mathbf{w},\mathbf{x})$ -- Cost function
+    \item $\beta$ -- Learning rate
+    \item $\mathcal{L}$ -- Loss function
+    \item $\hat{y}$ -- Predicted output value
+    \item $y$ -- Expected classification value
+    \item $\sigma(z)$ -- Sigmoid function ${\left(\frac{1}{1+e^{-z}}\right)}$ with respect to~$z$ (i.e.,~${\mathbf{w}^{\T} \mathbf{x}}$).
+  \end{itemize}
+  
+  \section{$w$~Update Rules}
+  
+  My understanding of the \textit{batch} update rule is shown in Eq.~\eqref{eq:batchUpdateRule}.
+  
+  \begin{equation}
+    \mathbf{w}_{t+1} := \mathbf{w}_{t} - \beta \cdot \frac{\partial J(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}}
+    \label{eq:batchUpdateRule}
+  \end{equation}
+  
+  \noindent
+  The learning rate is defined as:
+  
+  \[\beta := \eta \cdot t^{-\alpha} \]
+  
+  \noindent
+  where~$\alpha=0.9$.  The cost function is the average loss as shown in Eq.~\eqref{eq:costFunction}.
+ 
+  \begin{equation}
+    J(\mathbf{w}, \mathbf{x}) = \frac{1}{m}\sum_{i=1}^{m} \mathcal{L}(\mathbf{w},\mathbf{x})
+    \label{eq:costFunction}
+  \end{equation}
+  
+  \noindent
+  The loss function is the squared loss and uses the same regularizer as in homework~\#1 as shown in Eq.~\eqref{eq:lossFunction}.
+  
+  \begin{equation}
+    \mathcal{L}(\mathbf{w},\mathbf{x}) = \frac{1}{2}\cdot(\hat{y} - y)^2 + \lambda \cdot \norm{\mathbf{w}}
+    \label{eq:lossFunction}
+  \end{equation}
+  
+  \noindent
+  The predicted value~$\hat{y}$ is 
+  
+  \[\hat{y} = \sigma   (\mathbf{w}^{\T}\mathbf{x}) \textrm{.} \]
+
+  The derivative of the loss function~$\mathcal{L}$ is:
+  
+  \begin{align}
+    \frac{\partial \mathcal{L}(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}} = (\hat{y} - y) \cdot \frac{\partial \hat{y}}{\partial \mathbf{w}} + \lambda \mathbf{w} \textrm{.}
+    \label{eq:derivLoss}
+  \end{align}
+
+  \noindent
+  Via the chain rule, we solve the derivative of the sigmoid function:
+  
+  \begin{equation}
+    \frac{\partial \hat{y}(z)}{\partial \mathbf{w}} = \frac{e^{-z}}{(1+e^{-z})^{2}} \cdot \frac{\partial z}{\partial \mathbf{w}}
+    \label{eq:derivYhat}
+  \end{equation}
+
+  \noindent
+  Applying the chain rule again yields:
+  
+  \begin{equation}
+    \frac{\partial z}{\partial \mathbf{w}} = \mathbf{x}
+    \label{eq:derivZ}
+  \end{equation}
+
+  \noindent
+  Combining Eq.~\eqref{eq:derivLoss},~\eqref{eq:derivYhat}, and~\eqref{eq:derivZ} shows the complete derivative of the loss function.
+  
+  \begin{align}
+    \frac{\partial \mathcal{L}(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}} &= (\hat{y} - y) \cdot \frac{e^{-z}}{(1+e^{-z})^{2}} \cdot \mathbf{x} + \lambda \mathbf{w}\\
+    &= (\sigma(\mathbf{w}^{\T} \mathbf{x}) - y) \cdot \frac{e^{-\mathbf{w}^{\T} \mathbf{x}}}{(1+e^{-\mathbf{w}^{\T} \mathbf{x}})^{2}} \cdot \mathbf{x} + \lambda \mathbf{w}
+  \end{align}  
+
+\end{document}
