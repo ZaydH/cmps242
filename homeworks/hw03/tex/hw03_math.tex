@@ -24,6 +24,7 @@
 \renewcommand\thesection{\arabic{section}} % Prevent chapter number in section number.
 
 \newcommand{\eref}[1]{(\ref{#1})}
+\newcommand{\yhat}{\hat{y}}
 \newcommand{\wstar}{\mathbf{w}^{\star}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand{\includeLambdaPlot}[3]{  
@@ -54,12 +55,12 @@
     \item $J(\mathbf{w},\mathbf{x})$ -- Cost function
     \item $\beta$ -- Learning rate
     \item $\mathcal{L}$ -- Loss function
-    \item $\hat{y}$ -- Predicted output value
-    \item $y$ -- Expected classification value
+    \item $\yhat$ -- Predicted output value
+    \item $y$ -- Expected (target) classification value
     \item $\sigma(z)$ -- Sigmoid function ${\left(\frac{1}{1+e^{-z}}\right)}$ with respect to~$z$ (i.e.,~${\mathbf{w}^{\T} \mathbf{x}}$).
   \end{itemize}
   
-  \section{$w$~Update Rules}
+  \section{$w$~Update Rules with Squared Loss}
   
   My understanding of the \textit{batch} update rule is shown in Eq.~\eqref{eq:batchUpdateRule}.
   
@@ -82,22 +83,22 @@
   \end{equation}
   
   \noindent
-  The loss function is the squared loss and uses the same regularizer as in homework~\#1 as shown in Eq.~\eqref{eq:lossFunction}.
+  The loss function is the squared loss and uses the same regularizer as in homework~\#1 as shown in Eq.~\eqref{eq:squaredLossFunction}.
   
   \begin{equation}
-    \mathcal{L}(\mathbf{w},\mathbf{x}) = \frac{1}{2}\cdot(\hat{y} - y)^2 + \lambda \cdot \norm{\mathbf{w}}
-    \label{eq:lossFunction}
+    \mathcal{L}(\yhat,y,\mathbf{w}) = \frac{1}{2}(\yhat - y)^2 + \lambda  \norm{\mathbf{w}}
+    \label{eq:squaredLossFunction}
   \end{equation}
   
   \noindent
-  The predicted value~$\hat{y}$ is 
+  The predicted value~$\yhat$ is 
   
-  \[\hat{y} = \sigma   (\mathbf{w}^{\T}\mathbf{x}) \textrm{.} \]
+  \[\yhat = \sigma   (\mathbf{w}^{\T}\mathbf{x}) \textrm{.} \]
 
   The derivative of the loss function~$\mathcal{L}$ is:
   
   \begin{align}
-    \frac{\partial \mathcal{L}(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}} = (\hat{y} - y) \cdot \frac{\partial \hat{y}}{\partial \mathbf{w}} + \lambda \mathbf{w} \textrm{.}
+    \frac{\partial \mathcal{L}(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}} = (\yhat - y)  \frac{\partial \yhat}{\partial \mathbf{w}} + \lambda \mathbf{w} \textrm{.}
     \label{eq:derivLoss}
   \end{align}
 
@@ -105,7 +106,7 @@
   Via the chain rule, we solve the derivative of the sigmoid function:
   
   \begin{equation}
-    \frac{\partial \hat{y}(z)}{\partial \mathbf{w}} = \frac{e^{-z}}{(1+e^{-z})^{2}} \cdot \frac{\partial z}{\partial \mathbf{w}}
+    \frac{\partial \yhat(z)}{\partial \mathbf{w}} = \sigma(z) (1-\sigma(z)) = \frac{e^{-z}}{(1+e^{-z})^{2}}  \frac{\partial z}{\partial \mathbf{w}}
     \label{eq:derivYhat}
   \end{equation}
 
@@ -121,8 +122,53 @@
   Combining Eq.~\eqref{eq:derivLoss},~\eqref{eq:derivYhat}, and~\eqref{eq:derivZ} shows the complete derivative of the loss function.
   
   \begin{align}
-    \frac{\partial \mathcal{L}(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}} &= (\hat{y} - y) \cdot \frac{e^{-z}}{(1+e^{-z})^{2}} \cdot \mathbf{x} + \lambda \mathbf{w}\\
-    &= (\sigma(\mathbf{w}^{\T} \mathbf{x}) - y) \cdot \frac{e^{-\mathbf{w}^{\T} \mathbf{x}}}{(1+e^{-\mathbf{w}^{\T} \mathbf{x}})^{2}} \cdot \mathbf{x} + \lambda \mathbf{w}
+    \frac{\partial \mathcal{L}(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}} &= \left( \sigma(\mathbf{w}^{\T} \mathbf{x}) - y \right) \left( \frac{e^{-z}}{(1+e^{-z})^{2}} \right) \mathbf{x} + \lambda \mathbf{w}\\
+    &= \left( \sigma(\mathbf{w}^{\T} \mathbf{x}) - y \right) \left( \frac{e^{-\mathbf{w}^{\T} \mathbf{x}}}{(1+e^{-\mathbf{w}^{\T} \mathbf{x}})^{2}} \right) \mathbf{x} + \lambda \mathbf{w}
+    \label{eq:completeDerivative}
   \end{align}  
+  
+  \noindent
+  For mathematical simplicity, the identity for~$\sigma'(z)$ allows for a simpler form in Eq.~\eqref{eq:completeDerivativeSimple}.\footnote{I am not considering the transposes.  That math I would need to think more about.}
+  
+  \begin{equation}
+    \frac{\partial \mathcal{L}(\mathbf{w}, \mathbf{x})}{\partial \mathbf{w}} = \left( \sigma(\mathbf{w}^{\T} \mathbf{x}) - y \right) \sigma(\mathbf{w}^{\T} \mathbf{x}) \left( 1 - \sigma(\mathbf{w}^{\T} \mathbf{x}) \right)  \mathbf{x} + \lambda \mathbf{w}
+  \label{eq:completeDerivativeSimple}
+  \end{equation} 
+    
+  \section{$w$~Update Rules with Logistic Loss}
+  
+  The more common loss function I see for logistic regression is in Eq.~\eqref{eq:logisticLossFunction}.
+  
+  \begin{equation}
+    \mathcal{L}(\yhat,y,\mathbf{w}) = -\left(  y\log(\yhat) + (1-y) \log(1-\yhat) \right)
+    \label{eq:logisticLossFunction}
+  \end{equation}
+  
+  \noindent
+  The derivative of the logistic loss function is shown below in Eq.~\eqref{eq:derivLogisticLoss}.
+  
+  \begin{equation}
+    \frac{\partial \mathcal{L}(\yhat,y,\mathbf{w})}{\partial \mathbf{w}} = -\left(  \frac{y}{\yhat} - \frac{1-y}{1-\yhat} \right) \frac{\partial \yhat}{\partial \mathbf{w}}
+    \label{eq:derivLogisticLoss}
+  \end{equation}
+  
+  \noindent
+  We know the derivative of~$\yhat$ from Eq.~\eqref{eq:derivYhat}.  Substituting that we get:
+  
+  \begin{align}
+    \frac{\partial \mathcal{L}(\yhat,y,\mathbf{w})}{\partial \mathbf{w}} &= -\left(  \frac{y}{\yhat} - \frac{1-y}{1-\yhat} \right) \yhat(1-\yhat) \frac{\partial \mathbf{z}}{\partial \mathbf{w}}\\
+    &= \left( -y(1 - \yhat) + (1-y) \yhat) \right) \frac{\partial \mathbf{z}}{\partial \mathbf{w}}\\
+    &= \left( \yhat - y \right) \frac{\partial \mathbf{z}}{\partial \mathbf{w}} \textrm{.}
+    \label{eq:derivLogistic}
+  \end{align}
+
+  \noindent
+  The complete derivative then is in Eq.~\eqref{eq:derivLogisticComplete}.
+  
+  \begin{equation}
+    \frac{\partial \mathcal{L}(\yhat,y,\mathbf{w})}{\partial \mathbf{w}} = \left( \yhat - y \right) \mathbf{x} \textrm{.}
+    \label{eq:derivLogisticComplete}
+  \end{equation}
+  
 
 \end{document}
