@@ -3,6 +3,7 @@ import random
 import const
 import input_parser
 import numpy as np
+import math
 
 
 def run_hw03(train_data, test_data):
@@ -133,8 +134,8 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
   y = np.matmul(x_tensor, w_star)
   err = np.power(y - t_vec, 2)
 
-  num_samples = x_tensor.shape[0]
-  return np.sum(err) / num_samples
+  rms = 2.0 * np.sum(err) / x_tensor.shape[0]
+  return math.sqrt(rms)
 
 
 def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_val,
