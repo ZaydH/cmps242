@@ -20,6 +20,7 @@ def run_hw03(train_data, test_data):
   :return:
   :rtype: List[np.matrix]
   """
+  print "Starting Learner."
   # Extract the information from the widgets
   k = widgets.k_slider.value
   # Strategy pattern for which learner to run
@@ -58,6 +59,7 @@ def run_hw03(train_data, test_data):
     w_star = learner_func(train_x, train_t, loss_function, eta, lambda_val)
     test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
 
+  print "Learner complete."
   return train_err, valid_err, test_err
 
 
@@ -162,7 +164,7 @@ def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_va
   """
   n = train_x.shape[1]
   w = initialize_weights(n)
-  for t in range(1, num_epochs + 1 ): # Starting from zero is not possible because of aging term t ^ \alpha
+  for t in range(1, num_epochs + 1 ):  # Starting from zero is not possible because of aging term t ^ \alpha
     w_star = loss_function(w, train_x, train_t, lambda_val)
     w_change = eta * (t ** (-const.ALPHA)) * w_star
     w -= w_change
@@ -172,6 +174,9 @@ def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_va
 def regularized_error(w, train_x, train_t, lambda_val):
   """
   Regularized Error Calculator
+
+  :param w: Weight vector
+  :type w: np.matrix
 
   :param train_x: Training X tensor
   :type train_x: np.matrix
@@ -198,7 +203,6 @@ def regularized_error(w, train_x, train_t, lambda_val):
   regularizer = np.multiply(lambda_val, w)
 
   return np.add(prod, regularizer)
-
 
 
 def sigmoid_vec(z):

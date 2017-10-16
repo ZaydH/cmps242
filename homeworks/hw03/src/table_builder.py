@@ -4,20 +4,22 @@ from run_learner import build_lambdas
 import math
 
 
-def _highlight_max(s):
-  is_max = s == s.max()
+def _highlight_min(s):
+  is_max = s == s.min()
+  # noinspection PyTypeChecker
   return ['background-color: yellow; font-weight: bold;' if v else '' for v in is_max]
 
 
 def get_lambda_str(x):
   return "$2^{%d}$" % (round(math.log(x, 2))) if x != 0 else str(x)
 
+
 def create_table(train_err, validation_err, test_err):
   """
   Pandas Table Creator
 
   :return: Stylized Pandas table.
-  :rtype: pd.DataFrame
+  :rtype: np.matrix
   """
   # Create the lambdas DataFrame
   lambdas_str = [get_lambda_str(x) for x in build_lambdas()]
@@ -41,20 +43,20 @@ def create_table(train_err, validation_err, test_err):
                                          ('text-align', 'center')]),
     dict(selector=".col_heading", props=[('display', 'none')]),  # Hide the index row.
   ]
-  df = (df.transpose().style.apply(_highlight_max, subset=pd.IndexSlice[column_names, :])
+  df = (df.transpose().style.apply(_highlight_min, subset=pd.IndexSlice[column_names, :])  # ToDo Not highlighting rows properly
                             .set_properties(**{'color': 'black',
                                                'border-color': 'black',
                                                'border-style': 'solid',
                                                'border-width': '1px',
                                                'text-align': 'center'})
                             .set_table_styles(th_styles)
-                            .format("{:.4f}", subset=pd.IndexSlice[column_names, :])
-       )
+                            .format("{:.4f}", subset=pd.IndexSlice[column_names, :]))
   return df
 
 
 if __name__ == "__main__":
   """Debug only code."""
+  # noinspection PyProtectedMember
   from run_learner import _build_random_results
   training, validation, test = _build_random_results()
   create_table(training, validation, test)
