@@ -53,7 +53,7 @@ learning_rate_hbox = ipywidgets.HBox([ipywidgets.Label("Learning Rate ($\eta$): 
 
 
 lambdas_range_slider = ipywidgets.IntRangeSlider(
-  value=[-10, 10],
+  value=[-10, 2],
   min=-10,
   max=10,
   step=1,

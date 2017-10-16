@@ -131,7 +131,7 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
   :return: RMS error
   :rtype: float
   """
-  y = np.matmul(x_tensor, w_star)
+  y = sigmoid_vec(np.matmul(x_tensor, w_star))
   err = np.power(y - t_vec, 2)
 
   rms = 2.0 * np.sum(err) / x_tensor.shape[0]
@@ -139,7 +139,7 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
 
 
 def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_val,
-                                 num_epochs=25):
+                                 num_epochs=10):  # ToDo Come up with a more definitive epoch system
   """
 
   :param train_x: X-tensor to be learned.
@@ -193,7 +193,7 @@ def regularized_error(w, train_x, train_t, lambda_val):
   """
   num_samples = train_x.shape[0]
 
-  y_hat = np.matmul(train_x, w)
+  y_hat = sigmoid_vec(np.matmul(train_x, w))
   err = np.subtract(y_hat, train_t)
   prod = np.matmul(err.transpose(), train_x).transpose()
 
