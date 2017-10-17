@@ -13,13 +13,13 @@ def run_hw03(train_data, test_data):
   Performs the learning for homework 3.
 
   :param train_data: Matrix containing training feature and target values
-  :type train_data: np.matrix
+  :type train_data: np.ndarray
 
   :param test_data: Matrix containing test feature and target values
-  :type test_data: np.matrix
+  :type test_data: np.ndarray
 
   :return:
-  :rtype: List[np.matrix]
+  :rtype: List[np.ndarray]
   """
   print "Starting Learner."
   # Extract the information from the widgets
@@ -50,8 +50,8 @@ def run_hw03(train_data, test_data):
     # Get cross validation results
     results = perform_cross_validation(train_data, validation_sets,
                                        learner_func, loss_function, eta, lambda_val)
-    train_err[idx, :] = np.matrix(results[0:2])
-    valid_err[idx, :] = np.matrix(results[2:])
+    train_err[idx, :] = np.ndarray(results[0:2])
+    valid_err[idx, :] = np.ndarray(results[2:])
 
     # Train on the full training set then verify against the test data.
     # Extract the training and test data
@@ -120,33 +120,34 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
   Calculates the RMS error for the x_tensor and the target vector.
 
   :param w_star: Learned weight vector
-  :type w_star: np.matrix
+  :type w_star: np.ndarray
 
   :param x_tensor: Input feature tensor.
-  :type x_tensor: np.matrix
+  :type x_tensor: np.ndarray
 
   :param t_vec: Array of target values
-  :type t_vec: np.matrix
+  :type t_vec: np.ndarray
 
   :return: RMS error
   :rtype: float
   """
-  y = sigmoid_vec(np.matmul(x_tensor, w_star))
-  err = np.power(y - t_vec, 2)
-
-  rms = 2.0 * np.sum(err) / x_tensor.shape[0]
+  y_hat = sigmoid_vec(np.matmul(x_tensor, w_star))
+  y_diff = y_hat - t_vec
+  err = np.power(y_diff, 2)
+  sum_err = np.sum(err)
+  rms = 2.0 * sum_err / x_tensor.shape[0]
   return math.sqrt(rms)
 
 
 def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_val,
-                                 num_epochs=10):  # ToDo Come up with a more definitive epoch system
+                                 num_epochs=1000):  # ToDo Come up with a more definitive epoch system
   """
 
   :param train_x: X-tensor to be learned.
-  :type train_x: np.matrix
+  :type train_x: np.ndarray
 
   :param train_t: Target value for the learner.
-  :type train_t: np.matrix
+  :type train_t: np.ndarray
 
   :param loss_function: Function used for calculating the loss
   :type loss_function: callable
@@ -161,11 +162,11 @@ def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_va
   :type num_epochs: int
 
   :return: Final learned weight vector
-  :rtype: np.matrix
+  :rtype: np.ndarray
   """
   n = train_x.shape[1]
   w = initialize_weights(n)
-  for t in range(1, num_epochs + 1 ):  # Starting from zero is not possible because of aging term t ^ \alpha
+  for t in range(1, num_epochs + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
     w_star = loss_function(w, train_x, train_t, lambda_val)
     w_change = eta * (t ** (-const.ALPHA)) * w_star
     w -= w_change
@@ -177,28 +178,27 @@ def regularized_error(w, train_x, train_t, lambda_val):
   Regularized Error Calculator
 
   :param w: Weight vector
-  :type w: np.matrix
+  :type w: np.ndarray
 
   :param train_x: Training X tensor
-  :type train_x: np.matrix
+  :type train_x: np.ndarray
 
   :param train_t: Training target value
-  :type train_t: np.matrix
+  :type train_t: np.ndarray
 
   :param lambda_val: Regularizer value
   :type lambda_val: float
 
   :return: Associated weight vector
-  :rtype: np.matrix
+  :rtype: np.ndarray
   """
-  num_samples = train_x.shape[0]
-
   y_hat = sigmoid_vec(np.matmul(train_x, w))
   err = np.subtract(y_hat, train_t)
   prod = np.matmul(err.transpose(), train_x).transpose()
 
   # Normalize by the sample count
-  prod = np.divide(prod, num_samples)
+  # num_samples = train_x.shape[0]
+  # prod = np.divide(prod, num_samples)
 
   # Calculate the regularizer
   regularizer = np.multiply(lambda_val, w)
@@ -210,11 +210,12 @@ def sigmoid_vec(z):
   """
 
   :param z:
-  :type z: np.matrix
+  :type z: np.ndarray
 
   :return:
-  :rtype: np.matrix
+  :rtype: np.ndarray
   """
+  # noinspection SpellCheckingInspection
   denom = np.add(1, np.exp(-1 * z))
   return np.divide(1, denom)
 
@@ -245,7 +246,7 @@ def _build_random_results():
   Builds debug results for testing while the program is being debugged.
 
   :return: Training, validation, and test errors in a list respectively.
-  :rtype: List[np.matrix]
+  :rtype: List[np.ndarray]
   """
   lambdas = build_lambdas()
   training = np.random.rand(len(lambdas), 2)
@@ -328,7 +329,7 @@ def initialize_weights(n):
   :param n: Number of dimensions in the weight vector
   :type n: int
   :return: Initial weight vector.
-  :rtype: np.matrix
+  :rtype: np.ndarray
   """
   return np.zeros([n, 1], dtype=np.float64)
 
@@ -350,7 +351,7 @@ def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test
   :type test_row_indexes: List[int]
 
   :return: Numpy matrices for trainX, trainT, testX, testT
-  :rtype: List[np.matrix]
+  :rtype: List[np.ndarray]
   """
   train_x, train_t = _build_x_and_target(train_df, train_row_indexes)
 
@@ -364,13 +365,13 @@ def _build_x_and_target(data_mat, row_indexes=None):
   Pandas to NumPy Converter
 
   :param data_mat: Matrix of the data.  First column is the target data. The rest is feature data/
-  :type data_mat: np.matrix
+  :type data_mat: np.ndarray
 
   :param row_indexes: List of rows to selects.  Can be ignored if all the rows are desired.
   :type row_indexes: List[int]
 
   :return: Final learned weight vector
-  :rtype: np.matrix
+  :rtype: np.ndarray
   """
   target_values = data_mat[:, 0]
   x_values = data_mat[:, 1:]

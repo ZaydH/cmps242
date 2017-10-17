@@ -5,12 +5,20 @@ import math
 
 
 def _highlight_min(s):
-  is_max = s == s.min()
+  is_min = s == s.min()
   # noinspection PyTypeChecker
-  return ['background-color: yellow; font-weight: bold;' if v else '' for v in is_max]
+  return ['background-color: yellow; font-weight: bold;' if v else '' for v in is_min]
 
 
 def get_lambda_str(x):
+  """
+  Builds the string for the lambda in the table.  Reesult uses LaTeX formatting.
+
+  :param x: Power of two for latex
+  :type x: int
+  :return:
+  :rtype: str
+  """
   return "$2^{%d}$" % (round(math.log(x, 2))) if x != 0 else str(x)
 
 
@@ -43,7 +51,7 @@ def create_table(train_err, validation_err, test_err):
                                          ('text-align', 'center')]),
     dict(selector=".col_heading", props=[('display', 'none')]),  # Hide the index row.
   ]
-  df = (df.transpose().style.apply(_highlight_min, subset=pd.IndexSlice[column_names, :])  # ToDo Not highlighting rows properly
+  df = (df.transpose().style.apply(_highlight_min, axis=1, subset=pd.IndexSlice[column_names, :])  # ToDo Not highlighting rows properly
                             .set_properties(**{'color': 'black',
                                                'border-color': 'black',
                                                'border-style': 'solid',

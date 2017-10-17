@@ -32,6 +32,7 @@ def parse():
   :rtype: Tuple(pd.DataFrame)
   """
   train_data = parse_csv_data_file("train.csv")
+  # train_data = train_data.head(10)
   test_data = parse_csv_data_file("test.csv")
 
   # Vectorizer and get the TF-IDF scores
@@ -89,7 +90,7 @@ def count_vectorizer(df, col_name, vocab=None):
   if vocab is None:
     vocab = vectorizer.vocabulary_
 
-  tf_idf = sklearntext.TfidfTransformer().fit_transform(doc_word_matrix)
+  tf_idf = sklearntext.TfidfTransformer(norm=None).fit_transform(doc_word_matrix)
   return tf_idf.toarray(), vocab
 
 

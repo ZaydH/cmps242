@@ -40,7 +40,7 @@ run_button.on_click(run_all)
 
 
 learning_rate_slider = ipywidgets.FloatSlider(
-  value=0.2,
+  value=5000,
   min=0.01,
   max=1,
   step=0.01,
