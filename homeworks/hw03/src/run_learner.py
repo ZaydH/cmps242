@@ -21,6 +21,7 @@ def run_hw03(train_data, test_data):
   :return:
   :rtype: List[np.ndarray]
   """
+  np.seterr(over='ignore')  # Mask the numpy overflow warning.
   print "Starting Learner."
   # Extract the information from the widgets
   k = widgets.k_slider.value
@@ -45,17 +46,17 @@ def run_hw03(train_data, test_data):
 
   # Build the indices for each of the folds.
   validation_sets = create_cross_validation_fold_sets(num_train, k)
+  # Train on the full training set then verify against the test data.
+  # Extract the training and test data
+  train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data)
 
   for idx, lambda_val in enumerate(lambdas):
     # Get cross validation results
     results = perform_cross_validation(train_data, validation_sets,
                                        learner_func, loss_function, eta, lambda_val)
-    train_err[idx, :] = np.ndarray(results[0:2])
-    valid_err[idx, :] = np.ndarray(results[2:])
+    train_err[idx, :] = np.matrix(results[0:2])
+    valid_err[idx, :] = np.matrix(results[2:])
 
-    # Train on the full training set then verify against the test data.
-    # Extract the training and test data
-    train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data)
     # Get the test error
     w_star = learner_func(train_x, train_t, loss_function, eta, lambda_val)
     test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
@@ -140,8 +141,9 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
 
 
 def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_val,
-                                 num_epochs=1000):  # ToDo Come up with a more definitive epoch system
+                                 num_epochs=100):  # ToDo Come up with a more definitive epoch system
   """
+  Performs the gradient descent algorithm.
 
   :param train_x: X-tensor to be learned.
   :type train_x: np.ndarray
@@ -364,7 +366,7 @@ def _build_x_and_target(data_mat, row_indexes=None):
   """
   Pandas to NumPy Converter
 
-  :param data_mat: Matrix of the data.  First column is the target data. The rest is feature data/
+  :param data_mat: Matrix of the data.  First column is the target data. The rest is feature data.
   :type data_mat: np.ndarray
 
   :param row_indexes: List of rows to selects.  Can be ignored if all the rows are desired.
