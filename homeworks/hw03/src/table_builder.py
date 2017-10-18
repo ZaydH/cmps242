@@ -51,6 +51,7 @@ def create_table(train_err, validation_err, test_err):
                                          ('text-align', 'center')]),
     dict(selector=".col_heading", props=[('display', 'none')]),  # Hide the index row.
   ]
+  # noinspection PyUnresolvedReferences
   df = (df.transpose().style.apply(_highlight_min, axis=1, subset=pd.IndexSlice[column_names, :])
                             .set_properties(**{'color': 'black',
                                                'border-color': 'black',

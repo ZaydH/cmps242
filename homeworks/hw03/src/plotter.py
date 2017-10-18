@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from run_learner import build_lambdas, _build_random_results
-from widgets import learning_alg_radio
+from widgets import learning_alg_radio, k_slider, learning_rate_slider, regularizer_radio
 
 
 def create_plots(training_errors, validation_errors, test_errors):
@@ -15,7 +15,7 @@ def create_plots(training_errors, validation_errors, test_errors):
   # Plot the test error (no error bars)
   plt.plot(x, test_errors[:, 0], label="Test")
 
-  plot_title = "Effect of $\lambda$ on Learning Errors using %s" % (learning_alg_radio.value)
+  plot_title = "Effect of $\lambda$ on Learning Errors using %s" % learning_alg_radio.value
   plt.title(plot_title)
 
   # Label the plot information
@@ -24,8 +24,14 @@ def create_plots(training_errors, validation_errors, test_errors):
   plt.xscale('log')
   plt.ylabel("RMS Error")
   plt.yscale('log')
-  plt.legend()
+  plt.loglog()
+  plt.legend(shadow=True, fontsize='x-large', loc="southeast")
+
   plt.show()
+  filename = "error_%s_%s_k=%d_alpha=%f.pdf" % (learning_alg_radio.value, regularizer_radio.value,
+                                                k_slider.value, learning_rate_slider.value)
+  filename.replace(" ", "_")
+  plt.savefig(".pdf")
 
 
 def _verify_data_sizes(training_errors, validation_errors, test_errors):

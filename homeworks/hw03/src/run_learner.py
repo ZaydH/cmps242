@@ -26,17 +26,25 @@ def run_hw03(train_data, test_data):
   # Extract the information from the widgets
   k = widgets.k_slider.value
   # Strategy pattern for which learner to run
+  add_plus_minus_data = False
   if widgets.learning_alg_radio.value == const.GD_ALG:
     learner_func = run_gradient_descent_learner
   elif widgets.learning_alg_radio.value == const.EG_ALG:
     learner_func = run_eg_learner
+    add_plus_minus_data = True
   else:
     raise ValueError("Invalid learning algorithm")
+  # Strategy Pattern for the Regularizer
+  if widgets.regularizer_radio.value == const.L1_NORM_REGULARIZER:
+    regularizer_func = l1_norm_regularizer
+  elif widgets.regularizer_radio.value == const.L2_NORM_REGULARIZER:
+    regularizer_func = l2_norm_regularizer
+  else:
+    raise ValueError("Invalid regularizer")
+
   num_train = train_data.shape[0]
   eta = widgets.learning_rate_slider.value
   lambdas = build_lambdas()
-
-  loss_function = regularized_error  # TODO Update support for multiple loss functions.
 
   # Build the results structures
   num_lambdas = len(lambdas)
@@ -48,17 +56,19 @@ def run_hw03(train_data, test_data):
   validation_sets = create_cross_validation_fold_sets(num_train, k)
   # Train on the full training set then verify against the test data.
   # Extract the training and test data
-  train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data)
+  train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data,
+                                                                  convert_to_plus_minus=add_plus_minus_data)
 
   for idx, lambda_val in enumerate(lambdas):
     # Get cross validation results
     results = perform_cross_validation(train_data, validation_sets,
-                                       learner_func, loss_function, eta, lambda_val)
+                                       learner_func, regularizer_func,
+                                       eta, lambda_val)
     train_err[idx, :] = np.matrix(results[0:2])
     valid_err[idx, :] = np.matrix(results[2:])
 
     # Get the test error
-    w_star = learner_func(train_x, train_t, loss_function, eta, lambda_val)
+    w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
     test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
 
   print "Learner complete."
@@ -66,7 +76,8 @@ def run_hw03(train_data, test_data):
 
 
 def perform_cross_validation(train_data, validation_sets,
-                             learner_func, loss_function, eta, lambda_val):
+                             learner_func, regularizer_func,
+                             eta, lambda_val):
   """
   Execute Cross-Validation
 
@@ -79,8 +90,8 @@ def perform_cross_validation(train_data, validation_sets,
   :param learner_func: Function that performs the learning
   :type learner_func: callable
 
-  :param loss_function: Function used to calculate the new weights
-  :type loss_function: callable
+  :param regularizer_func: Function to regularize the error
+  :type regularizer_func: callable
 
   :param eta: Learning rate
   :type eta: float
@@ -105,9 +116,10 @@ def perform_cross_validation(train_data, validation_sets,
     # Extract the training and test data
     train_x, train_t, valid_x, valid_t = _extract_train_and_test_data(train_data, train_data,
                                                                       training_sets[fold_cnt],
-                                                                      validation_sets[fold_cnt])
+                                                                      validation_sets[fold_cnt],
+                                                                      convert_to_plus_minus=False) # Converted in main func if needed
     # Learn the function
-    w_star = learner_func(train_x, train_t, loss_function, eta, lambda_val)
+    w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
     train_err[fold_cnt] = calculate_rms_error(w_star, train_x, train_t)
     validation_err[fold_cnt] = calculate_rms_error(w_star, valid_x, valid_t)
 
@@ -140,8 +152,8 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
   return math.sqrt(rms)
 
 
-def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_val,
-                                 num_epochs=100):  # ToDo Come up with a more definitive epoch system
+def run_gradient_descent_learner(train_x, train_t, regularizer_func, eta, lambda_val,
+                                 num_epochs=25):  # ToDo Come up with a more definitive epoch system
   """
   Performs the gradient descent algorithm.
 
@@ -151,8 +163,8 @@ def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_va
   :param train_t: Target value for the learner.
   :type train_t: np.ndarray
 
-  :param loss_function: Function used for calculating the loss
-  :type loss_function: callable
+  :param regularizer_func: Function used to run different regularizers
+  :type regularizer_func: callable
 
   :param eta: Learning rate
   :type eta: float
@@ -169,13 +181,19 @@ def run_gradient_descent_learner(train_x, train_t, loss_function, eta, lambda_va
   n = train_x.shape[1]
   w = initialize_weights(n)
   for t in range(1, num_epochs + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
-    w_star = loss_function(w, train_x, train_t, lambda_val)
+    w_prev = np.copy(w)
+    w_star = regularized_error(w, train_x, train_t, lambda_val, regularizer_func)
     w_change = eta * (t ** (-const.ALPHA)) * w_star
     w -= w_change
+
+    # Allow premature exit.
+    max_change = np.max(np.abs(np.subtract(w, w_prev)))
+    if max_change < 10 ** -3:
+      break
   return w
 
 
-def regularized_error(w, train_x, train_t, lambda_val):
+def regularized_error(w, train_x, train_t, lambda_val, regularizer_func):
   """
   Regularized Error Calculator
 
@@ -191,6 +209,9 @@ def regularized_error(w, train_x, train_t, lambda_val):
   :param lambda_val: Regularizer value
   :type lambda_val: float
 
+  :param regularizer_func:
+  :type regularizer_func: callable
+
   :return: Associated weight vector
   :rtype: np.ndarray
   """
@@ -203,9 +224,47 @@ def regularized_error(w, train_x, train_t, lambda_val):
   # prod = np.divide(prod, num_samples)
 
   # Calculate the regularizer
-  regularizer = np.multiply(lambda_val, w)
+  regularizer_err = regularizer_func(lambda_val, w)
 
-  return np.add(prod, regularizer)
+  return np.add(prod, regularizer_err)
+
+
+def l1_norm_regularizer(lambda_val, w):
+  """
+  L1 Norm Regularizer
+
+  Calculates the L1 regularizer.  It removes the bias term.
+
+  :param lambda_val: Regularizer term
+  :type lambda_val: float
+  :param w: Weight vector
+  :type w: np.ndarray
+
+  :return: Regularized err term
+  :rtype: np.ndarray
+  """
+  reg_err = np.multiply(np.ones(w.shape), lambda_val)
+  reg_err[0, 0] = 0  # Exclude the bias
+  return reg_err
+
+
+def l2_norm_regularizer(lambda_val, w):
+  """
+  L2 Norm Regularizer
+
+  Calculates the L2 regularizer.  It removes the bias term.
+
+  :param lambda_val: Regularizer term
+  :type lambda_val: float
+  :param w: Weight vector
+  :type w: np.ndarray
+
+  :return: Regularized err term
+  :rtype: np.ndarray
+  """
+  reg_err = np.multiply(lambda_val, w)
+  reg_err[0, 0] = 0  # Exclude the bias
+  return reg_err
 
 
 def sigmoid_vec(z):
@@ -336,7 +395,8 @@ def initialize_weights(n):
   return np.zeros([n, 1], dtype=np.float64)
 
 
-def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test_row_indexes=None):
+def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test_row_indexes=None,
+                                 convert_to_plus_minus=False):
   """
   Test and Training Extractor
 
@@ -351,6 +411,8 @@ def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test
   :type train_row_indexes: List[int]
   :param test_row_indexes: List of row indices to select for the test data
   :type test_row_indexes: List[int]
+  :param convert_to_plus_minus: Creates a duplicsate copy of the minus data for use with EG+-
+  :type convert_to_plus_minus: bool
 
   :return: Numpy matrices for trainX, trainT, testX, testT
   :rtype: List[np.ndarray]
@@ -362,7 +424,7 @@ def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test
   return train_x, train_t, test_x, test_t
 
 
-def _build_x_and_target(data_mat, row_indexes=None):
+def _build_x_and_target(data_mat, row_indexes=None, add_plus_minus=False):
   """
   Pandas to NumPy Converter
 
@@ -377,6 +439,9 @@ def _build_x_and_target(data_mat, row_indexes=None):
   """
   target_values = data_mat[:, 0]
   x_values = data_mat[:, 1:]
+  if add_plus_minus:
+    neg_values = np.multiply(-1, np.copy(x_values))
+    x_values = np.hstack(x_values, neg_values)
   # If appropriate, get only a subset of the rows
   if row_indexes is not None:
     rows_np = np.array(row_indexes)
@@ -392,4 +457,6 @@ def _build_x_and_target(data_mat, row_indexes=None):
 
 if __name__ == "__main__":
   train_examples, test_examples = input_parser.parse()
-  run_hw03(train_examples, test_examples)
+  train_err, validation_err, test_err = run_hw03(train_examples, test_examples)
+  import plotter
+  plotter.create_plots(train_err, validation_err, test_err)

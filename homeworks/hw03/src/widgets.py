@@ -24,10 +24,22 @@ k_hbox = ipywidgets.HBox([ipywidgets.Label('Number of Folds: '), k_slider])
 
 learning_alg_radio = ipywidgets.RadioButtons(
   options=[const.GD_ALG, const.EG_ALG],
+  description="",
   disabled=False
 )
 learning_alg_hbox = ipywidgets.HBox([ipywidgets.Label("Select Learning Algorithm: "),
                                      learning_alg_radio])
+
+
+regularizer_radio = ipywidgets.RadioButtons(
+  options=[const.L1_NORM_REGULARIZER, const.L2_NORM_REGULARIZER],
+  description="",
+  disabled=False
+)
+regularizer_radio.value = const.L2_NORM_REGULARIZER
+regularizer_hbox = ipywidgets.HBox([ipywidgets.Label("Select the Regularizer: "),
+                                    regularizer_radio])
+
 
 run_button = ipywidgets.Button(
   description='Run Learner',
@@ -40,7 +52,7 @@ run_button.on_click(run_all)
 
 
 learning_rate_slider = ipywidgets.FloatSlider(
-  value=1.0,
+  value=0.5,
   min=0.01,
   max=1,
   step=0.01,
@@ -53,9 +65,9 @@ learning_rate_hbox = ipywidgets.HBox([ipywidgets.Label("Learning Rate ($\eta$): 
 
 
 lambdas_range_slider = ipywidgets.IntRangeSlider(
-  value=[-3, 4],
-  min=-5,
-  max=5,
+  value=[-10, 4],
+  min=-10,
+  max=10,
   step=1,
   orientation='horizontal',
   readout=True,
