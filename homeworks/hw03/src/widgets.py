@@ -52,10 +52,10 @@ run_button.on_click(run_all)
 
 
 learning_rate_slider = ipywidgets.FloatSlider(
-  value=0.5,
-  min=0.01,
-  max=1,
-  step=0.01,
+  value=20,
+  min=0.1,
+  max=100,
+  step=0.1,
   orientation='horizontal',
   readout=True,
   readout_format='.2f',
@@ -65,7 +65,7 @@ learning_rate_hbox = ipywidgets.HBox([ipywidgets.Label("Learning Rate ($\eta$): 
 
 
 lambdas_range_slider = ipywidgets.IntRangeSlider(
-  value=[-10, 4],
+  value=[0, 10],
   min=-10,
   max=10,
   step=1,

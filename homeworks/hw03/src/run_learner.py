@@ -22,13 +22,13 @@ def run_hw03(train_data, test_data):
   :rtype: List[np.ndarray]
   """
   np.seterr(over='ignore')  # Mask the numpy overflow warning.
-  print "Starting Learner."
+  print("Starting Learner.")
   # Extract the information from the widgets
   k = widgets.k_slider.value
   # Strategy pattern for which learner to run
   add_plus_minus_data = False
   if widgets.learning_alg_radio.value == const.GD_ALG:
-    learner_func = run_gradient_descent_learner
+    learner_func = run_gd_learner
   elif widgets.learning_alg_radio.value == const.EG_ALG:
     learner_func = run_eg_learner
     add_plus_minus_data = True
@@ -71,7 +71,7 @@ def run_hw03(train_data, test_data):
     w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
     test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
 
-  print "Learner complete."
+  print("Learner complete.")
   return train_err, valid_err, test_err
 
 
@@ -117,13 +117,34 @@ def perform_cross_validation(train_data, validation_sets,
     train_x, train_t, valid_x, valid_t = _extract_train_and_test_data(train_data, train_data,
                                                                       training_sets[fold_cnt],
                                                                       validation_sets[fold_cnt],
-                                                                      convert_to_plus_minus=False) # Converted in main func if needed
+                                                                      convert_to_plus_minus=False)  # Converted in main func if needed
     # Learn the function
     w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
     train_err[fold_cnt] = calculate_rms_error(w_star, train_x, train_t)
     validation_err[fold_cnt] = calculate_rms_error(w_star, valid_x, valid_t)
 
+    # Calculate the percent done and report it.
+    print_percent_done(fold_cnt + 1, lambda_val, k)
   return np.mean(train_err), np.var(train_err), np.mean(validation_err), np.var(validation_err)
+
+
+def print_percent_done(current_fold, current_lambda, k):
+  """
+  Prints the percent done based off the current fold and the current lambda under test.
+
+  :param current_fold: Fold number
+  :type current_fold: int
+  :param current_lambda: Current lambda under test
+  :type current_lambda: float
+  :param k: Number of folds
+  :type k: int
+  """
+  all_lambdas = build_lambdas()
+  numb_runs = k * len(all_lambdas) + 1
+  lambda_cnt = all_lambdas.index(current_lambda)
+  training_cnt = current_fold + lambda_cnt * k
+
+  print("%.1f%% complete." % (100.0 * training_cnt / numb_runs))
 
 
 def calculate_rms_error(w_star, x_tensor, t_vec):
@@ -148,12 +169,12 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
   y_diff = y_hat - t_vec
   err = np.power(y_diff, 2)
   sum_err = np.sum(err)
-  rms = 2.0 * sum_err / x_tensor.shape[0]
+  rms = sum_err / x_tensor.shape[0]
   return math.sqrt(rms)
 
 
-def run_gradient_descent_learner(train_x, train_t, regularizer_func, eta, lambda_val,
-                                 num_epochs=25):  # ToDo Come up with a more definitive epoch system
+def run_gd_learner(train_x, train_t, regularizer_func, eta, lambda_val,
+                   num_epochs=100):
   """
   Performs the gradient descent algorithm.
 
@@ -179,10 +200,10 @@ def run_gradient_descent_learner(train_x, train_t, regularizer_func, eta, lambda
   :rtype: np.ndarray
   """
   n = train_x.shape[1]
-  w = initialize_weights(n)
+  w = initialize_weights_gd(n)
   for t in range(1, num_epochs + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
     w_prev = np.copy(w)
-    w_star = regularized_error(w, train_x, train_t, lambda_val, regularizer_func)
+    w_star = gd_regularizer_error(w, train_x, train_t, lambda_val, regularizer_func)
     w_change = eta * (t ** (-const.ALPHA)) * w_star
     w -= w_change
 
@@ -193,7 +214,7 @@ def run_gradient_descent_learner(train_x, train_t, regularizer_func, eta, lambda
   return w
 
 
-def regularized_error(w, train_x, train_t, lambda_val, regularizer_func):
+def gd_regularizer_error(w, train_x, train_t, lambda_val, regularizer_func):
   """
   Regularized Error Calculator
 
@@ -218,10 +239,6 @@ def regularized_error(w, train_x, train_t, lambda_val, regularizer_func):
   y_hat = sigmoid_vec(np.matmul(train_x, w))
   err = np.subtract(y_hat, train_t)
   prod = np.matmul(err.transpose(), train_x).transpose()
-
-  # Normalize by the sample count
-  # num_samples = train_x.shape[0]
-  # prod = np.divide(prod, num_samples)
 
   # Calculate the regularizer
   regularizer_err = regularizer_func(lambda_val, w)
@@ -281,10 +298,70 @@ def sigmoid_vec(z):
   return np.divide(1, denom)
 
 
-def run_eg_learner(train_x, train_t, loss_function, lambda_val,
-                   num_epochs=25):
+def run_eg_learner(train_x, train_t, regularizer_func, eta, lambda_val,
+                   num_epochs=25):  # ToDo Come up with a more definitive epoch system
   # TODO: Implement the EG learner
-  pass
+  n = train_x.shape[1]
+  w = initialize_weights_eg(n)
+  for t in range(1, num_epochs + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
+    w_prev = np.copy(w)
+    exp_weight = _eg_regularized_error(w, train_x, train_t, eta, lambda_val, regularizer_func)
+    w = np.multiply(w_prev, exp_weight)
+
+    # Normalize all the weights
+    w = np.divide(w, np.sum(w))
+    _verify_eg_w_length(w)
+
+    # Allow premature exit.
+    max_change = np.max(np.abs(np.subtract(w, w_prev)))
+    if max_change < 10 ** -3:
+      break
+  return w
+
+
+def _eg_regularized_error(w_t, train_x, train_t, eta, lambda_val, regularizer_func):
+  """
+  Exponentiated Regularizer Error
+
+  Calculates the regularized error for the exponentiated gradient
+  algorithm.
+
+  :param w_t: Current weight vector
+  :type w_t: np.ndarray
+  :param train_x: X tensor
+  :type train_x: np.ndarray
+  :param train_t: Target training value
+  :type train_t: np.ndarray
+  :param eta: Learning rate
+  :type eta: float
+  :param lambda_val: Regularizer value
+  :type lambda_val: float
+  :param regularizer_func:
+  :type regularizer_func: callable
+  :return:
+  :rtype: np.ndarray
+  """
+  y_hat = sigmoid_vec(np.matmul(train_x, w_t))
+  err = np.subtract(y_hat, train_t)
+  regularizer_err = regularizer_func(lambda_val, w_t)
+  prod = np.matmul(train_x, err) + regularizer_err
+  exp_weight = np.multiply(-1 * eta, prod)
+  return np.exp(exp_weight)
+
+
+# noinspection PyUnusedLocal
+def zero_regularizer(lambda_val, w_t):
+  """
+  Empty regularizer that has no effect
+
+  :param lambda_val: Regularizer scalar
+  :type lambda_val: float
+  :param w_t: Weight vector for the current epoch
+  :type w_t: np.ndarray
+  :return: Regularizer correct
+  :rtype: np.ndarray
+  """
+  return np.zeros(w_t.shape)
 
 
 def build_lambdas():
@@ -298,6 +375,19 @@ def build_lambdas():
   """
   return [0] + [2 ** x for x in range(widgets.lambdas_range_slider.value[0],
                                       widgets.lambdas_range_slider.value[1]+1)]
+
+
+def _verify_eg_w_length(w):
+  """
+  EG Weights Verifier
+
+  Debug only code.  Verifies that the weights of an EG weight
+  vector are valid.
+
+  :param w: Normalized EG weight vector
+  :type w: np.ndarray
+  """
+  assert abs(np.sum(w) - 1) < 10 ** -4
 
 
 def _build_random_results():
@@ -380,12 +470,11 @@ def create_training_set_indices(validation_sets):
   return splits
 
 
-def initialize_weights(n):
+def initialize_weights_gd(n):
   """
-  Weight Vector Initializer
+  GD Weight Vector Initializer
 
-  The weight vector selected may differ depending on the specfic learning
-  algorithm selected.
+  Initializes all weights to zero in a Numpy matrix of the specified length.
 
   :param n: Number of dimensions in the weight vector
   :type n: int
@@ -393,6 +482,29 @@ def initialize_weights(n):
   :rtype: np.ndarray
   """
   return np.zeros([n, 1], dtype=np.float64)
+
+
+def initialize_weights_eg(n):
+  """
+  EG Weight Vector Initializer
+
+  Initializes weights to a random vector where the sum of the
+  weights equals 1.
+
+  :param n: Number of dimensions for the weight vector
+  :type n: int
+
+  :return: Normalized random array
+  :rtype: np.array
+  """
+  rand_arr = np.random.rand([n, 1])
+  sum_rand = np.sum(rand_arr)
+
+  norm_rand = np.divide(rand_arr, sum_rand)
+  _verify_eg_w_length(norm_rand)
+
+  # Debug verification
+  return norm_rand
 
 
 def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test_row_indexes=None,
@@ -417,9 +529,11 @@ def _extract_train_and_test_data(train_df, test_df, train_row_indexes=None, test
   :return: Numpy matrices for trainX, trainT, testX, testT
   :rtype: List[np.ndarray]
   """
-  train_x, train_t = _build_x_and_target(train_df, train_row_indexes)
+  train_x, train_t = _build_x_and_target(train_df, train_row_indexes,
+                                         add_plus_minus=convert_to_plus_minus)
 
-  test_x, test_t = _build_x_and_target(test_df, test_row_indexes)
+  test_x, test_t = _build_x_and_target(test_df, test_row_indexes,
+                                       add_plus_minus=convert_to_plus_minus)
 
   return train_x, train_t, test_x, test_t
 
@@ -441,7 +555,7 @@ def _build_x_and_target(data_mat, row_indexes=None, add_plus_minus=False):
   x_values = data_mat[:, 1:]
   if add_plus_minus:
     neg_values = np.multiply(-1, np.copy(x_values))
-    x_values = np.hstack(x_values, neg_values)
+    x_values = np.hstack([x_values, neg_values])
   # If appropriate, get only a subset of the rows
   if row_indexes is not None:
     rows_np = np.array(row_indexes)
@@ -457,6 +571,6 @@ def _build_x_and_target(data_mat, row_indexes=None, add_plus_minus=False):
 
 if __name__ == "__main__":
   train_examples, test_examples = input_parser.parse()
-  train_err, validation_err, test_err = run_hw03(train_examples, test_examples)
+  train_err_run, validation_err_run, test_err_run = run_hw03(train_examples, test_examples)
   import plotter
-  plotter.create_plots(train_err, validation_err, test_err)
+  plotter.create_plots(train_err_run, validation_err_run, test_err_run)

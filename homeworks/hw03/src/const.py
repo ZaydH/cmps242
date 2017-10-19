@@ -12,6 +12,8 @@ ALPHA = 0.9
 GD_ALG = "Gradient Descent"
 EG_ALG = "EG+/-"
 
+IMG_DIR = "img"
+
 # Regularizer Names
 L1_NORM_REGULARIZER = "L1 Norm"
 L2_NORM_REGULARIZER = "L2 Norm"

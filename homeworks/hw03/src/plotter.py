@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import const
+import os
 from run_learner import build_lambdas, _build_random_results
 from widgets import learning_alg_radio, k_slider, learning_rate_slider, regularizer_radio
 
@@ -19,19 +21,19 @@ def create_plots(training_errors, validation_errors, test_errors):
   plt.title(plot_title)
 
   # Label the plot information
-  plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
+  # plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
   plt.xlabel("$\lambda$")
   plt.xscale('log')
   plt.ylabel("RMS Error")
   plt.yscale('log')
   plt.loglog()
-  plt.legend(shadow=True, fontsize='x-large', loc="southeast")
+  plt.legend(shadow=True, fontsize='x-large', loc='best')
 
-  plt.show()
-  filename = "error_%s_%s_k=%d_alpha=%f.pdf" % (learning_alg_radio.value, regularizer_radio.value,
-                                                k_slider.value, learning_rate_slider.value)
+  filename = "error_%s_%s__k=%d_alpha=%.1f.pdf" % (learning_alg_radio.value, regularizer_radio.value,
+                                                   k_slider.value, learning_rate_slider.value)
   filename.replace(" ", "_")
-  plt.savefig(".pdf")
+  plt.savefig(const.IMG_DIR + os.sep + filename)
+  plt.show()
 
 
 def _verify_data_sizes(training_errors, validation_errors, test_errors):
@@ -40,6 +42,7 @@ def _verify_data_sizes(training_errors, validation_errors, test_errors):
   :param training_errors:
   :param validation_errors:
   :param test_errors:
+
   :return:
   """
   # Verify the error matricies are correct
