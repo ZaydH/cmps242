@@ -27,21 +27,30 @@ def run_hw03(train_data, test_data):
   k = widgets.k_slider.value
   # Strategy pattern for which learner to run
   add_plus_minus_data = False
-  if widgets.learning_alg_radio.value == const.GD_ALG:
+  if widgets.learning_alg_radio.value == const.ALG_GD:
     learner_func = run_gd_learner
-  elif widgets.learning_alg_radio.value == const.EG_ALG:
+  elif widgets.learning_alg_radio.value == const.ALG_EG:
     learner_func = run_eg_learner
     add_plus_minus_data = True
   else:
     raise ValueError("Invalid learning algorithm")
   # Strategy Pattern for the Regularizer
-  if widgets.regularizer_radio.value == const.L1_NORM_REGULARIZER:
+  if widgets.regularizer_radio.value == const.REGULARIZER_L1_NORM:
     regularizer_func = l1_norm_regularizer
-  elif widgets.regularizer_radio.value == const.L2_NORM_REGULARIZER:
+  elif widgets.regularizer_radio.value == const.REGULARIZER_L2_NORM:
     regularizer_func = l2_norm_regularizer
   else:
     raise ValueError("Invalid regularizer")
-
+  # ToDo Decide what to do about regularization of the EG+/- Learner
+  if widgets.learning_alg_radio.value == const.ALG_EG:
+    regularizer_func = zero_regularizer
+  # Strategy Pattern for the Regularizer
+  if widgets.error_type_radio.value == const.ERROR_RMS:
+    calculate_validation_err_func = calculate_rms_error
+  elif widgets.error_type_radio.value == const.ERROR_ACCURACY:
+    calculate_validation_err_func = calculate_accuracy
+  else:
+    raise ValueError("Invalid validation error function")
   num_train = train_data.shape[0]
   eta = widgets.learning_rate_slider.value
   lambdas = build_lambdas()
@@ -62,22 +71,22 @@ def run_hw03(train_data, test_data):
   for idx, lambda_val in enumerate(lambdas):
     # Get cross validation results
     results = perform_cross_validation(train_data, validation_sets,
-                                       learner_func, regularizer_func,
-                                       eta, lambda_val)
+                                       learner_func, regularizer_func, calculate_validation_err_func,
+                                       eta, lambda_val, add_plus_minus_data,)
     train_err[idx, :] = np.matrix(results[0:2])
     valid_err[idx, :] = np.matrix(results[2:])
 
     # Get the test error
     w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
-    test_err[idx] = calculate_rms_error(w_star, test_x, test_t)
+    test_err[idx] = calculate_validation_err_func(w_star, test_x, test_t)
 
   print("Learner complete.")
   return train_err, valid_err, test_err
 
 
 def perform_cross_validation(train_data, validation_sets,
-                             learner_func, regularizer_func,
-                             eta, lambda_val):
+                             learner_func, regularizer_func, calculate_validation_err_func,
+                             eta, lambda_val, convert_to_plus_minus):
   """
   Execute Cross-Validation
 
@@ -93,11 +102,17 @@ def perform_cross_validation(train_data, validation_sets,
   :param regularizer_func: Function to regularize the error
   :type regularizer_func: callable
 
+  :param calculate_validation_err_func: Calculates the validation error
+  :type calculate_validation_err_func: callable
+
   :param eta: Learning rate
   :type eta: float
 
   :param lambda_val: Regularization value to be used
   :type lambda_val: float
+
+  :param convert_to_plus_minus: Selects whether to add a negative version of the input to the extracted data
+  :type convert_to_plus_minus: bool
 
   :return: Error mean and variable
   :rtype: List[float]
@@ -117,11 +132,11 @@ def perform_cross_validation(train_data, validation_sets,
     train_x, train_t, valid_x, valid_t = _extract_train_and_test_data(train_data, train_data,
                                                                       training_sets[fold_cnt],
                                                                       validation_sets[fold_cnt],
-                                                                      convert_to_plus_minus=False)  # Converted in main func if needed
+                                                                      convert_to_plus_minus)
     # Learn the function
     w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
-    train_err[fold_cnt] = calculate_rms_error(w_star, train_x, train_t)
-    validation_err[fold_cnt] = calculate_rms_error(w_star, valid_x, valid_t)
+    train_err[fold_cnt] = calculate_validation_err_func(w_star, train_x, train_t)
+    validation_err[fold_cnt] = calculate_validation_err_func(w_star, valid_x, valid_t)
 
     # Calculate the percent done and report it.
     print_percent_done(fold_cnt + 1, lambda_val, k)
@@ -173,9 +188,35 @@ def calculate_rms_error(w_star, x_tensor, t_vec):
   return math.sqrt(rms)
 
 
+def calculate_accuracy(w_star, x_tensor, t_vec):
+  """
+  RMS Calculator
+
+  Calculates the RMS error for the x_tensor and the target vector.
+
+  :param w_star: Learned weight vector
+  :type w_star: np.ndarray
+
+  :param x_tensor: Input feature tensor.
+  :type x_tensor: np.ndarray
+
+  :param t_vec: Array of target values
+  :type t_vec: np.ndarray
+
+  :return: RMS error
+  :rtype: float
+  """
+  y_hat = sigmoid_vec(np.matmul(x_tensor, w_star))
+  y_hat_round = np.round(y_hat, 0)
+  y_diff = np.abs(np.subtract(y_hat_round, t_vec))
+  return np.sum(y_diff) / x_tensor.shape[0]
+
+
 def run_gd_learner(train_x, train_t, regularizer_func, eta, lambda_val,
                    num_epochs=100):
   """
+  Standard Gradient Descent Learner
+
   Performs the gradient descent algorithm.
 
   :param train_x: X-tensor to be learned.
@@ -216,7 +257,12 @@ def run_gd_learner(train_x, train_t, regularizer_func, eta, lambda_val,
 
 def gd_regularizer_error(w, train_x, train_t, lambda_val, regularizer_func):
   """
-  Regularized Error Calculator
+  Gradient Descent Regularized Error Calculator
+
+  Calculates the derivative of the gradient descent loss function using the
+  form:
+
+  err = (\hat{y} - y)^T X^T + \lambda w_t
 
   :param w: Weight vector
   :type w: np.ndarray
@@ -286,11 +332,14 @@ def l2_norm_regularizer(lambda_val, w):
 
 def sigmoid_vec(z):
   """
+  Vectorized Sigmoid Function Calculator
 
-  :param z:
+  Calculates the sigmoid function on a NumPy array.
+
+  :param z: Input vector for the sigmoid function
   :type z: np.ndarray
 
-  :return:
+  :return: \sigma(z)
   :rtype: np.ndarray
   """
   # noinspection SpellCheckingInspection
@@ -299,8 +348,33 @@ def sigmoid_vec(z):
 
 
 def run_eg_learner(train_x, train_t, regularizer_func, eta, lambda_val,
-                   num_epochs=25):  # ToDo Come up with a more definitive epoch system
-  # TODO: Implement the EG learner
+                   num_epochs=100):
+  """
+  Exponentiated Gradient +/- Learner
+
+  Performs the gradient descent algorithm.
+
+  :param train_x: X-tensor to be learned.
+  :type train_x: np.ndarray
+
+  :param train_t: Target value for the learner.
+  :type train_t: np.ndarray
+
+  :param regularizer_func: Function used to run different regularizers
+  :type regularizer_func: callable
+
+  :param eta: Learning rate
+  :type eta: float
+
+  :param lambda_val: Lambda regularization value
+  :type lambda_val: float
+
+  :param num_epochs: Number of training epochs
+  :type num_epochs: int
+
+  :return: Final learned weight vector
+  :rtype: np.ndarray
+  """
   n = train_x.shape[1]
   w = initialize_weights_eg(n)
   for t in range(1, num_epochs + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
@@ -309,7 +383,8 @@ def run_eg_learner(train_x, train_t, regularizer_func, eta, lambda_val,
     w = np.multiply(w_prev, exp_weight)
 
     # Normalize all the weights
-    w = np.divide(w, np.sum(w))
+    w_sum = np.sum(w)
+    w = np.divide(w, w_sum)
     _verify_eg_w_length(w)
 
     # Allow premature exit.
@@ -341,10 +416,11 @@ def _eg_regularized_error(w_t, train_x, train_t, eta, lambda_val, regularizer_fu
   :return:
   :rtype: np.ndarray
   """
+  n = train_x.shape[0]  # Number of training examples
   y_hat = sigmoid_vec(np.matmul(train_x, w_t))
   err = np.subtract(y_hat, train_t)
   regularizer_err = regularizer_func(lambda_val, w_t)
-  prod = np.matmul(train_x, err) + regularizer_err
+  prod = np.divide(np.matmul(train_x.transpose(), err) + regularizer_err, n)
   exp_weight = np.multiply(-1 * eta, prod)
   return np.exp(exp_weight)
 
@@ -374,7 +450,7 @@ def build_lambdas():
   :rtype: List[float]
   """
   return [0] + [2 ** x for x in range(widgets.lambdas_range_slider.value[0],
-                                      widgets.lambdas_range_slider.value[1]+1)]
+                                      widgets.lambdas_range_slider.value[1] + 1)]
 
 
 def _verify_eg_w_length(w):
@@ -387,7 +463,10 @@ def _verify_eg_w_length(w):
   :param w: Normalized EG weight vector
   :type w: np.ndarray
   """
-  assert abs(np.sum(w) - 1) < 10 ** -4
+  normalizer_err = abs(np.sum(w) - 1)
+  # assert normalizer_err < 10 ** -4 # ToDo Restore w length checker
+  if normalizer_err > 10 ** -4:
+      pass
 
 
 def _build_random_results():
@@ -497,7 +576,7 @@ def initialize_weights_eg(n):
   :return: Normalized random array
   :rtype: np.array
   """
-  rand_arr = np.random.rand([n, 1])
+  rand_arr = np.random.rand(n, 1)
   sum_rand = np.sum(rand_arr)
 
   norm_rand = np.divide(rand_arr, sum_rand)
@@ -553,9 +632,6 @@ def _build_x_and_target(data_mat, row_indexes=None, add_plus_minus=False):
   """
   target_values = data_mat[:, 0]
   x_values = data_mat[:, 1:]
-  if add_plus_minus:
-    neg_values = np.multiply(-1, np.copy(x_values))
-    x_values = np.hstack([x_values, neg_values])
   # If appropriate, get only a subset of the rows
   if row_indexes is not None:
     rows_np = np.array(row_indexes)
@@ -566,10 +642,20 @@ def _build_x_and_target(data_mat, row_indexes=None, add_plus_minus=False):
   ones_vector = np.ones([x_values.shape[0], 1])
   x_values = np.hstack([ones_vector, x_values])
 
+  # Must be here as bias can be positive or negative
+  if add_plus_minus:
+    neg_values = np.multiply(-1, np.copy(x_values))
+    x_values = np.hstack([x_values, neg_values])
+
   return x_values, target_values
 
 
 if __name__ == "__main__":
+  widgets.learning_alg_radio.value = const.ALG_GD
+  widgets.k_slider.value = 2
+  widgets.lambdas_range_slider.value = [-10, 10]
+  widgets.learning_rate_slider.value = 20
+
   train_examples, test_examples = input_parser.parse()
   train_err_run, validation_err_run, test_err_run = run_hw03(train_examples, test_examples)
   import plotter

@@ -29,10 +29,17 @@ def create_plots(training_errors, validation_errors, test_errors):
   plt.loglog()
   plt.legend(shadow=True, fontsize='x-large', loc='best')
 
-  filename = "error_%s_%s__k=%d_alpha=%.1f.pdf" % (learning_alg_radio.value, regularizer_radio.value,
+  # Save the plot to a directory
+  filename = "error_%s_%s_k=%d_alpha=%.1f.pdf" % (learning_alg_radio.value, regularizer_radio.value,
                                                    k_slider.value, learning_rate_slider.value)
-  filename.replace(" ", "_")
+  filename = filename.replace(" ", "_").replace("/", "")
+  try:
+    os.makedirs(const.IMG_DIR)
+  except OSError:
+    pass
   plt.savefig(const.IMG_DIR + os.sep + filename)
+
+  # Output the graph to the screen
   plt.show()
 
 

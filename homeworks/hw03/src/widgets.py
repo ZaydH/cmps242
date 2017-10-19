@@ -3,7 +3,8 @@ import ipywidgets
 import const
 
 
-def run_all(ev):
+def run_all(_):
+  # noinspection PyTypeChecker
   display(Javascript('IPython.notebook.execute_cells_below()'))
 
 
@@ -23,22 +24,33 @@ k_hbox = ipywidgets.HBox([ipywidgets.Label('Number of Folds: '), k_slider])
 
 
 learning_alg_radio = ipywidgets.RadioButtons(
-  options=[const.GD_ALG, const.EG_ALG],
+  options=[const.ALG_GD, const.ALG_EG],
   description="",
   disabled=False
 )
+learning_alg_radio.value = const.ALG_EG
 learning_alg_hbox = ipywidgets.HBox([ipywidgets.Label("Select Learning Algorithm: "),
                                      learning_alg_radio])
 
 
 regularizer_radio = ipywidgets.RadioButtons(
-  options=[const.L1_NORM_REGULARIZER, const.L2_NORM_REGULARIZER],
+  options=[const.REGULARIZER_L1_NORM, const.REGULARIZER_L2_NORM],
   description="",
   disabled=False
 )
-regularizer_radio.value = const.L2_NORM_REGULARIZER
+regularizer_radio.value = const.REGULARIZER_L2_NORM
 regularizer_hbox = ipywidgets.HBox([ipywidgets.Label("Select the Regularizer: "),
                                     regularizer_radio])
+
+
+error_type_radio = ipywidgets.RadioButtons(
+  options=[const.ERROR_ACCURACY, const.ERROR_RMS],
+  description="",
+  disabled=False
+)
+error_type_radio.value = const.ERROR_ACCURACY
+error_type_hbox = ipywidgets.HBox([ipywidgets.Label("Select the Validation Error Calculation: "),
+                                   error_type_radio])
 
 
 run_button = ipywidgets.Button(
@@ -65,7 +77,7 @@ learning_rate_hbox = ipywidgets.HBox([ipywidgets.Label("Learning Rate ($\eta$): 
 
 
 lambdas_range_slider = ipywidgets.IntRangeSlider(
-  value=[0, 10],
+  value=[-10, 10],
   min=-10,
   max=10,
   step=1,

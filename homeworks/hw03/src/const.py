@@ -9,14 +9,18 @@ target = "target"
 ALPHA = 0.9
 
 # Learning Algorithm Names
-GD_ALG = "Gradient Descent"
-EG_ALG = "EG+/-"
+ALG_GD = "Gradient Descent"
+ALG_EG = "EG+/-"
 
 IMG_DIR = "img"
 
 # Regularizer Names
-L1_NORM_REGULARIZER = "L1 Norm"
-L2_NORM_REGULARIZER = "L2 Norm"
+REGULARIZER_L1_NORM = "L1 Norm"
+REGULARIZER_L2_NORM = "L2 Norm"
+
+# Regularizer Names
+ERROR_RMS = "RMS"
+ERROR_ACCURACY = "Accuracy"
 
 # define the mapping of ham and spam.
 SPAM = 1
