@@ -2,12 +2,12 @@ import matplotlib.pyplot as plt
 import const
 import os
 from run_learner import build_lambdas, _build_random_results
-from widgets import learning_alg_radio, k_slider, learning_rate_slider, regularizer_radio
+from widgets import learning_alg_radio, k_slider, learning_rate_slider, regularizer_radio, error_type_radio
 
 
 def create_plots(training_errors, validation_errors, test_errors):
   x = build_lambdas()
-
+  # Make sure the errors and lambdas have matching sizes
   _verify_data_sizes(training_errors, validation_errors, test_errors)
 
   # Plot the training and validation errors
@@ -24,7 +24,12 @@ def create_plots(training_errors, validation_errors, test_errors):
   # plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
   plt.xlabel("$\lambda$")
   plt.xscale('log')
-  plt.ylabel("RMS Error")
+  if error_type_radio.value == const.ERROR_RMS:
+    plt.ylabel("RMS Error")
+  elif error_type_radio.value == const.ERROR_ACCURACY:
+    plt.ylabel("Accuracy")
+  else:
+    raise ValueError("Unknown error type")
   plt.yscale('log')
   plt.loglog()
   plt.legend(shadow=True, fontsize='x-large', loc='best')
