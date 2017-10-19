@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 import widgets
 import random
 import const
 import input_parser
 import numpy as np
 import math
+import sys
 
 
 def run_hw03(train_data, test_data):
@@ -18,8 +20,8 @@ def run_hw03(train_data, test_data):
   :param test_data: Matrix containing test feature and target values
   :type test_data: np.ndarray
 
-  :return:
-  :rtype: List[np.ndarray]
+  :return: Training, validation, and test error respectively.
+  :rtype: Tuple[np.ndarray]
   """
   np.seterr(over='ignore')  # Mask the numpy overflow warning.
   print("Starting Learner.")
@@ -67,8 +69,8 @@ def run_hw03(train_data, test_data):
   # Extract the training and test data
   train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data,
                                                                   convert_to_plus_minus=add_plus_minus_data)
-
   for idx, lambda_val in enumerate(lambdas):
+    print_percent_done(current_fold=0, current_lambda=lambda_val)
     # Get cross validation results
     results = perform_cross_validation(train_data, validation_sets,
                                        learner_func, regularizer_func, calculate_validation_err_func,
@@ -80,6 +82,9 @@ def run_hw03(train_data, test_data):
     w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
     test_err[idx] = calculate_validation_err_func(w_star, test_x, test_t)
 
+  # Record progress complete.
+  print_percent_done(current_fold=widgets.k_slider.value,
+                     current_lambda=lambdas[-1])
   print("Learner complete.")
   return train_err, valid_err, test_err
 
@@ -139,11 +144,11 @@ def perform_cross_validation(train_data, validation_sets,
     validation_err[fold_cnt] = calculate_validation_err_func(w_star, valid_x, valid_t)
 
     # Calculate the percent done and report it.
-    print_percent_done(fold_cnt + 1, lambda_val, k)
+    print_percent_done(fold_cnt + 1, lambda_val)
   return np.mean(train_err), np.var(train_err), np.mean(validation_err), np.var(validation_err)
 
 
-def print_percent_done(current_fold, current_lambda, k):
+def print_percent_done(current_fold, current_lambda):
   """
   Prints the percent done based off the current fold and the current lambda under test.
 
@@ -151,15 +156,13 @@ def print_percent_done(current_fold, current_lambda, k):
   :type current_fold: int
   :param current_lambda: Current lambda under test
   :type current_lambda: float
-  :param k: Number of folds
-  :type k: int
   """
+  k = widgets.k_slider.value
   all_lambdas = build_lambdas()
-  numb_runs = k * len(all_lambdas) + 1
+  numb_runs = (k + 1) * len(all_lambdas) + 1
   lambda_cnt = all_lambdas.index(current_lambda)
-  training_cnt = current_fold + lambda_cnt * k
-
-  print("%.1f%% complete." % (100.0 * training_cnt / numb_runs))
+  training_cnt = current_fold + lambda_cnt * (k + 1)
+  print_progress(iteration=training_cnt, total=numb_runs, prefix="Progress: ")
 
 
 def calculate_rms_error(w_star, x_tensor, t_vec):
@@ -650,11 +653,66 @@ def _build_x_and_target(data_mat, row_indexes=None, add_plus_minus=False):
   return x_values, target_values
 
 
+def _build_dummy_dataset():
+  """
+  Dummy Dataset Builder
+
+  Builds a fully linearly separable dataset for testing the learner.
+  These datasets are then written to a file.
+  """
+  with open('AMtest.csv', 'r') as f:
+    all_lines = [line.strip().split(",") for line in f.readlines()]
+
+  a_strings = [line[1] for line in all_lines if line[1][0] == "a"][1:101]
+  m_strings = [line[1] for line in all_lines if line[1][0] == "m"][1:101]
+
+  file_names = ["coolest_guy_zayd_train.csv", "coolest_guy_zayd_test.csv"]
+  for filename in file_names:
+    with open(filename, "w") as f:
+      for i in xrange(0, 1000):
+        dict_strings = [a_strings, m_strings][np.random.randint(0, 2)]
+        type_str = "ham" if dict_strings[1][0] == "a" else "spam"
+        words = np.random.choice(dict_strings, size=10, replace=True)
+        # noinspection PyTypeChecker
+        f.write(",".join([type_str] + np.ndarray.tolist(words)) + "\n")
+
+
+# Print iterations progress
+def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        bar_length  - Optional  : character length of bar (Int)
+
+    Taken from: https://gist.github.com/aubricus/f91fb55dc6ba5557fbab06119420dd6a
+
+    Just prints a progress bar.  Used for debug purposes and not as a core feature
+    or anything to do with the learning.
+    """
+    str_format = "{0:." + str(decimals) + "f}"
+    percents = str_format.format(100 * (iteration / float(total)))
+    filled_length = int(round(bar_length * iteration / float(total)))
+    # noinspection PyByteLiteral,PyNonAsciiChar
+    bar = '█' * filled_length + '-' * (bar_length - filled_length)
+
+    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
+
+    if iteration == total:
+        sys.stdout.write('\n')
+    sys.stdout.flush()
+
+
 if __name__ == "__main__":
   widgets.learning_alg_radio.value = const.ALG_GD
-  widgets.k_slider.value = 2
+  widgets.error_type_radio.value = const.ERROR_ACCURACY
+  widgets.k_slider.value = 10
   widgets.lambdas_range_slider.value = [-10, 10]
-  widgets.learning_rate_slider.value = 20
+  widgets.learning_rate_slider.value = 0.2
 
   train_examples, test_examples = input_parser.parse()
   train_err_run, validation_err_run, test_err_run = run_hw03(train_examples, test_examples)

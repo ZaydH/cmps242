@@ -22,7 +22,7 @@ def _print_data_sizes(train_data, test_data):
          + "\nNumber of Test Samples: " + str(test_data.shape[0]))
 
 
-def parse():
+def parse(override_input_data=False):
   """
   SMS Data Parser
 
@@ -32,8 +32,10 @@ def parse():
   :rtype: Tuple(pd.DataFrame)
   """
   train_data = parse_csv_data_file("train.csv")
-  # train_data = train_data.head(10)
   test_data = parse_csv_data_file("test.csv")
+  if override_input_data:
+    train_data = parse_csv_data_file("coolest_guy_zayd_train.csv")
+    test_data = parse_csv_data_file("coolest_guy_zayd_test.csv")
 
   # Vectorizer and get the TF-IDF scores
   data_col_name = "sms"

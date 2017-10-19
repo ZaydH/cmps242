@@ -23,14 +23,12 @@ def create_plots(training_errors, validation_errors, test_errors):
   # Label the plot information
   # plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
   plt.xlabel("$\lambda$")
-  plt.xscale('log')
   if error_type_radio.value == const.ERROR_RMS:
     plt.ylabel("RMS Error")
   elif error_type_radio.value == const.ERROR_ACCURACY:
     plt.ylabel("Accuracy")
   else:
     raise ValueError("Unknown error type")
-  plt.yscale('log')
   plt.loglog()
   plt.legend(shadow=True, fontsize='x-large', loc='best')
 
