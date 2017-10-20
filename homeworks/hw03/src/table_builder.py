@@ -53,6 +53,7 @@ def stylize_table(results_table):
   :rtype: pd.io.formats.style.Styler
   """
   # Format the Pandas table for printing in Jupyter notebook.
+  column_names = ["Training", "Validation", "Test"]
   th_styles = [
     dict(selector=".row_heading", props=[('color', 'black'),  # Ensure the headers have proper format
                                          ('border-color', 'black'),
