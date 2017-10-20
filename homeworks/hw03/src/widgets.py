@@ -18,18 +18,18 @@ k_slider = ipywidgets.IntSlider(
   orientation='horizontal',
   readout=True,
   readout_format='d',
-  width=1000,
+  width=100,
 )
 k_hbox = ipywidgets.HBox([ipywidgets.Label('Number of Folds: '), k_slider])
 
 
 learning_alg_radio = ipywidgets.RadioButtons(
-  options=[const.ALG_GD, const.ALG_EG],
+  options=[const.ALG_GD, const.ALG_EG, const.ALG_SGD],
   description="",
   disabled=False
 )
-learning_alg_radio.value = const.ALG_EG
-learning_alg_hbox = ipywidgets.HBox([ipywidgets.Label("Select Learning Algorithm: "),
+learning_alg_radio.value = const.ALG_GD
+learning_alg_hbox = ipywidgets.HBox([ipywidgets.Label("Select the Learning Algorithm: "),
                                      learning_alg_radio])
 
 
@@ -51,6 +51,21 @@ error_type_radio = ipywidgets.RadioButtons(
 error_type_radio.value = const.ERROR_ACCURACY
 error_type_hbox = ipywidgets.HBox([ipywidgets.Label("Select the Validation Error Calculation: "),
                                    error_type_radio])
+
+
+epoch_slider = ipywidgets.IntSlider(
+  value=25,
+  min=1,
+  max=100,
+  step=1,
+  disabled=False,
+  continuous_update=False,
+  orientation='horizontal',
+  readout=True,
+  readout_format='d',
+  width=100,
+)
+epoch_hbox = ipywidgets.HBox([ipywidgets.Label('Max. Number of Epochs: '), epoch_slider])
 
 
 run_button = ipywidgets.Button(

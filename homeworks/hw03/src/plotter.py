@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import const
 import os
-from run_learner import build_lambdas, _build_random_results
-from widgets import learning_alg_radio, k_slider, learning_rate_slider, regularizer_radio, error_type_radio
+import run_learner
+import widgets
 
 
 def create_plots(training_errors, validation_errors, test_errors):
-  x = build_lambdas()
+  x = run_learner.build_lambdas()
   # Make sure the errors and lambdas have matching sizes
   _verify_data_sizes(training_errors, validation_errors, test_errors)
 
@@ -17,25 +17,34 @@ def create_plots(training_errors, validation_errors, test_errors):
   # Plot the test error (no error bars)
   plt.plot(x, test_errors[:, 0], label="Test")
 
-  plot_title = "Effect of $\lambda$ on Learning Errors using %s" % learning_alg_radio.value
+  plot_title = "Effect of $\lambda$ on Learning Errors using %s" % widgets.learning_alg_radio.value
   plt.title(plot_title)
 
   # Label the plot information
   # plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
   plt.xlabel("$\lambda$")
-  if error_type_radio.value == const.ERROR_RMS:
+  if widgets.error_type_radio.value == const.ERROR_RMS:
     plt.ylabel("RMS Error")
-  elif error_type_radio.value == const.ERROR_ACCURACY:
-    plt.ylabel("Accuracy")
+  elif widgets.error_type_radio.value == const.ERROR_ACCURACY:
+    plt.ylabel("1 - Accuracy")
   else:
     raise ValueError("Unknown error type")
   plt.loglog()
   plt.legend(shadow=True, fontsize='x-large', loc='best')
 
+  # # Calculate the axes so the log scale is easy to read
+  # y_max = 1.11 * np.max([training_errors[:, 0] + training_errors[:, 1],
+  #                       validation_errors[:, 0] + validation_errors[:, 1],
+  #                       test_errors[:, 0]])
+  # y_min = 0.89 * np.min([training_errors[:, 0] - training_errors[:, 1],
+  #                       validation_errors[:, 0] - validation_errors[:, 1],
+  #                       test_errors[:, 0]])
+  # cur_y_min, cur_y_max = plt.ylim()
+  # plt.ylim([min(cur_y_min, y_min), max(cur_y_max, y_max)])
+  plt.tight_layout()  # Ensure no title/label is cutoff
+
   # Save the plot to a directory
-  filename = "error_%s_%s_k=%d_alpha=%.1f.pdf" % (learning_alg_radio.value, regularizer_radio.value,
-                                                   k_slider.value, learning_rate_slider.value)
-  filename = filename.replace(" ", "_").replace("/", "")
+  filename = run_learner.build_results_filename() + ".pdf"
   try:
     os.makedirs(const.IMG_DIR)
   except OSError:
@@ -56,7 +65,7 @@ def _verify_data_sizes(training_errors, validation_errors, test_errors):
   :return:
   """
   # Verify the error matricies are correct
-  lambdas_size = len(build_lambdas())
+  lambdas_size = len(run_learner.build_lambdas())
   for err_shape in [training_errors.shape, validation_errors.shape]:
     assert err_shape[0] == lambdas_size
     assert err_shape[1] == 2
@@ -67,5 +76,6 @@ def _verify_data_sizes(training_errors, validation_errors, test_errors):
 
 if __name__ == "__main__":
   # Verify the plotter with random data
-  training, validation, test = _build_random_results()
+  # noinspection PyProtectedMember
+  training, validation, test = run_learner._build_random_results()
   create_plots(training, validation, test)

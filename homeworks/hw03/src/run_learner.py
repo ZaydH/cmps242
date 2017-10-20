@@ -31,6 +31,8 @@ def run_hw03(train_data, test_data):
   add_plus_minus_data = False
   if widgets.learning_alg_radio.value == const.ALG_GD:
     learner_func = run_gd_learner
+  elif widgets.learning_alg_radio.value == const.ALG_SGD:
+    learner_func = run_sgd_learner
   elif widgets.learning_alg_radio.value == const.ALG_EG:
     learner_func = run_eg_learner
     add_plus_minus_data = True
@@ -43,6 +45,7 @@ def run_hw03(train_data, test_data):
     regularizer_func = l2_norm_regularizer
   else:
     raise ValueError("Invalid regularizer")
+
   # ToDo Decide what to do about regularization of the EG+/- Learner
   if widgets.learning_alg_radio.value == const.ALG_EG:
     regularizer_func = zero_regularizer
@@ -83,7 +86,7 @@ def run_hw03(train_data, test_data):
     test_err[idx] = calculate_validation_err_func(w_star, test_x, test_t)
 
   # Record progress complete.
-  print_percent_done(current_fold=widgets.k_slider.value,
+  print_percent_done(current_fold=widgets.k_slider.value + 1,
                      current_lambda=lambdas[-1])
   print("Learner complete.")
   return train_err, valid_err, test_err
@@ -159,7 +162,7 @@ def print_percent_done(current_fold, current_lambda):
   """
   k = widgets.k_slider.value
   all_lambdas = build_lambdas()
-  numb_runs = (k + 1) * len(all_lambdas) + 1
+  numb_runs = (k + 1) * len(all_lambdas)
   lambda_cnt = all_lambdas.index(current_lambda)
   training_cnt = current_fold + lambda_cnt * (k + 1)
   print_progress(iteration=training_cnt, total=numb_runs, prefix="Progress: ")
@@ -215,8 +218,7 @@ def calculate_accuracy(w_star, x_tensor, t_vec):
   return np.sum(y_diff) / x_tensor.shape[0]
 
 
-def run_gd_learner(train_x, train_t, regularizer_func, eta, lambda_val,
-                   num_epochs=100):
+def run_gd_learner(train_x, train_t, regularizer_func, eta, lambda_val):
   """
   Standard Gradient Descent Learner
 
@@ -237,17 +239,13 @@ def run_gd_learner(train_x, train_t, regularizer_func, eta, lambda_val,
   :param lambda_val: Lambda regularization value
   :type lambda_val: float
 
-  :param num_epochs: Number of training epochs
-  :type num_epochs: int
-
   :return: Final learned weight vector
   :rtype: np.ndarray
   """
-  n = train_x.shape[1]
-  w = initialize_weights_gd(n)
-  for t in range(1, num_epochs + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
+  w = initialize_weights_gd(train_x.shape[1])
+  for t in range(1, widgets.epoch_slider.value + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
     w_prev = np.copy(w)
-    w_star = gd_regularizer_error(w, train_x, train_t, lambda_val, regularizer_func)
+    w_star = gd_regularizer_error(w_prev, train_x, train_t, lambda_val, regularizer_func)
     w_change = eta * (t ** (-const.ALPHA)) * w_star
     w -= w_change
 
@@ -350,12 +348,11 @@ def sigmoid_vec(z):
   return np.divide(1, denom)
 
 
-def run_eg_learner(train_x, train_t, regularizer_func, eta, lambda_val,
-                   num_epochs=100):
+def run_eg_learner(train_x, train_t, regularizer_func, eta, lambda_val):
   """
   Exponentiated Gradient +/- Learner
 
-  Performs the gradient descent algorithm.
+  Performs the exponentiated gradient algorithm.
 
   :param train_x: X-tensor to be learned.
   :type train_x: np.ndarray
@@ -372,15 +369,11 @@ def run_eg_learner(train_x, train_t, regularizer_func, eta, lambda_val,
   :param lambda_val: Lambda regularization value
   :type lambda_val: float
 
-  :param num_epochs: Number of training epochs
-  :type num_epochs: int
-
   :return: Final learned weight vector
   :rtype: np.ndarray
   """
-  n = train_x.shape[1]
-  w = initialize_weights_eg(n)
-  for t in range(1, num_epochs + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
+  w = initialize_weights_eg(train_x.shape[1])
+  for t in range(1, widgets.epoch_slider.value + 1):  # Starting from zero is not possible because of aging term t ^ \alpha
     w_prev = np.copy(w)
     exp_weight = _eg_regularized_error(w, train_x, train_t, eta, lambda_val, regularizer_func)
     w = np.multiply(w_prev, exp_weight)
@@ -421,6 +414,7 @@ def _eg_regularized_error(w_t, train_x, train_t, eta, lambda_val, regularizer_fu
   """
   n = train_x.shape[0]  # Number of training examples
   y_hat = sigmoid_vec(np.matmul(train_x, w_t))
+
   err = np.subtract(y_hat, train_t)
   regularizer_err = regularizer_func(lambda_val, w_t)
   prod = np.divide(np.matmul(train_x.transpose(), err) + regularizer_err, n)
@@ -441,6 +435,47 @@ def zero_regularizer(lambda_val, w_t):
   :rtype: np.ndarray
   """
   return np.zeros(w_t.shape)
+
+
+def run_sgd_learner(train_x, train_t, regularizer_func, eta, lambda_val):
+  """
+  Stochastic Gradient +/- Learner
+
+  Performs the stochastic gradient descent algorithm.
+
+  :param train_x: X-tensor to be learned.
+  :type train_x: np.ndarray
+
+  :param train_t: Target value for the learner.
+  :type train_t: np.ndarray
+
+  :param regularizer_func: Function used to run different regularizers
+  :type regularizer_func: callable
+
+  :param eta: Learning rate
+  :type eta: float
+
+  :param lambda_val: Lambda regularization value
+  :type lambda_val: float
+
+  :return: Final learned weight vector
+  :rtype: np.ndarray
+  """
+  w = initialize_weights_gd(train_x.shape[1])
+
+  scrambled_range = range(0, train_x.shape[0])
+  # Starting from zero is not possible because of aging term t ^ \alpha
+  for t in range(1, widgets.epoch_slider.value + 1):
+    random.shuffle(scrambled_range)
+    for sample_row in scrambled_range:
+      curr_x = train_x[sample_row, :]
+      curr_t = train_t[sample_row, :]
+      w_prev = np.copy(w)
+
+      w_star = gd_regularizer_error(w_prev, curr_x, curr_t, lambda_val, regularizer_func)
+      w_change = eta * (t ** (-const.ALPHA)) * w_star
+      w -= w_change
+  return w
 
 
 def build_lambdas():
@@ -467,9 +502,9 @@ def _verify_eg_w_length(w):
   :type w: np.ndarray
   """
   normalizer_err = abs(np.sum(w) - 1)
-  # assert normalizer_err < 10 ** -4 # ToDo Restore w length checker
-  if normalizer_err > 10 ** -4:
-      pass
+  assert normalizer_err < 10 ** -4
+  # if normalizer_err > 10 ** -4:
+  #     pass
 
 
 def _build_random_results():
@@ -678,7 +713,7 @@ def _build_dummy_dataset():
 
 
 # Print iterations progress
-def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
+def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=50):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -707,14 +742,34 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
     sys.stdout.flush()
 
 
+def build_results_filename():
+  """
+  Builds a filename based off the current widget settings,
+
+  :return: Filename without path or extension
+  :rtype: str
+  """
+  filename_str = "error_%s_%s_k=%d_alpha=%.1f_epochs=%d"
+  filename = filename_str % (widgets.learning_alg_radio.value, widgets.regularizer_radio.value,
+                             widgets.k_slider.value, widgets.learning_rate_slider.value,
+                             widgets.epoch_slider.value)
+  return filename.replace(" ", "_").replace("/", "").lower()
+
+
 if __name__ == "__main__":
-  widgets.learning_alg_radio.value = const.ALG_GD
+  widgets.learning_alg_radio.value = const.ALG_SGD
+  widgets.epoch_slider.value = 10
+  widgets.learning_rate_slider.value = 0.1
   widgets.error_type_radio.value = const.ERROR_ACCURACY
-  widgets.k_slider.value = 10
-  widgets.lambdas_range_slider.value = [-10, 10]
+  widgets.k_slider.value = 5
+  widgets.lambdas_range_slider.value = [-10, -8]
   widgets.learning_rate_slider.value = 0.2
 
   train_examples, test_examples = input_parser.parse()
   train_err_run, validation_err_run, test_err_run = run_hw03(train_examples, test_examples)
   import plotter
   plotter.create_plots(train_err_run, validation_err_run, test_err_run)
+
+  import table_builder
+  df = table_builder.create_table(train_err_run, validation_err_run, test_err_run)
+  df.to_csv(build_results_filename() + ".csv", sep=",")

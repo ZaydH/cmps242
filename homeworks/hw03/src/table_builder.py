@@ -26,8 +26,8 @@ def create_table(train_err, validation_err, test_err):
   """
   Pandas Table Creator
 
-  :return: Stylized Pandas table.
-  :rtype: np.matrix
+  :return: Results combined into a single DataFrame
+  :rtype: pd.DataFrame
   """
   # Create the lambdas DataFrame
   lambdas_str = [get_lambda_str(x) for x in build_lambdas()]
@@ -40,8 +40,18 @@ def create_table(train_err, validation_err, test_err):
 
   # Merge the DataFrames
   df = pd.concat([df, df_errors], axis=1)
-  # column_names = ["$\lambda$", "Training", "Validation", "Testing"]
-  # df = pd.DataFrame(np.random.randn(10, 4), columns=column_names)
+
+  # noinspection PyUnresolvedReferences
+  return df.transpose()
+
+
+def stylize_table(results_table):
+  """
+  Stylizes the results table.
+
+  :return: Stylized Pandas table.
+  :rtype: pd.io.formats.style.Styler
+  """
   # Format the Pandas table for printing in Jupyter notebook.
   th_styles = [
     dict(selector=".row_heading", props=[('color', 'black'),  # Ensure the headers have proper format
@@ -52,15 +62,15 @@ def create_table(train_err, validation_err, test_err):
     dict(selector=".col_heading", props=[('display', 'none')]),  # Hide the index row.
   ]
   # noinspection PyUnresolvedReferences
-  df = (df.transpose().style.apply(_highlight_min, axis=1, subset=pd.IndexSlice[column_names, :])
-                            .set_properties(**{'color': 'black',
-                                               'border-color': 'black',
-                                               'border-style': 'solid',
-                                               'border-width': '1px',
-                                               'text-align': 'center'})
-                            .set_table_styles(th_styles)
-                            .format("{:.4f}", subset=pd.IndexSlice[column_names, :]))
-  return df
+  results_styler = (results_table.style.apply(_highlight_min, axis=1, subset=pd.IndexSlice[column_names, :])
+                                       .set_properties(**{'color': 'black',
+                                                          'border-color': 'black',
+                                                          'border-style': 'solid',
+                                                          'border-width': '1px',
+                                                          'text-align': 'center'})
+                                       .set_table_styles(th_styles)
+                                       .format("{:.4f}", subset=pd.IndexSlice[column_names, :]))
+  return results_styler
 
 
 if __name__ == "__main__":

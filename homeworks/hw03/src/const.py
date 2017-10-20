@@ -9,8 +9,9 @@ target = "target"
 ALPHA = 0.9
 
 # Learning Algorithm Names
-ALG_GD = "Gradient Descent"
+ALG_GD = "Batch Gradient Descent"
 ALG_EG = "EG+/-"
+ALG_SGD = "Stochastic Gradient Descent"
 
 IMG_DIR = "img"
 
