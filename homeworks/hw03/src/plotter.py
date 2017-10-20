@@ -4,6 +4,8 @@ import os
 import run_learner
 import widgets
 
+display_plot = False
+
 
 def create_plots(training_errors, validation_errors, test_errors):
   x = run_learner.build_lambdas()
@@ -51,8 +53,9 @@ def create_plots(training_errors, validation_errors, test_errors):
     pass
   plt.savefig(const.IMG_DIR + os.sep + filename)
 
-  # Output the graph to the screen
-  plt.show()
+  if display_plot:
+    # Output the graph to the screen
+    plt.show()
 
 
 def _verify_data_sizes(training_errors, validation_errors, test_errors):

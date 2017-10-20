@@ -768,6 +768,7 @@ if __name__ == "__main__":
   train_examples, test_examples = input_parser.parse()
   train_err_run, validation_err_run, test_err_run = run_hw03(train_examples, test_examples)
   import plotter
+  plotter.display_plot = True
   plotter.create_plots(train_err_run, validation_err_run, test_err_run)
 
   import table_builder
