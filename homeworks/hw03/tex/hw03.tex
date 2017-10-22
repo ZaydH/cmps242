@@ -8,6 +8,9 @@
 \graphicspath{{img/}}
 \usepackage{multicol}   % Used for two column lists
 
+\usepackage{listings}   % Format code in the paper.
+\lstset{language=Python}  
+
 \usepackage[obeyspaces,spaces]{url} % Used for typesetting with the ``path'' command
 \usepackage[hidelinks]{hyperref}   % Make the cross references clickable hyperlinks
 \usepackage[bottom]{footmisc} % Prevents the table going below the footnote
@@ -226,7 +229,7 @@
   \end{figure}
 
   
-  \section{Experiment Setup}
+  \section{Experiment Setup}\label{sec:experimentSetup}
   
   Our solver is implemented in Python 2.7.13.  It requires a set of external packages, including: 
   
@@ -242,13 +245,109 @@
     \end{itemize}
   \end{multicols}
 
+  The default experiment setup was:
+  
+  \begin{itemize}
+    \item \textit{Performance Metric}: Accuracy which rounds~$\yhat$ to the closest integer.
+    \item \textit{Learning Algorithm}: Batch gradient descent
+    \item \textit{Regularizer}: $L_2$ norm
+    \item \textit{Cross-validation Fold Count ($k$)}: 10
+    \item \textit{Number of Training Epochs/Rounds}: 15
+    \item \textit{$\lambda$ Range}: $0,2^{-10},2^{-9},...,2^{9},2^{10}$
+    \item \textit{Learning Rate ($\eta_0$)}: 20
+    \item \textit{Graph Error Bars}: These are included in all graphs.  However, the variance between folds is low meaning they are often not visible.
+  \end{itemize}
+
   \section{Extra Credit \#1: Bias Term Support}
   
+  A bias term in the learning algorithm can only improve the learner's performance by accounting for shifts in the data.  As such, our implementation only supports training with a bias; we deliberately chose that this feature could not be disabled.  
+  
+  The bias term is added to the input tensor,~$X$, as a column of value $1$.  This is done using NumPy.  When calculating the regularization error, we ignore the error caused by the bias term by setting its error to~$0$ as shown in Figure~\ref{fig:codeBiasRegularizerRemoval}.
+  
+  \begin{figure}[tb]
+    \begin{lstlisting}[frame=single] 
+      def l2_norm_regularizer(lambda_val, w):
+        reg_err = np.multiply(lambda_val, w)
+        reg_err[0, 0] = 0  # Exclude the bias
+        return reg_err
+    \end{lstlisting}
+    \caption{Implementation of Bias Regularizer Error Removal}\label{fig:codeBiasRegularizerRemoval}
+  \end{figure}
+
+  \section{Batch Gradient Descent Learning Performance}
+  
+  Our batch gradient descent implementation followed the experiment setup described in Section~\ref{sec:experimentSetup}.  The best error was observed when there was no regularizer as shown in Table~\ref{tab:batchGradientDescentL2} and Figure~\ref{fig:batchGdL2}.  It is also important to note that as the regularizer increased, the error drops precipitously and remains largely unchanged.  This occurs because the regularizer begins to saturate the sigmoid function causing it to return a $yhat$ of~$0$ for all but the most obvious cases of spam.
+    
+  \begin{table}[]
+    \centering
+    \caption{Effect of the $L_2$ Regularizer on Batch Gradient Descent Performance}
+    \label{tab:batchGradientDescentL2}
+    \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+      \hline
+      $\lambda$  & 0              & $2^{-10}$ & $2^{-9}$ & $2^{-8}$       & $2^{-7}$ & $2^{-6}$ & $2^{-5}$ & $2^{-4}$ & $2^{-3}$ & $2^{-2}$ \\ \hline
+      Training   & 0.008          & 0.007     & 0.007    & \textbf{0.006} & 0.008    & 0.013    & 0.023    & 0.043    & 0.058    & 0.099    \\ \hline
+      Validation & \textbf{0.027} & 0.028    & 0.029    & 0.029          & 0.032    & 0.039    & 0.057    & 0.072    & 0.081    & 0.113    \\ \hline
+      Test       & \textbf{0.024} & 0.024     & 0.024    & 0.026          & 0.028    & 0.034    & 0.051    & 0.060    & 0.061    & 0.098    \\ \hline
+    \end{tabular}
+  \end{table}
+
+
+  \begin{figure}
+    \centering
+    \includegraphics[scale=.3]{batch_GD_L2Norm}
+    \caption{Effect of regularizer~$\lambda$ on batch gradient descent performance using $L_2$ norm}\label{fig:batchGdL2}
+  \end{figure}
+    
   \section{Extra Credit \#2: Multiple Regularizer Experimentation}
+
+  An extra credit portion of the assignment was to investigate the performance of the learner with another regularizer.  As the homework proposed, we use the $L_1$.  Unlike the $L_2$ from Section~\ref{}, the derivative of the $L_1$ norm is a vector of ones multiplied by~$lambda$.  As such, the value of~$\w$ does not affect the regularization.  As expected, the affect of this norm on the learner's performance is far more muted as shown in Table~\ref{tab:batchGradientDescentL1} and Figure~\ref{fig:batchGdL1}.  The clamping of the logistic function was not observed and there was not significant change in the learner's performance for small values of~$\lambda$ (i.e.,~less than~$1$).  This behavior is fully expected.
+
+  \begin{table}[]
+    \centering
+    \caption{Effect of the $L_1$ Regularizer on Batch Gradient Descent Performance}
+    \label{tab:batchGradientDescentL1}
+    \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+      \hline
+      $\lambda$  & 0              & $2^{-10}$ & $2^{-9}$ & $2^{-8}$       & $2^{-7}$ & $2^{-6}$ & $2^{-5}$ & $2^{-4}$ & $2^{-3}$ & $2^{-2}$ \\ \hline
+      Training   & \textbf{0.007} & \textbf{0.007}     & \textbf{0.007}    & 0.008 & 0.008    & 0.008    & 0.008    & 0.008    & 0.008    & 0.008    \\ \hline
+      Validation & \textbf{0.030} & \textbf{0.030}    & \textbf{0.030}    & \textbf{0.030} & \textbf{0.030}    & \textbf{0.030}    & \textbf{0.030}    & 0.031    & 0.031    & 0.031    \\ \hline
+      Test       & \textbf{0.024} & \textbf{0.024}     & \textbf{0.024}    & \textbf{0.024} & \textbf{0.024}    & \textbf{0.024}    & \textbf{0.024}    & \textbf{0.024}    & \textbf{0.024}    & 0.026    \\ \hline
+    \end{tabular}
+  \end{table}
+
+
+  \begin{figure}
+    \centering
+    \includegraphics[scale=.5]{batch_GD_L1Norm}
+    \caption{Effect of regularizer~$\lambda$ on batch gradient descent performance using $L_1$ norm}\label{fig:batchGdL1}
+  \end{figure}
 
   \section{Extra Credit \#3: Stochastic Gradient Descent}
   
-  In lecture on Thursday October~19, Prof.~Warmuth mentioned that there would be extra credit if we implemented stochastic gradient descent.  As such, we implemented this 
+  In each training round/epoch, batch gradient descent performs a single update of the weight vector based off \textit{all} the training samples.  In contrast, given a dataset of size~$m$, stochastic gradient descent (SGD) performs $m$ updates of the weight vector in each epoch.  This generally should cause the trainer to require less epochs and train faster on average.
+  
+  Since a single element at a time is used to update the weight vector, the learning rate,~$\eta_{0}$ should be smaller to prevent over-correction based on a single outlier.  As such, we reduced the learning rate to~$0.1$ for this experiment.  Figure~\ref{tab:stochasticGradientDescentL2} and Table~\ref{tab:stochasticGradientDescentL2} show that SGD had better performance than batch gradient descent.  Although the selected regularizer~($2^{-10}$) did not have the minimum test error, the difference is quite small.  Like despite also using the L2 norm, SGD did not have the same clamped error for larger values of~$\lambda$.
+  
+  While stochastic gradient descent takes far few epochs to converge (5 versus more than~15 for batch gradient descent), the running time is actually longer for SGD by about a factor of 3~times.  This is due primarily to the inefficiencies of Python and how it interacts with NumPy.  When all the matrix multiplications are performed at once, the just-in-time (JIT) compiler is able to optimize them.  It is not able to do the same level of optimization when multiplications are made one at a time in SGD.
+  
+    \begin{table}[]
+    \centering
+    \caption{Effect of the $L_1$ Regularizer on Batch Gradient Descent Performance}
+    \label{tab:stochasticGradientDescentL2}
+    \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+      \hline
+      $\lambda$  & 0              & $2^{-10}$ & $2^{-9}$ & $2^{-8}$       & $2^{-7}$ & $2^{-6}$ & $2^{-5}$ & $2^{-4}$ & $2^{-3}$ & $2^{-2}$ \\ \hline
+      Training   & \textbf{0}  & \textbf{0}    & \textbf{0}    & \textbf{0} & 0.001   & 0.002    & 0.005    & 0.013    & 0.024    & 0.046    \\ \hline
+      Validation & 0.026 & \textbf{0.025}    & 0.029  & 0.030 & 0.030    & 0.032    & 0.032    & 0.034    & 0.040    & 0.061    \\ \hline
+      Test       & \textbf{0.018} & 0.019     & 0.019    & 0.021          & 0.021    & 0.022    & 0.020    & 0.026    & 0.037    & 0.056    \\ \hline
+    \end{tabular}
+  \end{table}
+  
+  \begin{figure}
+    \centering
+    \includegraphics[scale=.5]{stochastic_GD_L2Norm}
+    \caption{Stochastic Gradient Descent Performance using the $L_{2}$ norm and a learning rate of~$0.1$}\label{fig:stochasticGDL2}
+  \end{figure}
     
   \section{Extra Credit \#4: Exponentiated Gradient Descent}
  
