@@ -54,7 +54,7 @@
   \suppressfloats
   \section{Homework Objective}
   
-  Develop a logistic regression-based learner that can identify SMS text messages as either SPAM or ham (i.e.,~not SPAM).  Additional requirements include:
+  Develop a logistic regression-based learner that can identify SMS~text messages as either spam or ham (i.e.,~not spam).  Additional requirements include:
   
   \begin{itemize}
     \setlength\itemsep{0pt}
@@ -63,14 +63,13 @@
   \end{itemize}
 
   \noindent
-  Four extra credit tasks were also possible for this homework.  They are:
+  Three extra credit tasks are implemented for this homework, specifically:
   
   \begin{enumerate}
     \setlength\itemsep{0pt}
     \item Support a bias term in the weight vector~($\mathbf{w}$) that is not regularized
     \item Experiment with different regularizers, such as~$\lambda\norm{\w}_1$.
     \item Implement the stochastic gradient descent algorithm
-    \item Implement the exponentiated gradient algorithm (EG\textsuperscript{$\pm$})
   \end{enumerate}
  
   \section{Gradient Descent Update Rule}
@@ -109,24 +108,24 @@
   \end{align}
  
   \noindent
-  Given a target classification vector~$\y$ and the relation~$a=$, the likelihood~($L$) is in turn defined as shown in Eq.~\eqref{eq:likelihoodJoint}.  Since each element is independent, this probability can be transformed into a product as shown in Eq.~\eqref{eq:likelihoodIndependent}, where~$n=|\y|$.
+  Given a target classification vector~$\y$ and the relation~$a=\wTxi$, the likelihood~($L$) is in turn defined as shown in Eq.~\eqref{eq:likelihoodJoint}.  Since each element is independent, this probability can be transformed into a product as shown in Eq.~\eqref{eq:likelihoodIndependent}, where~$n=|\y|$.
   
   \begin{align}
-    L(\w)&=\Pr\{\y | \wTx \}\label{likelihoodJoint}\\
-        &=\prod_{i=1}^{n}\Pr\{y_i | \wTxi \}\label{eq:likelihoodIndependent}
+    L(\w)&=\Pr\{\y | \w, \xtensor \}\label{eq:likelihoodJoint}\\
+        &=\prod_{i=1}^{n}\Pr\{y_i | \w, \xvec_i \}\label{eq:likelihoodIndependent}
   \end{align}
  
-  As with homework~\#1, the value that maximizes the likelihood of a non-negative function also maximizes the log likelihood.  Hence, Eq.~\eqref{eq:likelihoodIndependent} can be transformed to Eq.~\eqref{eq:logLikelihood}.
+  As with homework~\#1, the value that maximizes the likelihood of a strictly positive function also maximizes the log likelihood.  Hence, Eq.~\eqref{eq:likelihoodIndependent} can be transformed to Eq.~\eqref{eq:logLikelihood}.
   
   \begin{align}
-    \ln L(\w) &= \ln \left(\prod_{i=1}^{n}\Pr\{y_i | \wTxi\}\right)\\
-             &= \sum_{i=1}^{n}\ln \Pr\{y_i | \wTxi\}\\
+    \ln L(\w) &= \ln \left(\prod_{i=1}^{n}\Pr\{y_i | \w, \xvec_i \}\right)\\
+             &= \sum_{i=1}^{n}\ln \Pr\{y_i | \w, \xvec_i\}\\
              &= \sum_{i=1}^{n}\ln \left( \sigma(\wTxi)^{y_i} (1-\sigma(\wTxi))^{1-y_i} \right)\\
-             &= \sum_{i=1}^{n} \ln \left(\sigma(\wTxi)^{y_i}  + \ln \left( (1-\sigma(\wTxi))^{1-y_i} \right) \right)\\
+             &= \sum_{i=1}^{n} \ln \left(\sigma(\wTxi)^{y_i}\right) + \ln \left( (1-\sigma(\wTxi))^{1-y_i} \right) \\
              &= \sum_{i=1}^{n} y_i \ln \sigma(\wTxi) + (1-y_i) \ln (1-\sigma(\wTxi)) \label{eq:logLikelihood}
   \end{align}
  
-  To find the maximizing likelihood, the derivative is taken and set equal to~$0$.  We use the identity ${\frac{\partial \sigma(a)}{\partial a} = \sigma(a)(1-\sigma(a))}$ without proof, but the proof is trivial. Hence the maximizing value is is shown in Eq.~\eqref{eq:derivLossFunction}; note that the \textit{chain rule} was used for this derivative.
+  To find the maximizing likelihood, the derivative is taken and set equal to~$0$.  We use the identity ${\frac{\partial \sigma(a)}{\partial a} = \sigma(a)(1-\sigma(a))}$ without proof, but the proof is trivial. Hence the maximizing value is shown in Eq.~\eqref{eq:derivLossFunction}; note that the \textit{chain rule} was used for this derivative.
   
   \begin{align}
     0 &= \sum_{i=1}^{n} \left( y_i \frac{1}{\sigma(\wTxi)} \frac{\partial \sigma(\wTxi)}{\partial \w} - (1-y_i) \frac{1}{1-\sigma(\wTxi)} \frac{\partial \sigma(\wTxi)}{\partial \w} \right)\\
@@ -135,21 +134,21 @@
     &= \sum_{i=1}^{n} (y_i -\sigma(\wTxi))\xvec_i \label{eq:derivLossFunction}
   \end{align}
   
-  Eq.~\eqref{eq:derivLossFunction} represents the maximizing gradient for the log likelihood.  This can then be substituted into the update rule for stochastic gradient descent, where $\eta$~is the hyperparameter, learning rate.
+  Eq.~\eqref{eq:derivLossFunction} represents the maximizing gradient for the log likelihood.  This can then be substituted into the update rule for gradient descent, where $\eta$~is the hyperparameter, learning rate.
   
   \begin{equation}
     \w_{t+1}:=\w_{t}+\eta \nabla \ln L(\w)\label{eq:updateRuleGradient}
   \end{equation}
   
   \noindent
-  We can then substitute into Eq.~\eqref{eq:updateRuleGradient}, using tensor notation since this is batch update.  
+  Eq.~\eqref{eq:updateRuleGradient} rewritten using tensor notation forms the batch update rule.
   
  \begin{equation}
   \w_{t+1}:=\w_{t}+\eta \xtensor^{\T}(\y -\yhat)^{\T}\label{eq:finalUpdateRule}
  \end{equation}
   
   \noindent
-  Note that that~$\w_{t}$ was used in the gradient since it is not known how to maximize on $w_{t+1}$.  In addition, the learning rate,~$\eta$ uses a constant configured by the user an aging term as shown in Eq.~\eqref{eq:learningRate}.
+  Note that that~$\w_{t}$ was used in the gradient since it is not known how to maximize on $\w_{t+1}$.  In addition, the learning rate,~$\eta$ uses a constant configured by the user an aging term as shown in Eq.~\eqref{eq:learningRate}.
    
   \begin{equation}
     \eta = \frac{\eta_0}{t^{0.9}}
@@ -161,31 +160,49 @@
     
   \section{Text Preprocessor}
   
-  Before learning can be attempted the natural language text in the form of SMS messages much be turned into a feature vectors.  We accomplish this through a multistep process described below (in order).
+  Before learning can be attempted, the natural language text in the form of SMS messages much be turned into feature vectors.  We accomplish this through a multistep process described (in order) below.
 
   \begin{itemize}
     \item \textit{Import CSV File} -- Pandas' native CSV~support as part of the \texttt{DataFrame} object was used.
-    \item \textit{Invalid Character Removal} -- The original text files (before my team cleaned them for the class) had invalid, unsupported characters.  We cleaned the 
-    \item \textit{Punctuation Removal} -- The punctuation set is defined by Python's \texttt{string} package (i.e.,~``string.punctuation'').  Punctuation removal entailed replacing all punctation symbols with the empty string (e.g.,~``couldn't'' became~``couldnt'').
+    \item \textit{Invalid Character Removal} -- The original text files (before my team cleaned them for the class) had invalid, unsupported characters.  We removed the characters that could not be properly encoded.
+    \item \textit{Punctuation Removal} -- The punctuation set is defined by Python's \texttt{string} package (i.e.,~``\texttt{string.punctuation}'').  Punctuation removal entailed replacing all punctuation symbols with the empty string (e.g.,~``couldn't'' becomes~``couldnt'').
     \item \textit{Capitalization Correction} -- Standardizes case so that words with different capitalization are not treated differently.
-    \item \textit{Stop Words Removal} -- The set of ``stop words'' is non-standard.  For our experiments, we used the English ``\texttt{corpus}'' dictionary bundled with the Natural Language Toolkit (NLTK).
+    \item \textit{Stop Words Removal} -- There is not standard set of English ``stop words.''  For our experiments, we used the English ``\texttt{corpus}'' dictionary bundled with the Natural Language Toolkit (NLTK).
   \end{itemize}
+
+  Next, tokenization is performed on the training set.  The words in training set will be the vocabulary for the test set.  This step is required since new words in the testing set would otherwise not have associated weights.
+  
+  After tokenization, term frequency-inverse document frequency~(TF-IDF) is performed.  TF-IDF is defined as:
+  
+  \begin{equation}
+    \text{TF-IDF}(d,t) = Tf(d,t) \cdot IDF(t)
+  \end{equation}
+  
+  Term frequency ($Tf$) is the number of times a specified term,~$t$, appears in a document~$d$.  Similarly, given a corpus of $n$~documents, the document frequency~($df$) is the number of documents that contain term~$t$.  It is formally defined as:
+  
+  \begin{equation}
+    IDF(t)= \ln \left( \frac{n+1}{df(t) + 1} \right)  + 1
+  \end{equation}
+  
+  Note that the addition of~$1$ in the numerator and denominator is a smoothing factor.  Since we are restricting the test set to the training set's vocabulary, its benefit is limited.  However, we included it nonetheless to more closely follow standard techniques.
+  
+  We observed that not normalizing the term frequency yielded better results so we do not normalize it in our implementation.
 
   \section{Jupyter Notebook Implementation}
   
-  Jupyter notebooks serve as a intermediary layer that insulates users from the underlying code implementation.  We included multiple features into our Jupyter notebook to improve the user experience and provide external learner configuration and data visualization.
+  Jupyter notebooks serve as a intermediary layer that insulates users from the underlying code implementation.  We included multiple features into our Jupyter notebook to improve the user experience and provide external learner configurability and data visualization.
   
   \subsection{Specifying Hyperparameters}
   
-  Since Jupyter notebook masks the code from the user, some may find it difficult to experiment with different configurations.  To address this limitation, we added a series of widgets to our notebook.  They leverage the \texttt{ipywidgets} library.  The specific hyperparameters that are controllable by widgets are:
+  Since Jupyter notebook masks the code from the user, some may find it difficult to experiment with different configurations.  To address this limitation, we added a series of widgets to our notebook.  They leverage Python's \texttt{ipywidgets} library.  The specific hyperparameters that are controllable by widgets are:
   
   \begin{itemize}
     \setlength\itemsep{0pt}
     \item Cross-validation fold count ($k$)
-    \item Learning algorithm (e.g.,~standard gradient descent, exponentiated gradient descent, and stochastic gradient descent)
+    \item Learning algorithm (e.g.,~standard gradient descent and stochastic gradient descent)
     \item Regularizer selection (e.g.,~$L_2$ or~$L_1$~norm)
-    \item Error calculation formula (e.g.,~$1 - Accuracy$ or root-mean square)
-    \item Maximum number of training epochs
+    \item Error calculation formula (e.g.,~$1 - Accuracy$ or root-mean-square, RMS)
+    \item Maximum number of training epochs/rounds
     \item Learning rate~($\alpha$)
     \item $\lambda$~range -- These are the powers of~$2$ to test.
   \end{itemize}
@@ -200,7 +217,7 @@
 
   \subsection{Learner Progress Indicator}
   
-  As with most iterative learning algorithms, our learner does provide instantaneous results.  Depending on the user specified configuration described in the previous section, it may take several minutes before a run of the algorithm completes.  Our implementation provides visual feedback on the learners progress via a text-based progress bar, which is shown in Figure~\ref{fig:jupyterProgressBar}.\footnote{The underlying implementation used for this feature was from an online resource and not developed natively by our team.}
+  As with most iterative learning algorithms, our learner does provide instantaneous results.  Depending on the user specified configuration described in the previous section, it may take several minutes before a run of the algorithm completes.  Our implementation provides visual feedback on the learner's progress via a text-based progress bar, which is shown in Figure~\ref{fig:jupyterProgressBar}.\footnote{The underlying implementation used for this feature was from an online resource and not developed natively by our team.}
   
   \begin{figure}[tb]
     \centering
@@ -210,7 +227,7 @@
 
   \subsection{Embedded Results Table}
   
-  To improve the Jupyter notebook experience, we built in support for a table that will display the latest execution's results.  The minimum training, validation and test errors are bolded and highlighted in yellow as shown in Figure~\ref{fig:jupyterTable}.
+  To improve the Jupyter notebook experience, we included support for a table that displays the latest execution's results.  The minimum training, validation and test error values are bolded and highlighted in yellow as shown in Figure~\ref{fig:jupyterTable}.
     
   \begin{figure}[tb]
     \centering
@@ -220,7 +237,7 @@
   
   \subsection{Embedded Result Graphing}
   
-  We also implemented graphing into our Jupter notebook.  This uses Python's \texttt{matplotlib} package.  An example graph is shown in Figure~\ref{fig:jupyterGraph}.
+  We also implemented graphing into our Jupyter notebook.  This uses Python's \texttt{matplotlib} package.  An example graph is shown in Figure~\ref{fig:jupyterGraph}.
   
   \begin{figure}[tb]
     \centering
@@ -240,12 +257,12 @@
       \item Scikit-Learn
       \item NumPy
       \item IPython
-      \item Matplotlib
+      \item matplotlib
       \item ipywidgets\textrm{.}
     \end{itemize}
   \end{multicols}
 
-  The default experiment setup was:
+  The default experiment configuration was:
   
   \begin{itemize}
     \item \textit{Performance Metric}: Accuracy which rounds~$\yhat$ to the closest integer.
@@ -257,6 +274,8 @@
     \item \textit{Learning Rate ($\eta_0$)}: 20
     \item \textit{Graph Error Bars}: These are included in all graphs.  However, the variance between folds is low meaning they are often not visible.
   \end{itemize}
+
+  This configuration applies in the following sections unless otherwise specified.
 
   \section{Extra Credit \#1: Bias Term Support}
   
@@ -274,9 +293,9 @@
     \caption{Implementation of Bias Regularizer Error Removal}\label{fig:codeBiasRegularizerRemoval}
   \end{figure}
 
-  \section{Batch Gradient Descent Learning Performance}
+  \section{Batch Gradient Descent Learning Performance}\label{sec:batchGradientDescent}
   
-  Our batch gradient descent implementation followed the experiment setup described in Section~\ref{sec:experimentSetup}.  The best error was observed when there was no regularizer as shown in Table~\ref{tab:batchGradientDescentL2} and Figure~\ref{fig:batchGdL2}.  It is also important to note that as the regularizer increased, the error drops precipitously and remains largely unchanged.  This occurs because the regularizer begins to saturate the sigmoid function causing it to return a $yhat$ of~$0$ for all but the most obvious cases of spam.
+  Our batch gradient descent implementation followed the experiment setup described in Section~\ref{sec:experimentSetup}.  The best error was observed when there was no regularizer as shown in Table~\ref{tab:batchGradientDescentL2} and Figure~\ref{fig:batchGdL2}.  It is also important to note that as the regularizer increased, the error drops precipitously and remains largely unchanged.  This occurs because the regularizer begins to saturate the sigmoid function causing it to return a $\yhat$ of~$0$ for all but the most obvious cases of spam.  Since most of the dataset is ham, the graph false makes it appear that the learner is performing well, but this is misleading.
     
   \begin{table}[]
     \centering
@@ -300,7 +319,7 @@
     
   \section{Extra Credit \#2: Multiple Regularizer Experimentation}
 
-  An extra credit portion of the assignment was to investigate the performance of the learner with another regularizer.  As the homework proposed, we use the $L_1$.  Unlike the $L_2$ from Section~\ref{}, the derivative of the $L_1$ norm is a vector of ones multiplied by~$lambda$.  As such, the value of~$\w$ does not affect the regularization.  As expected, the affect of this norm on the learner's performance is far more muted as shown in Table~\ref{tab:batchGradientDescentL1} and Figure~\ref{fig:batchGdL1}.  The clamping of the logistic function was not observed and there was not significant change in the learner's performance for small values of~$\lambda$ (i.e.,~less than~$1$).  This behavior is fully expected.
+  An extra credit portion of the assignment was to investigate the performance of the learner with another regularizer.  As the homework proposed, we use the $L_1$.  Unlike the $L_2$~norm from Section~\ref{sec:batchGradientDescent}, the derivative of the $L_1$ norm is a vector of ones multiplied by~$\lambda$.  As such, the value of~$\w$ does not affect this regularization.  As expected, the effect of this norm on the learner's performance is far more muted as shown in Table~\ref{tab:batchGradientDescentL1} and Figure~\ref{fig:batchGdL1}.  The clamping of the logistic function was not observed, and there was not significant change in the learner's performance for small values of~$\lambda$ (i.e.,~less than~$1$).  This behavior is fully expected.
 
   \begin{table}[]
     \centering
@@ -326,9 +345,9 @@
   
   In each training round/epoch, batch gradient descent performs a single update of the weight vector based off \textit{all} the training samples.  In contrast, given a dataset of size~$m$, stochastic gradient descent (SGD) performs $m$ updates of the weight vector in each epoch.  This generally should cause the trainer to require less epochs and train faster on average.
   
-  Since a single element at a time is used to update the weight vector, the learning rate,~$\eta_{0}$ should be smaller to prevent over-correction based on a single outlier.  As such, we reduced the learning rate to~$0.1$ for this experiment.  Figure~\ref{tab:stochasticGradientDescentL2} and Table~\ref{tab:stochasticGradientDescentL2} show that SGD had better performance than batch gradient descent.  Although the selected regularizer~($2^{-10}$) did not have the minimum test error, the difference is quite small.  Like despite also using the L2 norm, SGD did not have the same clamped error for larger values of~$\lambda$.
+  Since a single element at a time is used to update the weight vector, the learning rate,~$\eta_{0}$ should be smaller to prevent over-correction based on a single outlier.  As such, we reduced the learning rate to~$0.1$ for this experiment.  Figure~\ref{fig:stochasticGDL2} and Table~\ref{tab:stochasticGradientDescentL2} show that SGD had better performance than batch gradient descent with either regularizer.  Although the selected regularizer~($2^{-10}$) did not have the minimum test error, the difference is quite small.  Likewise, despite also using the $L_2$~norm, SGD did not have the same clamped error for larger values of~$\lambda$.
   
-  While stochastic gradient descent takes far few epochs to converge (5 versus more than~15 for batch gradient descent), the running time is actually longer for SGD by about a factor of 3~times.  This is due primarily to the inefficiencies of Python and how it interacts with NumPy.  When all the matrix multiplications are performed at once, the just-in-time (JIT) compiler is able to optimize them.  It is not able to do the same level of optimization when multiplications are made one at a time in SGD.
+  While stochastic gradient descent takes far few epochs to converge (5~versus more than~15 for batch gradient descent), the running time is actually longer for SGD by about a factor of 3~times.  This is due primarily to the inefficiencies of Python and how it interacts with NumPy.  When all the matrix multiplications are performed at once, the just-in-time (JIT) compiler is able to optimize them.  However, it is not able to do the same level of optimization when multiplications are made one at a time in SGD.
   
     \begin{table}[]
     \centering
@@ -343,7 +362,7 @@
     \end{tabular}
   \end{table}
   
-  \begin{figure}
+  \begin{figure}[tb]
     \centering
     \includegraphics[scale=.5]{stochastic_GD_L2Norm}
     \caption{Stochastic Gradient Descent Performance using the $L_{2}$ norm and a learning rate of~$0.1$}\label{fig:stochasticGDL2}
