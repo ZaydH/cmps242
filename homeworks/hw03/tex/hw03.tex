@@ -63,13 +63,14 @@
   \end{itemize}
 
   \noindent
-  Three extra credit tasks are implemented for this homework, specifically:
+  Four extra credit tasks are implemented for this homework, specifically:
   
   \begin{enumerate}
     \setlength\itemsep{0pt}
     \item Support a bias term in the weight vector~($\mathbf{w}$) that is not regularized
     \item Experiment with different regularizers, such as~$\lambda\norm{\w}_1$.
     \item Implement the stochastic gradient descent algorithm
+    \item Implement the exponentiated gradient~(EG)~$\pm$ algorithm.
   \end{enumerate}
  
   \section{Gradient Descent Update Rule}
@@ -349,7 +350,7 @@
   
   While stochastic gradient descent takes far few epochs to converge (5~versus more than~15 for batch gradient descent), the running time is actually longer for SGD by about a factor of 3~times.  This is due primarily to the inefficiencies of Python and how it interacts with NumPy.  When all the matrix multiplications are performed at once, the just-in-time (JIT) compiler is able to optimize them.  However, it is not able to do the same level of optimization when multiplications are made one at a time in SGD.
   
-    \begin{table}[]
+  \begin{table}[]
     \centering
     \caption{Effect of the $L_1$ Regularizer on Batch Gradient Descent Performance}
     \label{tab:stochasticGradientDescentL2}
@@ -368,5 +369,46 @@
     \caption{Stochastic Gradient Descent Performance using the $L_{2}$ norm and a learning rate of~$0.1$}\label{fig:stochasticGDL2}
   \end{figure}
   
+ 
+  \section{Extra Credit \#4: Exponentiated Gradient}
+  
+  The exponentiated gradient~$\pm$ is another approach to perform logistic regression weight updating.  The update rule presented in class was
+  
+  \begin{equation}
+    w_{t+1,i}=\frac{r_{t,i}w_{t,i}}{\sum_{i=1}^{N}r_{t.j}w_{t,j}}
+    \label{eq:exponeniatedGradient}
+  \end{equation}
+  
+  \noindent
+  where~${r_{t,j}=\exp\left(-2\eta(\yhat_{t,j}-y_{t,j})x_{t,j}\right)}$.  We implemented the exponentiated gradient with $\pm$-correction.  However, the results were generally poor compared to both batch and stochastic gradient descent as shown in Figure~\ref{fig:egLearningRate} and Table~\ref{tab:egLearningRate}.  After discussing with Manfred, we theorize that the performance would be improved if we used the slightly modified exponentiated gradient update rule
+    
+  \begin{equation}
+    w_{t+1,i}=U\cdot\frac{r_{t,i}w_{t,i}}{\sum_{i=1}^{N}r_{t.j}w_{t,j}}
+  \label{eq:exponeniatedGradientWithU}
+  \end{equation}
+  
+  \noindent
+  where~${r_{t,j}=\exp\left(-2\eta(\yhat_{t,j}-y_{t,j})Ux_{t,j}\right)}$.  This correction using the scalar~$U$ was not discussed in class, and wwe implemented the algorithm as it was explained in class.  Similarly, the class discussion did not review how to perform entropy-based regularization as needed by exponentiated gradient (per Ehsan) so our results are devoid of a regularizer.
+    
+  
+    
+  \begin{figure}
+    \centering
+    \includegraphics[scale=.5]{egLearningRate}
+    \caption{Effect of Learning Rate on Exponentiated Gradient~$\pm$ Learning Error}\label{fig:egLearningRate}
+  \end{figure}
+
+  \begin{table}
+    \centering
+    \caption{Effect of Learning Rate on EG$\pm$'s Performance}
+    \label{tab:egLearningRate}
+    \begin{tabular}{c||c|c|c|c|c|c|c|c|c|c}
+      \hline
+      Learning Rate~($\eta_0$)  & $0.01$ & $0.05$ & $0.1$ & $0.2$ & $0.5$ & $1$ & $2$ & $4$ & $8$ & $16$ \\ \hline
+      Training   & 0.245  &  0.244  &  0.194  &  \textbf{0.123}  &  0.139  &  0.139   &  0.139  &  0.139  &   0.139   &  0.139   \\ \hline
+      Validation & 0.252  &  0.264  &  0.211  &  \textbf{0.130}  &  0.139  &  0.139   &  0.139  &  0.139  &  0.139   &  0.139   \\ \hline
+      Test       & 0.233  & 0.175  & 0.189  & \textbf{0.119}  &  0.128  &  0.128   &  0.128  &  0.128  &  0.128  &  0.128   \\ \hline
+    \end{tabular}
+  \end{table}
   
 \end{document}

@@ -72,18 +72,18 @@ def run_hw03(train_data, test_data):
   # Extract the training and test data
   train_x, train_t, test_x, test_t = _extract_train_and_test_data(train_data, test_data,
                                                                   convert_to_plus_minus=add_plus_minus_data)
-  for idx, lambda_val in enumerate(lambdas):
+  for _idx, lambda_val in enumerate(lambdas):
     print_percent_done(current_fold=0, current_lambda=lambda_val)
     # Get cross validation results
     results = perform_cross_validation(train_data, validation_sets,
                                        learner_func, regularizer_func, calculate_validation_err_func,
                                        eta, lambda_val, add_plus_minus_data,)
-    train_err[idx, :] = np.matrix(results[0:2])
-    valid_err[idx, :] = np.matrix(results[2:])
+    train_err[_idx, :] = np.matrix(results[0:2])
+    valid_err[_idx, :] = np.matrix(results[2:])
 
     # Get the test error
     w_star = learner_func(train_x, train_t, regularizer_func, eta, lambda_val)
-    test_err[idx] = calculate_validation_err_func(w_star, test_x, test_t)
+    test_err[_idx] = calculate_validation_err_func(w_star, test_x, test_t)
 
   # Record progress complete.
   print_percent_done(current_fold=widgets.k_slider.value + 1,
@@ -382,11 +382,6 @@ def run_eg_learner(train_x, train_t, regularizer_func, eta, lambda_val):
     w_sum = np.sum(w)
     w = np.divide(w, w_sum)
     _verify_eg_w_length(w)
-
-    # Allow premature exit.
-    max_change = np.max(np.abs(np.subtract(w, w_prev)))
-    if max_change < 10 ** -3:
-      break
   return w
 
 
@@ -418,7 +413,7 @@ def _eg_regularized_error(w_t, train_x, train_t, eta, lambda_val, regularizer_fu
   err = np.subtract(y_hat, train_t)
   regularizer_err = regularizer_func(lambda_val, w_t)
   prod = np.divide(np.matmul(train_x.transpose(), err) + regularizer_err, n)
-  exp_weight = np.multiply(-1 * eta, prod)
+  exp_weight = np.multiply(-2 * eta, prod)
   return np.exp(exp_weight)
 
 
@@ -756,21 +751,50 @@ def build_results_filename():
   return filename.replace(" ", "_").replace("/", "").lower()
 
 
+def run_exponentiated_gradient_learning():
+  """
+  Tests the performance of exponentiated gradient with different learning
+  rates.
+  """
+  widgets.learning_alg_radio.value = const.ALG_EG
+  widgets.k_slider.value = 10
+  widgets.lambdas_range_slider.value = [-10, -10]
+  widgets.epoch_slider.value = 25
+
+  # Test exponentiated gradient with different learning rates
+  train_examples, test_examples = input_parser.parse()
+  learning_rate_vals = [0.01, 0.05, 0.10, 0.2, 0.5, 1, 2, 4, 8, 16, 32, 64, 128]
+  err_export = np.zeros([4, len(learning_rate_vals)])
+  for idx, learning_rate in enumerate(learning_rate_vals):
+    widgets.learning_rate_slider.value = learning_rate
+    train_err_run, validation_err_run, test_err_run = run_hw03(train_examples, test_examples)
+
+    err_export[0, idx] = learning_rate
+    err_export[1, idx] = train_err_run[0, 0]
+    err_export[2, idx] = validation_err_run[0, 0]
+    err_export[3, idx] = test_err_run[0, 0]
+
+  np.savetxt("exponentiated_gradient_learning_rate.csv", err_export,
+             delimiter=",")
+  import plotter
+  plotter.plot_eg_learning_rate(err_export)
+
+
 if __name__ == "__main__":
   widgets.learning_alg_radio.value = const.ALG_SGD
   widgets.epoch_slider.value = 10
   widgets.learning_rate_slider.value = 0.1
   widgets.error_type_radio.value = const.ERROR_ACCURACY
-  widgets.k_slider.value = 5
-  widgets.lambdas_range_slider.value = [-10, -8]
+  widgets.k_slider.value = 10
+  widgets.lambdas_range_slider.value = [-10, 10]
   widgets.learning_rate_slider.value = 0.2
 
-  train_examples, test_examples = input_parser.parse()
-  train_err_run, validation_err_run, test_err_run = run_hw03(train_examples, test_examples)
-  import plotter
-  plotter.display_plot = True
-  plotter.create_plots(train_err_run, validation_err_run, test_err_run)
+  run_exponentiated_gradient_learning()
 
-  import table_builder
-  df = table_builder.create_table(train_err_run, validation_err_run, test_err_run)
-  df.to_csv(build_results_filename() + ".csv", sep=",")
+  # import plotter
+  # plotter.display_plot = True
+  # plotter.create_plots(train_err_run, validation_err_run, test_err_run)
+  #
+  # import table_builder
+  # df = table_builder.create_table(train_err_run, validation_err_run, test_err_run)
+  # df.to_csv(build_results_filename() + ".csv", sep=",")

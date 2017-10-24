@@ -4,8 +4,6 @@ import os
 import run_learner
 import widgets
 
-display_plot = False
-
 
 def create_plots(training_errors, validation_errors, test_errors):
   x = run_learner.build_lambdas()
@@ -53,9 +51,43 @@ def create_plots(training_errors, validation_errors, test_errors):
     pass
   plt.savefig(const.IMG_DIR + os.sep + filename)
 
-  if display_plot:
-    # Output the graph to the screen
-    plt.show()
+  # Output the graph to the screen
+  plt.show()
+
+
+def plot_eg_learning_rate(eg_errs):
+
+  # Plot the training and validation errors
+  labels = ["Training", "Validation", "Test"]
+  for idx, label in enumerate(labels):
+    plt.plot(eg_errs[0, :], eg_errs[idx + 1, :], label=label)
+
+  plot_title = "Effect of Learning Rate $\eta_0$ on EG Learning Errors using %s" % const.ALG_EG
+  plt.title(plot_title)
+
+  # Label the plot information
+  # plt.rc('text', usetex=True)  # Enable Greek letters in MatPlotLib
+  plt.xlabel("Learning Rate ($\eta_0$)")
+  if widgets.error_type_radio.value == const.ERROR_RMS:
+    plt.ylabel("RMS Error")
+  elif widgets.error_type_radio.value == const.ERROR_ACCURACY:
+    plt.ylabel("1 - Accuracy")
+  else:
+    raise ValueError("Unknown error type")
+  plt.loglog()
+  plt.legend(shadow=True, fontsize='x-large', loc='best')
+  plt.tight_layout()  # Ensure no title/label is cutoff
+
+  # Save the plot to a directory
+  filename = run_learner.build_results_filename() + ".pdf"
+  try:
+    os.makedirs(const.IMG_DIR)
+  except OSError:
+    pass
+  plt.savefig(const.IMG_DIR + os.sep + filename)
+
+  # Output the graph to the screen
+  plt.show()
 
 
 def _verify_data_sizes(training_errors, validation_errors, test_errors):
