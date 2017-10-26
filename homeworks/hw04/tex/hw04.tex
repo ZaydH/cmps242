@@ -12,7 +12,6 @@
 \usepackage{nccmath}    % Needed in the workaround for the ``aligncustom'' environment
 \usepackage{amssymb}    % Used for black QED symbol   
 \usepackage{bm}    % Allows for bolding math symbols.
-
 \usepackage{tabto}     % Allows to tab to certain point on a line
 
 \newcommand{\hangindentdistance}{1cm}
@@ -22,6 +21,7 @@
 
 
 % Set up page formatting
+\usepackage{todonotes}
 \usepackage{fancyhdr} % Used for every page footer and title.
 \pagestyle{fancy}
 \fancyhf{} % Clears both the header and footer
@@ -72,6 +72,12 @@
 
 \newcommand{\problemspace}{\\[0.4em]}
 \newcommand{\sign}{\text{\normalfont sign}}
+\newcommand{\w}{\mathbf{w}}
+\newcommand{\xvec}{\mathbf{x}}
+\newcommand{\wx}{\w\cdot\xvec}
+\newcommand{\norm}[1]{\lVert\mathbf{#1}\rVert^{2}}
+\newcommand{\yhat}{\hat{y}}
+\newcommand{\T}{\text{T}}
 
 
 \begin{document}
@@ -92,8 +98,46 @@
     Hint: First check the above equation on Octave or Matlab on some random data.  Make your solution as simple as you can.
   \end{problem}
   
+  For a set of $n$~ordered pairs~$(x_i,y_i)$, the squared loss function~$L$ is given by
+  
+  \begin{equation}
+    L(w)=\sum_{i=j}^n (w x_{j}-y_{j})^2\textrm{.}
+  \end{equation}
 
+  The optimal weight vector,~$w^{*}$ can be found by taking the derivative and setting it equal to 0.  Hence,
+  
+  \begin{align}
+    \frac{\partial L(w)}{\partial w}=0&=\frac{\partial}{\partial w}\sum_{j=1}^n (w^{*} x_{j}-y_{j})^2\\
+    0&=\sum_{j=1}^{n} 2(w^{*} x_{j}-y_{j})x_{j}\\
+    \sum_{j=1}^n x_{j}y_{j} &= w^{*} \sum_{j=1}^{n} x_{j}^2\\
+    w^{*}&=\frac{\sum_{j=1}^{n}x_{j}y_{j}}{\norm{x}} \textrm{.}
+  \end{align}
+  
+  For a single example, the weight would just be:
+  
+  \begin{equation}
+    w_{i}=\frac{y_{i}}{x_{i}}
+  \end{equation}
+  
+  If our selection of $x_i$ was deterministic, then it would perform poorly against an adversary. Hence, it needs to be probabilistic.  The probability distribution specified in the problem was
+  
+  \begin{align}
+    P(X=x_{i})&=\frac{x_{i}^{2}}{\sum_{j=1}^{m} x_{j}^{2}}\\
+    &=\frac{x_{i}^{2}}{\norm{x}}\textrm{.}
+  \end{align}
 
+  Therefore, the expected loss would be:
+  
+  \begin{align}
+    \mathbf{E}\left[ L(w_i) \right] &= \sum_{i=1}^{n} \Pr(X=x_i)L(w_i)\\
+    &= \sum_{i=1}^{n} \frac{x_{i}^2}{\norm{x}}L(w_i)\\
+    &= \frac{1}{2} \sum_{i=1}^{n} \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} (w_{i} x_{j}-y_{j})^{2}\\
+    &= \frac{1}{2} \sum_{i=1}^{n} \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} \left( w^{2}_{i}x^{2}_{j}-2w_{i}x_{j}y_{j}+y^{2}_{j}\right)\\
+    &= \frac{1}{2} \sum_{i=1}^{n} \left(  \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} \left( w^{2}_{i}x^{2}_{j}\right)-\frac{2w_{i}x_{i}^2}{\norm{x}}\sum_{j=1}^{n}\left(x_{j}y_{j}\right) +\frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} y^{2}_{j} \right)\\
+    &= \frac{1}{2} \sum_{i=1}^{n} \left(  \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} \left( \frac{y^{2}_{i}}{x^{2}_{i}}x^{2}_{j}\right)-2\frac{y_{i}}{x_{i}}x_{i}^2\sum_{j=1}^{n}\left(\frac{x_{j}y_{j}}{\norm{x}}\right) +\frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} y^{2}_{j} \right)\\
+    &= \frac{1}{2} \sum_{i=1}^{n} \left(  y^{2}_{i}-2x_{i}y_{i}w^{*} +\frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} y^{2}_{j} \right)
+  \end{align}
+  
 
 
   %---------------------------------------------------%
@@ -107,11 +151,97 @@
     Hint: First produce a writeup when the transfer function is the sigmoid and then modify it.
   \end{problem}
 
+  \textbf{Notation}: 
+  \begin{itemize}
+    \item $\yhat$ -- Predicted output value.
+    \item $x_{j,k}^{l}$ -- Input to node~$j$ in layer~$l$ from node~$k$ in layer~$l-1$,
+    \item $\xvec_{j}^{l}$ -- Vector notation for all neuron inputs from layer~$l-1$ to node~$j$ in layer~$l$.
+    \item $w_{j,k}^{l}$ -- Weight for connection between the ${k^{\text{th}}}$~neuron in ${(l-1)^{\text{th}}}$~layer to the ${j^{\text{th}}}$~neuron in the ${l^{\text{th}}}$~layer.
+    \item $\w_{j}^{l}$ -- Vector notation for all connection weights between layer~$l-1$ and node~$j$ in layer~$l$.
+    \item $b_{j}^{l}$ -- Bias term for the ${j^{\text{th}}}$~neuron in the $l^{\text{th}}$~layer.
+    \item $\Phi(a)$ -- Transfer function for the neurons.  It is given as:
+    \begin{equation}
+      \Phi(a) :=\int_{-\infty}^{a}\frac{1}{\sqrt{2\pi}} \exp\left( -\frac{z^{2}}{2} \right)dz\label{eq:transferFunction} \textrm{.}
+    \end{equation}
+    \item $a_{j}^{l}$ -- Input to the transfer function for neuron~$j$ in layer~$l$.  It is defined as:
+    \begin{equation}
+      a_{j}^{l} := \w_{j}^{l} \xvec_{j}^{l} + b_{j}^{l}\text{rm}.
+    \end{equation}
+    \item $J$ -- Squared loss function.  It is defined formally as 
+    \begin{equation}
+      J = \frac{1}{2} (\yhat -y)^2
+    \end{equation}
+  \end{itemize}
+  
+  \textbf{Additional Notes:} By the Fundamental Theorem of Calculus, for given a continuous function~$f$, the derivative of its definite integral whose lower limit is a constant is given by
+  
+  \begin{equation}
+    \frac{\partial}{\partial x}\int_{a}^{x}f(t)dt=f(x)
+  \end{equation}
+  
+  The transfer function in Eq.~\ref{eq:transferFunction} is not exactly in this form.  However, it could be transformed into that form via a limit as shown below.
+  
+  \begin{equation}
+    \frac{\partial}{\partial a} \Phi(a) = \frac{\partial}{\partial a} \int_{-\infty}^{a}f(t)dt =\underset{b\rightarrow -\infty}\lim \frac{\partial}{\partial x} \int_{b}^{x}f(t)dt=\frac{1}{\sqrt{2\pi}} \exp\left( -\frac{x^{2}}{2} \right)
+  \end{equation}
+  
+  \textbf{Back-propagation for the Weights}: Using the chain rule, the back-propagation for the output layer is:
+  
+  \todo{check this formula}
+  \begin{equation}
+    \frac{\partial J}{\partial \w_{j}^{2}} = \frac{\partial J}{\partial \yhat} \cdot \frac{\partial \yhat}{\partial \w_{1}^{3}}  
+  \end{equation}
+  
+  The loss function for this network is given by the squared loss.  Given a single target value~$y$, the derivative of this function is:
+  
+  \begin{align}
+    \frac{\partial J}{\partial \yhat} &= \frac{\partial}{\partial \yhat} \left(\frac{1}{2} \left( \yhat - y\right)^2 \right) = \yhat - y \label{eq:derivLoss}
+  \end{align}
+  
+  The derivative of~$\yhat$ is then
+  
+  \begin{align}
+    \frac{\partial}{\partial \w_{1}^{3}} \yhat = \frac{\partial}{\partial \w_{1}^{3}}\Phi(a_{1}^{3})=\frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)\xvec_{1}^{3}\textrm{.}
+  \end{align}
+  
+  This makes the complete derivative for the output layer is:
+  
+  \begin{equation}
+    \frac{\partial L}{\partial \w_{1}^{3}} = \boxed{\left( \yhat - y \right) \cdot \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)\xvec_{1}^{3}} \label{eq:outputLayerDerivative}
+  \end{equation}
+    
+  The derivative of the $j^{th}$~neuron in the hidden layer is then found via:
+  
+  \begin{align}
+    \frac{\partial J}{\partial \w_{j}^{2}} &= \frac{\partial J}{\partial \yhat} \cdot \frac{\partial \yhat}{\partial x_{1}^{3}} \cdot \frac{\partial x_{1}^{3}}{\partial \w_{j}^{2}}\label{eq:hiddenLayerChainRule}\\
+      &=\left(\yhat - y\right) \cdot \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)\w_{1}^{3} \cdot \frac{\partial x_{1}^{3}}{\partial \w_{j}^{2}}\\
+      &=\boxed{\left(\yhat - y\right) \cdot \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)\w_{1}^{3} \cdot \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{j}^{2}\right)^\T\xvec_{j}^{2}+b_{j}^{2}\right)^{2}}{2} \right)\xvec_{j}^{2}}
+      \textrm{.}
+  \end{align}
 
-
-
-
-
+  
+  \textbf{Back-propagation for the Bias Terms}: Taking the derivative with respect to the bias is simpler.  Eq.~\ref{eq:derivLoss} applies as it did for the weights.  Now, the derivative of the transfer function with respect to~$b_{1}^{3}$ is:
+  
+  \begin{align}
+    \frac{\partial}{\partial b_{1}^{3}} \yhat = \frac{\partial}{\partial b_{1}^{3}}\Phi(a_{1}^{3})=\frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)\textrm{.}
+  \end{align}
+    
+  This makes the bias term derivative for the output layer is 
+    
+  \begin{align}
+    \frac{\partial}{\partial b_{1}^{3}} L =\boxed{\left(\yhat - y\right)\frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)}\textrm{.}
+  \end{align}
+  
+  Similar to what was done in the last equation and Eq.~\ref{eq:hiddenLayerChainRule}, we can find the bias term for the $j^{\text{th}}$~neuron in the hidden layer.  Hence, it is:
+  
+    \begin{align}
+  \frac{\partial J}{\partial b_{j}^{2}} &= \frac{\partial J}{\partial \yhat} \cdot \frac{\partial \yhat}{\partial \xvec_{1}^{3}} \cdot \frac{\partial \xvec_{1}^{3}}{\partial b_{j}^{2}}\\
+    &=\left(\yhat - y\right) \cdot \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)\w_{1}^{3} \cdot \frac{\partial x_{1}^{3}}{\partial b_{j}^{2}}\\
+    &=\boxed{\left(\yhat - y\right) \cdot \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{1}^{3}\right)^\T\xvec_{1}^{3}+b_{1}^{3}\right)^{2}}{2} \right)\w_{1}^{3} \cdot \frac{1}{\sqrt{2\pi}} \exp\left( -\frac{\left(\left(\w_{j}^{2}\right)^\T\xvec_{j}^{2}+b_{j}^{2}\right)^{2}}{2} \right)}\textrm{.}
+  \end{align}
+  
+  
+  
   %---------------------------------------------------%
   \newpage
   \begin{problem}
@@ -120,7 +250,40 @@
     Hint: Review how the matching loss is computed when the transfer functions are the sigmoid functions and the sign function:~${f(a) = \sign(a)}$. (See material for lecture 5.)
   \end{problem}
   
+  The $\max$~function can be written as a piecewise identity as shown below.
+  
+  \begin{equation}
+    \max(0,x)=\left\{
+                \begin{array}{ll}
+                  x & x \geq 0\\
+                  0 & \text{otherwise}
+                \end{array}
+              \right.
+  \end{equation}
  
- 
+  \noindent
+  The integral of the $\max$~function is similarly piecewise.
+
+  \begin{align}
+     \int \max(0,x) dx = H(x) &=  \left\{
+                                    \begin{array}{ll}
+                                      \frac{x^2}{2} & x \geq 0\\
+                                      0 & \text{otherwise}
+                                    \end{array}
+                                  \right.\\
+                              &=  \frac{1}{2}\max(0,x)x
+  \end{align}
+
+  For a function~$H$, the matching loss is defined as
+  
+  \begin{align}
+    \Delta_{H}(\wx, y) = H(\wx) - H(y) - (\wx - y)H(y)\textrm{.}
+  \end{align}
+
+  Substituting, the matching loss becomes
+  
+  \begin{align}
+    \delta_{H}(\wx, y) = \frac{1}{2}\left( \max(0,\wx)\wx - \max(0,y)y - (\wx -y)\max(0,y) \right)
+  \end{align}
 
 \end{document}
