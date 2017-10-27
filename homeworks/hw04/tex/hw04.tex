@@ -206,7 +206,6 @@
   
   \textbf{Back-propagation for the Weights}: Using the chain rule, the back-propagation for the output layer is:
   
-  \todo{check this formula}
   \begin{equation}
     \frac{\partial J}{\partial \w_{j}^{2}} = \frac{\partial J}{\partial \yhat} \cdot \frac{\partial \yhat}{\partial \w_{1}^{3}}  
   \end{equation}
@@ -285,7 +284,7 @@
 
   \begin{align}
      \int \max(0,x) dx = H(x) &=  \left\{
-                                    \begin{array}{ll}
+                                    \begin{array}{cl}
                                       \frac{x^2}{2} & x \geq 0\\
                                       0 & \text{otherwise}
                                     \end{array}
@@ -296,13 +295,13 @@
   For a function~$H$, the matching loss is defined as
   
   \begin{align}
-    \Delta_{H}(\wx, y) = H(\wx) - H(y) - (\wx - y)H(y)\textrm{.}
+    \Delta_{H}(\wx, y) = H(\wx) - H(y) - (\wx - y)h(y)\textrm{.}
   \end{align}
 
   Substituting, the matching loss becomes
   
   \begin{align}
-    \delta_{H}(\wx, y) = \frac{1}{2}\left( \max(0,\wx)\wx - \max(0,y)y - (\wx -y)\max(0,y) \right)
+    \boxed{\Delta_{H}(\wx, y) = \frac{1}{2}\left( \max(0,\wx)\wx - \max(0,y)y - 2(\wx -y)\max(0,y) \right)}
   \end{align}
 
 \end{document}
