@@ -86,12 +86,12 @@
   \begin{problem}
     Consider $1$-dimensional linear regression.
     \problemspace
-    First compute the optimum solution,~$w^{*}$, for a batch of examples,~${(x_i,y_i)}$, ${1 \leq n \leq n}$,~ie the weight that minimizes the total loss on examples:~${L(w)=\sum_{i=1}^n(wx_{i}-y_{i})^2}$.
+    First compute the optimum solution,~$w^{*}$, for a batch of examples,~${(x_i,y_i)}$, ${1 \leq i \leq n}$,~ie the weight that minimizes the total loss on examples:~${L(w)=\sum_{i=1}^n(wx_{i}-y_{i})^2}$.
     \problemspace
-    Assume labels are expensive (see lecture~7).  You are given only one of the labels~$y-i$.  Compute the optimal solution~$w_i$ based on a single example~$(x_i,y_i)$.
+    Assume labels are expensive (see lecture~7).  You are given only one of the labels~$y_{i}$.  Compute the optimal solution~$w_i$ based on a single example~$(x_i,y_i)$.
     \problemspace
     Show that if~$i$ is chosen wrt the distribution~$\frac{x_{i}^{2}}{\sum_{j}x_{j}^{2}}$, then the expected loss of~$w_{i}$ on all examples is twice the optimum ie
-    \[\mathbf{E}[L(w_i)] = 2L(w^{*}), \]
+    \[\mathbf{E}[L(w_{i}^{*})] = 2L(w^{*}), \]
     \noindent
     when all~$x_i$ are non-zero.
     \problemspace
@@ -101,44 +101,63 @@
   For a set of $n$~ordered pairs~$(x_i,y_i)$, the squared loss function~$L$ is given by
   
   \begin{equation}
-    L(w)=\sum_{i=j}^n (w x_{j}-y_{j})^2\textrm{.}
+    L(w)=\sum_{j} (w x_{j}-y_{j})^2\textrm{.}
   \end{equation}
 
   The optimal weight vector,~$w^{*}$ can be found by taking the derivative and setting it equal to 0.  Hence,
   
   \begin{align}
-    \frac{\partial L(w)}{\partial w}=0&=\frac{\partial}{\partial w}\sum_{j=1}^n (w^{*} x_{j}-y_{j})^2\\
-    0&=\sum_{j=1}^{n} 2(w^{*} x_{j}-y_{j})x_{j}\\
-    \sum_{j=1}^n x_{j}y_{j} &= w^{*} \sum_{j=1}^{n} x_{j}^2\\
-    w^{*}&=\frac{\sum_{j=1}^{n}x_{j}y_{j}}{\norm{x}} \textrm{.}
+    \frac{\partial L(w)}{\partial w}=0&=\frac{\partial}{\partial w}\sum_{j} (w^{*} x_{j}-y_{j})^2\\
+    0&=\sum_{j} 2(w^{*} x_{j}-y_{j})x_{j}\\
+    \sum_{j} x_{j}y_{j} &= w^{*} \sum_{j} x_{j}^2\\
+    w^{*}&=\frac{\sum_{j}x_{j}y_{j}}{\norm{x}}=\frac{\mathbf{x}\cdot\mathbf{y}}{\norm{x}} \textrm{.}
   \end{align}
   
   For a single example, the weight would just be:
   
   \begin{equation}
-    w_{i}=\frac{y_{i}}{x_{i}}
+    w_{i}^{*}=\frac{y_{i}}{x_{i}}
   \end{equation}
   
   If our selection of $x_i$ was deterministic, then it would perform poorly against an adversary. Hence, it needs to be probabilistic.  The probability distribution specified in the problem was
   
   \begin{align}
-    P(X=x_{i})&=\frac{x_{i}^{2}}{\sum_{j=1}^{m} x_{j}^{2}}\\
+    P(X=x_{i})&=\frac{x_{i}^{2}}{\sum_{j} x_{j}^{2}}\\
     &=\frac{x_{i}^{2}}{\norm{x}}\textrm{.}
   \end{align}
 
   Therefore, the expected loss would be:
   
   \begin{align}
-    \mathbf{E}\left[ L(w_i) \right] &= \sum_{i=1}^{n} \Pr(X=x_i)L(w_i)\\
-    &= \sum_{i=1}^{n} \frac{x_{i}^2}{\norm{x}}L(w_i)\\
-    &= \frac{1}{2} \sum_{i=1}^{n} \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} (w_{i} x_{j}-y_{j})^{2}\\
-    &= \frac{1}{2} \sum_{i=1}^{n} \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} \left( w^{2}_{i}x^{2}_{j}-2w_{i}x_{j}y_{j}+y^{2}_{j}\right)\\
-    &= \frac{1}{2} \sum_{i=1}^{n} \left(  \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} \left( w^{2}_{i}x^{2}_{j}\right)-\frac{2w_{i}x_{i}^2}{\norm{x}}\sum_{j=1}^{n}\left(x_{j}y_{j}\right) +\frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} y^{2}_{j} \right)\\
-    &= \frac{1}{2} \sum_{i=1}^{n} \left(  \frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} \left( \frac{y^{2}_{i}}{x^{2}_{i}}x^{2}_{j}\right)-2\frac{y_{i}}{x_{i}}x_{i}^2\sum_{j=1}^{n}\left(\frac{x_{j}y_{j}}{\norm{x}}\right) +\frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} y^{2}_{j} \right)\\
-    &= \frac{1}{2} \sum_{i=1}^{n} \left(  y^{2}_{i}-2x_{i}y_{i}w^{*} +\frac{x_{i}^2}{\norm{x}}\sum_{j=1}^{n} y^{2}_{j} \right)
+    \mathbf{E}\left[ L(w_{i}^{*}) \right] &= \sum_{i} \Pr(X=x_i)L(w_{i}^{*})\\
+    &= \sum_{i} \frac{x_{i}^2}{\norm{x}}L(w_{i}^{*})\\
+    &= \sum_{i} \frac{x_{i}^2}{\norm{x}}\sum_{j} (w_{i}^{*} x_{j}-y_{j})^{2}\\
+    &= \sum_{i} \frac{x_{i}^2}{\norm{x}}\sum_{j} \left( \left(w_{i}^{*}\right)^{2}x^{2}_{j}-2w_{i}^{*}x_{j}y_{j}+y^{2}_{j}\right)\\
+    &= \sum_{i} \left(  \frac{x_{i}^2}{\norm{x}}\sum_{j} \left( \left(w_{i}^{*}\right)^{2}x^{2}_{j}\right)-\frac{2}{\norm{x}}\sum_{j}\left(w_{i}^{*}x_{i}^{2}x_{j}y_{j}\right) +\frac{x_{i}^2}{\norm{x}}\sum_{j} y^{2}_{j} \right)\\
+    &= \sum_{i} \left(  \frac{x_{i}^2}{\norm{x}}\sum_{j} \left( \frac{y^{2}_{i}}{x^{2}_{i}}x^{2}_{j}\right) -  \frac{2}{\norm{x}}\sum_{j}\left(\frac{y_{i}}{x_{i}}x_{i}^{2}x_{j}y_{j}\right)   +\frac{x_{i}^2}{\norm{x}}\sum_{j} y^{2}_{j} \right)\\
+    &= \sum_{i} \left(  y^{2}_{i}- \frac{2}{\norm{x}}\sum_{j}\left(y_{i}x_{i}x_{j}y_{j}\right) +\frac{x_{i}^2}{\norm{x}}\norm{y} \right)\\
+    &= \norm{y} +\frac{\norm{x}}{\norm{x}}\norm{y} -\sum_{i}\frac{2}{\norm{x}}\sum_{j}\left(y_{i}x_{i}x_{j}y_{j}\right) \\
+    &= 2\norm{y} - \frac{2}{\norm{x}}\sum_{i}\sum_{j}\left(y_{i}y_{j}x_{i}x_{j}\right)\label{eq:expectedLoss}
   \end{align}
   
-
+  We can then find the similar relation for~$w^{*}$.
+  
+  \begin{align}
+    L(w^{*}) &= \sum_{i} (w^{*} x_{i}-y_{i})^2\\
+    &= \sum_{i} \left( \left(w^{*}\right)^{2}x_{i}^{2}-2w^{*}x_{i}y_{i}+y^{2}_{i}\right)\\
+    &= \norm{y} + \sum_{i} \left( \frac{\left(\sum_{j}x_{j}y_{j}\right)^{2}}{\left(\norm{x}\right)^2}x_{i}^{2}-2\frac{\left(\sum_{j}x_{j}y_{j}\right)}{\norm{x}}x_{i}y_{i}\right)\\
+    &= \norm{y} +\frac{\left(\sum_{j}x_{j}y_{j}\right)^{2}}{\left(\norm{x}\right)^2}\norm{x} -\frac{2}{\norm{x}}\sum_{i}\sum_{j}y_{i}y_{j}x_{i}x_{j}\\
+    &= \norm{y} +\frac{(\sum_{j}x_{j}y_{j})(\sum_{i}x_{i}y_{i})}{\norm{x}} -\frac{2}{\norm{x}}\sum_{i}\sum_{j}y_{i}y_{j}x_{i}x_{j}\\
+    &= \norm{y} + \frac{1}{\norm{x}}\sum_{i}\sum_{j}y_{i}y_{j}x_{i}x_{j}-\frac{2}{\norm{x}}\sum_{i}\sum_{j}y_{i}y_{j}x_{i}x_{j}\\
+    &= \norm{y} - \frac{1}{\norm{x}}\sum_{i}\sum_{j}\left(y_{i}y_{j}x_{i}x_{j}\right)\label{eq:optimalLoss}
+  \end{align}
+  
+  Hence, from Eq.~\eqref{eq:expectedLoss} and Eq.~\eqref{eq:optimalLoss}, it is clear that 
+  
+  \[\mathbf{E}[L(w_{i}^{*})] = 2L(w^{*}), \]
+  
+  \noindent
+  completing the proof.
 
   %---------------------------------------------------%
   \newpage
