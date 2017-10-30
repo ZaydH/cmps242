@@ -286,7 +286,7 @@
   The integral of the $\max$~function is similarly piecewise.
 
   \begin{align}
-     \int \max(0,a) dx = F(a) &=  \left\{
+     \int \max(0,a) da = F(a) &=  \left\{
                                     \begin{array}{cl}
                                       \frac{a^2}{2} & a \geq 0\\
                                       0 & \text{otherwise}
@@ -298,13 +298,13 @@
   For a function~$F$, the matching loss is defined as
   
   \begin{align}
-    \Delta_{H}(\wx, y) = H(\wx) - H(y) - (\wx - y)h(y)\textrm{.}
+    \Delta_{H}(\wx, y) = H(\wx) - H(y) - (\wx - y)y\textrm{.}
   \end{align}
 
   Substituting, the matching loss becomes
   
   \begin{align}
-    \boxed{\Delta_{H}(\wx, y) = \frac{1}{2}\left( \max(0,\wx)\wx - \max(0,y)y - 2(\wx -y)\max(0,y) \right)}
+    \boxed{\Delta_{H}(\wx, y) = \frac{1}{2}\left( \max(0,\wx)\wx - \max(0,y)y - 2(\wx -y)y \right)}
   \end{align}
 
 \end{document}
