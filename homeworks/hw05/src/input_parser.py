@@ -14,15 +14,8 @@ def parse():
   Parses the test and training sets.
 
   :return: Parsed training and test data respectively.
-  :rtype: Tuple(pd.DataFrame)
+  :rtype: Tuple(pd.DataFrame, pd.DataFrame, dict)
   """
-
-  # Loads the source data
-  if os.path.exists(const.PK_TEST) and os.path.exists(const.PK_TRAIN):
-    train = pickle.load(const.PK_TRAIN)
-    test = pickle.load(const.PK_TEST)
-    return train, test
-
   train = parse_csv_data_file("train.csv")
   test = parse_csv_data_file("test.csv")
 
@@ -31,15 +24,7 @@ def parse():
   build_integer_token_representation(train, test, full_vocab)
 
   build_one_hot(train, test, full_vocab)
-
-  # Keep the dictionary for ease of use
-  for df in [train, test]:
-    df[const.COL_VOCAB] = full_vocab
-
-  # Export to pickle and exit
-  pickle.dump(train, const.PK_TRAIN)
-  pickle.dump(test, const.PK_TEST)
-  return train, test
+  return train, test, full_vocab
 
 
 def build_vocab(train_data, test_data):
@@ -48,10 +33,10 @@ def build_vocab(train_data, test_data):
 
   Vectorizers and builds the combined dictionary of the test and training datasets.
 
-  :param train_data: Dataframe of the training data
+  :param train_data: DataFrame of the training data
   :type train_data: pd.DataFrame
 
-  :param test_data: Dataframe of the test data
+  :param test_data: DataFrame of the test data
   :type test_data: pd.DataFrame
 
   :return: Combined vocabulary for the training and testing.
@@ -124,6 +109,11 @@ def _remove_punctuation(s):
   return s
 
 
+def _determine_target_label(x):
+  ret = const.LBL_DONALD_TRUMP if str(x).lower() == const.HDL_DONALD_TRUMP.lower() else const.LBL_HILLARY_CLINTON
+  return ret
+
+
 def parse_csv_data_file(csv_file_path):
   """
   HW03 Data File Parser
@@ -145,9 +135,7 @@ def parse_csv_data_file(csv_file_path):
   df[const.COL_TWEET] = (df[const.COL_TWEET].str.replace('[^\x00-\x7F]', '')  # Remove illegal chars
                                             .str.lower()  # Make the text lower case
                                                 .apply(_remove_punctuation))  # Remove punctuation
-  df[const.COL_TARGET] = df[const.COL_TWEET].apply(lambda x: const.LBL_DONALD_TRUMP
-                                                             if str(x).lower() == const.HDL_DONALD_TRUMP.lower()
-                                                             else const.LBL_HILLARY_CLINTON)
+  df[const.COL_TARGET] = df[const.COL_HANDLE].apply(_determine_target_label)
   return df
 
 

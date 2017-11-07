@@ -1,15 +1,10 @@
 import tensorflow as tf
-import numpy as np
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
 
-RANDOM_SEED = 42
-tf.set_random_seed(RANDOM_SEED)
-
-
-def init_weights_zero(shape):
+def _init_weights_zero(shape):
   """
   Weight initializer
+
+  Initializes all weights/biases to value zero.
 
   :param shape: Shape of the weight vector
   :type shape: Tuple(int)
@@ -20,35 +15,53 @@ def init_weights_zero(shape):
   weights = tf.zeros(shape)
   return tf.Variable(weights)
 
-
-def forward_prop(X, w_hidden, w_out):
+def _build_fully_connected_feed_forward(X, weights, biases):
   """
-  Forward-propagation.
-  IMPORTANT: yhat is not softmax since TensorFlow's softmax_cross_entropy_with_logits() does that internally.
+  Constructs the feed-forward network.
+
+  :param X: Input to the feed-forward network
+  :type X: tf.Placeholder
+  :param weights: Weights between the different network layers
+  :type weights: dict
+  :param biases: Offsets/biases into each of the neurons
+  :type biases: dict
+
+  :return: Output tensor
+  :rtype: tf.Tensor
   """
-  hidden_layer = tf.nn.sigmoid(tf.matmul(X, w_hidden))  # The \sigma function
-  yhat = tf.matmul(hidden_layer, w_out)  # The \varphi function
-  return yhat
+  # Hidden fully connected layer with 256 neurons
+  hidden_layer = tf.add(tf.matmul(X, weights['w_ff_hidden']), biases['b_ff_hidden'])
+  # Output fully connected layer with a neuron for each class
+  out_layer = tf.add(tf.matmul(hidden_layer, weights['w_ff_out']), biases['b_ff_out'])
+  return out_layer
 
 
-def init_feedforward(input_x):
+def init(input_ff):
+  """
+  Feed Forward Network Initializer
 
-  input_size = input_x.shape[1]         # Number of input nodes: Depending on if from LSTM or direct
-  h_size = max(input_x.shape[1], 256)   # Number of hidden nodes - Make equaivalent to d
-  a_out_size = 1                        # Single class Hillary/Trump
+  Constructs the feed forward network components and returns the final logits.
 
-  # Symbols
-  X = tf.placeholder("float", shape=[None, input_size])
-  y = tf.placeholder("float", shape=[None, a_out_size])
+  :param input_ff: Input tensor to the feed forward network.
+  :return: Output of the feed-forward network.  It has not gone through the sigmoid
+  function.
+  :rtype: tf.Tensor
+  """
 
-  # Weight initializations
-  w_1 = init_weights_zero((input_size, h_size))
-  w_2 = init_weights_zero((h_size, y_size))
+  # Network Parameters
+  n_input = input_ff.shape[1]  # MNIST data input (img shape: 28*28)
+  n_hidden = max(256, input_ff.shape[1])  # 1st layer number of neurons
+  n_classes = 1  # Either Hillary or Trump
 
-  # Forward propagation
-  a_out = forward_prop(X, w_1, w_2)
-  predict = tf.argmax(yhat, axis=1)
+  # Store layers weight & bias
+  weights = {
+    'w_ff_hidden': _init_weights_zero([n_input, n_hidden]),
+    'w_ff_out': _init_weights_zero([n_hidden, n_classes])
+  }
+  biases = {
+    'b_ff_hidden': _init_weights_zero([n_hidden, 1]),
+    'b_ff_out': _init_weights_zero([n_classes, 1])
+  }
 
-  # Backward propagation
-  cost    = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=yhat))
-  updates = tf.train.GradientDescentOptimizer(0.01).minimize(cost)
+  logits = _build_fully_connected_feed_forward(input_ff, weights, biases)
+  return logits
