@@ -2,7 +2,7 @@ import tensorflow as tf
 
 def _init_weights_zero(shape):
   """
-  Weight initializer
+  Zero Weight initializer
 
   Initializes all weights/biases to value zero.
 
@@ -14,6 +14,24 @@ def _init_weights_zero(shape):
   """
   weights = tf.zeros(shape)
   return tf.Variable(weights)
+
+
+def init_weights_rand(shape):
+  """
+  Random Normal Weight initializer
+
+  Initializes all weights/biases to a normal random value with standard
+  deviation 0.1.
+
+  :param shape: Shape of the weight vector
+  :type shape: Tuple(int)
+
+  :return: Zero vector for all the weights
+  :rtype: tf.Tensor
+  """
+  weights = tf.random_normal(shape, stddev=0.1)
+  return tf.Variable(weights)
+
 
 def _build_fully_connected_feed_forward(X, weights, biases):
   """
@@ -36,7 +54,7 @@ def _build_fully_connected_feed_forward(X, weights, biases):
   return out_layer
 
 
-def init(input_ff):
+def init(input_ff, n_classes):
   """
   Feed Forward Network Initializer
 
@@ -49,18 +67,17 @@ def init(input_ff):
   """
 
   # Network Parameters
-  n_input = input_ff.shape[1]  # MNIST data input (img shape: 28*28)
+  n_input = input_ff.shape[1].value  # MNIST data input (img shape: 28*28)
   n_hidden = 256  # 1st layer number of neurons
-  n_classes = 1  # Either Hillary or Trump
 
   # Store layers weight & bias
   weights = {
-    'ff_hidden': _init_weights_zero([n_input, n_hidden]),
-    'ff_out': _init_weights_zero([n_hidden, n_classes])
+    'ff_hidden': init_weights_rand([n_input, n_hidden]),
+    'ff_out': init_weights_rand([n_hidden, n_classes])
   }
   biases = {
-    'ff_hidden': _init_weights_zero([n_hidden]),
-    'ff_out': _init_weights_zero([n_classes])
+    'ff_hidden': init_weights_rand([n_hidden]),
+    'ff_out': init_weights_rand([n_classes])
   }
 
   logits = _build_fully_connected_feed_forward(input_ff, weights, biases)

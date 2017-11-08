@@ -1,7 +1,7 @@
 
 # Training Parameters
-LEARNING_RATE = 0.001
-NUM_EPOCHS = 20
+LEARNING_RATE = 0.5
+NUM_EPOCHS = 200
 
 # Columns in the Pandas dataframe.
 COL_HANDLE = "handle"
@@ -16,8 +16,8 @@ HDL_DONALD_TRUMP = "realDonaldTrump"
 HDL_HILLARY_CLINTON = "HillaryClinton"
 
 # Target labels
-LBL_DONALD_TRUMP = 1
-LBL_HILLARY_CLINTON = 0
+LBL_DONALD_TRUMP = [1, 0]
+LBL_HILLARY_CLINTON = [0, 1]
 
 # RNN CONSTANTS
 HIDDEN_SIZE = 20
