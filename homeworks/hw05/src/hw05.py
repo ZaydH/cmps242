@@ -85,13 +85,14 @@ def run():
 
   # Create the inputs
   train_X, train_T, test_X, full_vocab = extract_train_and_test()
-  num_classes = 2  # Hillary v. Trump
+  num_classes = 2
 
   X = tf.placeholder("float", shape=[None, len(full_vocab)])
+  input_ff = X
   target = tf.placeholder("float", shape=[None, num_classes])
 
   # Build the network
-  input_ff = embedding_matrix.init(X, full_vocab)
+  #input_ff = embedding_matrix.init(X, full_vocab)
   logits = feed_forward.init(input_ff, num_classes)
   predict = tf.sigmoid(logits)
 

@@ -48,7 +48,7 @@ def _build_fully_connected_feed_forward(X, weights, biases):
   :rtype: tf.Tensor
   """
   # Hidden fully connected layer with 256 neurons
-  hidden_layer = tf.nn.sigmoid(tf.add(tf.matmul(X, weights['ff_hidden']), biases["ff_hidden"]))
+  hidden_layer = tf.nn.relu(tf.nn.sigmoid(tf.add(tf.matmul(X, weights['ff_hidden']), biases["ff_hidden"])))
   # Output fully connected layer with a neuron for each class
   out_layer = tf.matmul(hidden_layer, weights['ff_out']) + biases["ff_out"]
   return out_layer
@@ -68,7 +68,7 @@ def init(input_ff, n_classes):
 
   # Network Parameters
   n_input = input_ff.shape[1].value  # MNIST data input (img shape: 28*28)
-  n_hidden = 256  # 1st layer number of neurons
+  n_hidden = 128  # 1st layer number of neurons
 
   # Store layers weight & bias
   weights = {
