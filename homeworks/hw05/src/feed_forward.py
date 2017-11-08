@@ -30,9 +30,9 @@ def _build_fully_connected_feed_forward(X, weights, biases):
   :rtype: tf.Tensor
   """
   # Hidden fully connected layer with 256 neurons
-  hidden_layer = tf.add(tf.matmul(X, weights['w_ff_hidden']), biases['b_ff_hidden'])
+  hidden_layer = tf.nn.sigmoid(tf.add(tf.matmul(X, weights['ff_hidden']), biases["ff_hidden"]))
   # Output fully connected layer with a neuron for each class
-  out_layer = tf.add(tf.matmul(hidden_layer, weights['w_ff_out']), biases['b_ff_out'])
+  out_layer = tf.matmul(hidden_layer, weights['ff_out']) + biases["ff_out"]
   return out_layer
 
 
@@ -50,17 +50,17 @@ def init(input_ff):
 
   # Network Parameters
   n_input = input_ff.shape[1]  # MNIST data input (img shape: 28*28)
-  n_hidden = max(256, input_ff.shape[1])  # 1st layer number of neurons
+  n_hidden = 256  # 1st layer number of neurons
   n_classes = 1  # Either Hillary or Trump
 
   # Store layers weight & bias
   weights = {
-    'w_ff_hidden': _init_weights_zero([n_input, n_hidden]),
-    'w_ff_out': _init_weights_zero([n_hidden, n_classes])
+    'ff_hidden': _init_weights_zero([n_input, n_hidden]),
+    'ff_out': _init_weights_zero([n_hidden, n_classes])
   }
   biases = {
-    'b_ff_hidden': _init_weights_zero([n_hidden, 1]),
-    'b_ff_out': _init_weights_zero([n_classes, 1])
+    'ff_hidden': _init_weights_zero([n_hidden]),
+    'ff_out': _init_weights_zero([n_classes])
   }
 
   logits = _build_fully_connected_feed_forward(input_ff, weights, biases)

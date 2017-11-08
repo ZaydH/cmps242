@@ -1,6 +1,9 @@
 # Ignore Mac temp file
 *.DS_Store
 
+# Ignore the CSV files for debug
+*.csv
+
 # Ignore temporary Matlab files
 *.m~
 
