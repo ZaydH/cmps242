@@ -1,7 +1,7 @@
 
 # Training Parameters
-LEARNING_RATE = 0.5
-NUM_EPOCHS = 200
+LEARNING_RATE = 1.0
+NUM_EPOCHS = 10000
 
 # Columns in the Pandas dataframe.
 COL_HANDLE = "handle"

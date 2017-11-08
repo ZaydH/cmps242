@@ -92,15 +92,18 @@ def run():
   target = tf.placeholder("float", shape=[None, num_classes])
 
   # Build the network
-  #input_ff = embedding_matrix.init(X, full_vocab)
+  input_ff = embedding_matrix.init(X, full_vocab)
   logits = feed_forward.init(input_ff, num_classes)
   predict = tf.sigmoid(logits)
 
   # Define loss and optimizer
-  loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-                           logits=logits, labels=target))
-  optimizer = tf.train.AdamOptimizer(learning_rate=const.LEARNING_RATE)
-  train_op = optimizer.minimize(loss_op)
+  loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=target))
+  # optimizer = tf.train.AdamOptimizer(learning_rate=const.LEARNING_RATE)
+  # train_op = optimizer.minimize(loss_op)
+  global_step = tf.Variable(0, trainable=False)
+  learning_rate = tf.train.exponential_decay(const.LEARNING_RATE, global_step,
+                                             100, 0.98, staircase=True)
+  train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_op, global_step=global_step)
 
   # Run Gradient Descent
   sess = tf.Session()
@@ -110,8 +113,7 @@ def run():
   # Perform the training
   for epoch in range(const.NUM_EPOCHS):
     # Run optimization op (backprop) and cost op (to get loss value)
-    _, c = sess.run([train_op, loss_op], feed_dict={X: train_X,
-                                                   target: train_T})
+    _, c = sess.run([train_op, loss_op], feed_dict={X: train_X, target: train_T})
     print("Epoch:", '%04d' % (epoch + 1), "cost={:.9f}".format(c))
     p_val = sess.run(predict, feed_dict={X: test_X})
     _build_output_file(p_val, output_file="results_%04d.csv" % (epoch + 1))

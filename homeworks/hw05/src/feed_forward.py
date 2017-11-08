@@ -68,7 +68,7 @@ def init(input_ff, n_classes):
 
   # Network Parameters
   n_input = input_ff.shape[1].value  # MNIST data input (img shape: 28*28)
-  n_hidden = 128  # 1st layer number of neurons
+  n_hidden = 256  # 1st layer number of neurons
 
   # Store layers weight & bias
   weights = {
