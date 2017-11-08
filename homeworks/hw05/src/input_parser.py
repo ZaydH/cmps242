@@ -1,9 +1,7 @@
-import pickle
 import string
 import sklearn.feature_extraction.text as sklearntext
 import pandas as pd
 from mlxtend.preprocessing import one_hot
-import os
 import const
 
 

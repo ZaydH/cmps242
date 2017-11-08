@@ -4,7 +4,7 @@ import const
 import input_parser
 import numpy as np
 import feed_forward
-import pickle
+import embedding_matrix
 
 
 USE_BAG_OF_WORDS = True
@@ -91,7 +91,7 @@ def run():
   target = tf.placeholder("float", shape=[None, num_classes])
 
   # Build the network
-  input_ff = X
+  input_ff = embedding_matrix.init(X, full_vocab)
   logits = feed_forward.init(input_ff, num_classes)
   predict = tf.sigmoid(logits)
 
