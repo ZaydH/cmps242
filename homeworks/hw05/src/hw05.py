@@ -66,6 +66,7 @@ def extract_train_and_test():
            full_vocab
   else:
     x_col = const.COL_ONE_HOT
+    return train[x_col], train[t_col], test[x_col], full_vocab
 
 
 def init_tf():
