@@ -2,6 +2,8 @@
 # Training Parameters
 LEARNING_RATE = 1.0
 NUM_EPOCHS = 10000
+EPOCHS_PER_DECAY = 100
+DECAY_RATE = 0.98
 
 # Columns in the Pandas dataframe.
 COL_HANDLE = "handle"

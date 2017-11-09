@@ -103,13 +103,16 @@ def run():
   # train_op = optimizer.minimize(loss_op)
   global_step = tf.Variable(0, trainable=False)
   learning_rate = tf.train.exponential_decay(const.LEARNING_RATE, global_step,
-                                             100, 0.98, staircase=True)
+                                             const.EPOCHS_PER_DECAY, const.DECAY_RATE, staircase=True)
   train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_op, global_step=global_step)
 
   # Run Gradient Descent
   sess = tf.Session()
   init = init_tf()
   sess.run(init)
+
+  # `sess.graph` provides access to the graph used in a `tf.Session`.
+  writer = tf.summary.FileWriter("/tmp/log/...", sess.graph)
 
   # Perform the training
   for epoch in range(const.NUM_EPOCHS):
@@ -120,6 +123,9 @@ def run():
     _build_output_file(p_val, output_file="results_%04d.csv" % (epoch + 1))
 
   print("Training Complete.")
+
+  writer.close()
+  sess.close()
 
 
 if __name__ == "__main__":
