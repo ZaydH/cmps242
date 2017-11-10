@@ -9,7 +9,7 @@
 \usepackage{multicol}   % Used for two column lists
 
 \usepackage{tikz}
-\usetikzlibrary{matrix, positioning, calc}
+\usetikzlibrary{matrix, positioning, calc, shadows}
 \usepackage{xcolor}
 
 %\usepackage[hidelinks]{hyperref}   % Make the cross references clickable hyperlinks
@@ -68,11 +68,12 @@
       every neuron/.style={
         circle,
         draw,
+        fill=white,
         minimum size=1cm,
       },
       neuron output/.style={
         every neuron,
-        sigmoid
+        sigmoid,
       },
       matrix multiply/.style={
         every neuron,
@@ -82,17 +83,11 @@
         rectangle,
         draw,
         text centered,
+        fill=white,
         text width = 1.5cm,
-        minimum width = 1.75cm,
-        minimum height = 2cm
-      },
-      feed forward/.style={
-        every netbox,
-        font={Feed Forward Neural Network},
-      },
-      lstm/.style={
-        every netbox,
-        font={LSTM},
+        minimum width = 2.25cm,
+        minimum height = 2cm,
+        rounded corners,
       },
       every left delimiter/.style={xshift=1ex},
       every right delimiter/.style={xshift=-1ex},
@@ -107,10 +102,10 @@
     \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth] 
     
       % Must define nodes in the list before they can be used.
-      \node [neuron output] (output) {};
-      \node [feed forward, left of=output, xshift=-0.7in] (feedforward) {};
-      \node [lstm, left of=feedforward, xshift=-0.8in] (lstmbox) {};
-      \node [matrix multiply, left of=lstmbox, xshift=-0.5in] (matmul) {};
+      \node [neuron output, drop shadow] (output) {};
+      \node [every netbox, left of=output, xshift=-0.7in, drop shadow] (feedforward) {Feed Forward Neural Network};
+      \node [every netbox, left of=feedforward, xshift=-0.8in, drop shadow] (lstmbox) {LSTM};
+      \node [every neuron, left of=lstmbox, xshift=-0.5in, drop shadow] (matmul) {\Large$\times$};
       \matrix (onehot) [bmatrix, below left of = matmul, xshift=-0.5in, yshift = -0.1in] {
         0 \\
         1 \\
@@ -127,13 +122,15 @@
       \node [above of=embedding, yshift=0.15in] (embeddinglabel) {Embedding Matrix};
                   
       % Draw arrows
-      \draw [->] (embedding) -- (matmul);
-      \draw [->] (onehot) -- (matmul);
-      \draw [->] (matmul) -- (lstmbox);
-      \draw [->] (lstmbox) -- (feedforward);
-      \draw [->] (lstmbox) to[out=30, in=150, loop, looseness=4] (lstmbox); % Numbers represent location on the unit circle.  0 is due east, 90 due north, 180 due west, and 270 due south.
-      \draw [->] (feedforward) -- (output);
-      \draw [->] (output) -- ++(1,0);
+      \draw [->,thick] (embedding) -- (matmul);
+      \draw [->,thick] (onehot) -- (matmul);
+      \draw [->,thick] (matmul) -- (lstmbox);
+      \draw [->,thick] (lstmbox) -- (feedforward);
+      \draw [->,thick] (lstmbox) to[out=30, in=150, looseness=2] (lstmbox); % Numbers represent location on the unit circle.  0 is due east, 90 due north, 180 due west, and 270 due south.
+      \draw [->,thick] (feedforward.north east) -- (output);
+      \draw [->,thick] (feedforward) -- (output);
+      \draw [->,thick] (feedforward.south east) -- (output);
+      \draw [->,thick] (output) -- ++(1,0);
     \end{tikzpicture} 
     \caption{Base LSTM Neural Network Classifier}\label{fig:completeLstmClassifer}
   \end{figure}
@@ -187,15 +184,12 @@
       every neuron/.style={
         circle,
         draw,
+        fill=white,
         minimum size=1cm,
       },
       neuron filled/.style={
         every neuron,
         fill=gray!10
-      },
-      neuron bias/.style={
-        every neuron,
-        font={Bias}
       },
       neuron output/.style={
         every neuron,
@@ -206,7 +200,9 @@
         relu
       },
       neuron missing/.style={
-        draw=none, 
+        general shadow={fill=none},
+        draw=none,
+        fill=none,
         scale=4,
         text height=0.3cm,
         execute at begin node=\color{black}$\vdots$
@@ -215,22 +211,24 @@
   
     
     \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
-      \foreach \m/\l [count=\y] in {1,missing,2}
-        \node [every neuron/.try, neuron \m/.try] (input-\m) at (0,1.1-\y*0.9) {};
-      
+%      \foreach \m/\l [count=\y] in {1,missing,2}
+%        \node [every neuron/.try, neuron \m/.try, drop shadow] (input-\m) at (0,1.1-\y*0.9) {};
+      \node [every neuron/.try, neuron 1/.try, drop shadow] (input-1) at (0,1.1-1*0.9) {};
+      \node [every neuron/.try, neuron missing/.try] (input-missing) at (0,1.1-2*0.9) {};
+      \node [every neuron/.try, neuron 2/.try, drop shadow] (input-2) at (0,1.1-3*0.9) {};
+            
       %\foreach \m [count=\y] in {1,2,missing,3}
       %  \node [neuron hidden/.try, neuron \m/.try ] (hidden-\m) at (2,2.5-\y*1.25) {};
-      \node [neuron hidden/.try, neuron 1/.try ] (hidden-1) at (2,2.5-1*1.25) {};
-      \node [neuron hidden/.try, neuron 2/.try ] (hidden-2) at (2,2.5-2*1.25) {};
-      \node [every neuron/.try, neuron missing/.try ] (hidden-missing) at (2,2.5-2.95*1.25) {};
-      \node [neuron hidden/.try, neuron 3/.try ] (hidden-3) at (2,2.5-4*1.25) {};
+      \node [neuron hidden/.try, neuron 1/.try, drop shadow] (hidden-1) at (2,2.5-1*1.25) {};
+      \node [neuron hidden/.try, neuron 2/.try, drop shadow] (hidden-2) at (2,2.5-2*1.25) {};
+      \node [every neuron/.try, neuron missing/.try] (hidden-missing) at (2,2.5-2.95*1.25) {};
+      \node [neuron hidden/.try, neuron 3/.try, drop shadow] (hidden-3) at (2,2.5-4*1.25) {};
       
       \foreach \m [count=\y] in {1,2}
-        \node [neuron output/.try, neuron \m/.try ] (output-\m) at (4,0.85-\y*1.1) {};
+        \node [neuron output/.try, neuron \m/.try, drop shadow] (output-\m) at (4,0.85-\y*1.1) {};
       
       \foreach \m [count=\y] in {1,2}{
-        \node [neuron filled/.try] (filled-\m) at (-2+2*\y,-3.5) {};
-        \node [neuron bias/.try] (bias-\m) at (-2+2*\y,-3.5) {};
+        \node [neuron filled/.try, drop shadow] (bias-\m) at (-2+2*\y,-3.5) {Bias};
       }
       
       % Add the labels to the nodes
