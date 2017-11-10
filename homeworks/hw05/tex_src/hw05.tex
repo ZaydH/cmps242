@@ -48,13 +48,13 @@
   
   The dataset is a comma-separated list of tweets from either @HillaryClinton or @realDonaldTrump.  No additional information is provided by the tweet's text and potentially the class label.  The training set consists of 4,743~total tweets while the test set had 1,701~unlabeled tweets.
    
-  \section{Preprocessor}
+  \section{Tweet Text Preprocessor}\label{sec:textPreprocessor}
   
-  The dataset consists of tweet 
-  
+  Since an LSTM is a recursive neural network, it can rely on both vocabulary and contextual information to perform classification.  Extensive text preprocessing has the potential to destroy subtle textual information.  As such, we performed very minimal text manipulation beyond vectorization.  For example, we left all stop words in place.  We removed some of the punctuation but left hashtags~(\#) and exclamation points as we theorized that they may be part of a specific user's unique tweet ``signature.''  This results in a vocabulary of approximately eleven thousand words; it should be noted that a small percentage of this vocabulary is just largely gibberish shortened URLs.  We believe that with additional effort, we may be able to derive useful information from these URLs, but we leave that as a future exercise.
+   
   \section{Classifier Structure}
   
-  The LSTM classifier for this homework is required to at minimum the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network.  These modules are described in the following subsections.
+  At a minimum, this homework's LSTM classifier must have the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network.  These modules are described in the following subsections.
   
   \begin{figure}
     \centering
@@ -111,7 +111,7 @@
       \node [feed forward, left of=output, xshift=-0.7in] (feedforward) {};
       \node [lstm, left of=feedforward, xshift=-0.8in] (lstmbox) {};
       \node [matrix multiply, left of=lstmbox, xshift=-0.5in] (matmul) {};
-      \matrix (onehot) [bmatrix, below left of = matmul, xshift=-0.5in, yshift = -0.5in] {
+      \matrix (onehot) [bmatrix, below left of = matmul, xshift=-0.5in, yshift = -0.1in] {
         0 \\
         1 \\
         0 \\[-1ex]
@@ -119,7 +119,7 @@
         0\\};
       \node [left of=onehot, xshift=0.1in] (onehotcontinue) {\Large $\cdots$};
       \node [left of=onehotcontinue, text width = 0.82in, text centered, xshift =-0.2in] (onehotlabel) {One-Hot Vector Input};
-      \matrix (embedding) [bmatrix, above left of = matmul, xshift=-1in, yshift=0.2in] {
+      \matrix (embedding) [bmatrix, above left of = matmul, xshift=-1in, yshift=0.45in] {
         w_{1,1} & w_{1,2} &\cdots & w_{1,N}\\
         w_{2,1} & w_{2,2} &\cdots & w_{2,N}\\[-1ex]
         \vdots & & &  \vdots\\
@@ -138,14 +138,35 @@
     \caption{Base LSTM Neural Network Classifier}\label{fig:completeLstmClassifer}
   \end{figure}
   
-  \subsection{One-Hot Vector Input} \label{sec:oneHotVector}
-  
-  \subsection{Embedding Matrix} \label{sec:embeddingMatrix}
-  
-  \subsection{Long Short-Term Memory Network Structure} \label{sec:lstemOverview}
   
   
-  \subsection{Feed-Forward Neural Network Structure} \label{sec:neuralNetOverview}
+  \subsection{Implementation Overview}\label{sec:implementation}
+  
+  As specified in the homework description, our network is written in Python (specifically version~3.5.3) using Google's TensorFlow library.  Additional packages we used include: Pandas, NumPy, Scikit-Learn (for text preprocessing and vectorizing), and mlxtend (``Machine Learning Library Extension'' for generating the one-hot). 
+  
+  \subsection{One-Hot Vector Input}\label{sec:oneHotVector}
+  
+  Neural networks perform best when information is encoded in a fixed-length easily decodable fashion.  Humans encode words through an ordered series of letters.  While this form is compact and well-suited for human consumption, it is not ideal for a machine input.  Instead, it is much simpler for the learning algorithm if a word is represented as an $N$-dimensional bit vector with each of the bits representing one word in the vocabulary.  Using this notation, each word would be represented by a vector of $N-1$~zeros and a single bit of~$1$; this is the reason that this encoding scheme is known as ``one-hot'' vectors.  
+  
+  A sentence of $v$~words is represented an ordered sequence of $v$~one-hot vectors (with some vectors potentially repeated if a word is repeated in the sentence).  In our architecture, each of these one-hot vectors is multiplied by the embedding matrix before being fed into the neural network.
+  
+  
+  \subsection{Embedding Matrix}\label{sec:embeddingMatrix}
+  
+  As mentioned in Section~\ref{sec:textPreprocessor}, this dataset's vocabulary size,~$N$, is greater than 11,000~words.  Using one's personal computer to train a neural network of that size is impractical and will yield severely degraded results. TensorFlow includes built-in support from \textbf{embedding matrices}, which via matrix multiplication maps the original sparse $N$-dimensional space into a much smaller and denser~$d$ dimensional space. (In our experiments, $d=25$ as proposed by Ehsan in lecture.)  
+  
+  The embedding matrix is a learned-object that also can encode relationships between words.  For example, in one canonical example, the relationship, 
+  
+  \[\text{Rome } - \text{ Italy} = \text{Beijing } - \text{ China}\textrm{,}\]
+  
+  \noindent
+  can be shown to be learnable using embedded matrices.  This shows that embedding matrices can significantly improve a classifier's performance by deducing an inherent ``meaning'' to words.
+  
+  \subsection{Long Short-Term Memory Network Structure}\label{sec:lstemOverview}
+  
+  {\textcolor{red}{\Large NEED TO ADD}}
+  
+  \subsection{Feed-Forward Neural Network Structure}\label{sec:neuralNetOverview}
   
   \begin{figure}
     \centering
@@ -245,15 +266,13 @@
     \caption{Base Structure of Our Feed-Forward Network}\label{fig:feedForwardNet}
   \end{figure}
   
-  The final structure of our feed forward network is shown in Figure~\ref{fig:feedForwardNet}.  The number of input nodes is dictated by the number of rows in the embedding matrix; as mentioned in Section~\ref{sec:embeddingMatrix}, we used a rank of~$d=25$ in our experiments.  Our sole hidden layer has $m=256$ fully-connected neurons. There are two output nodes (e.g., one for ``Donald Trump'' and the other for ``Hillary Clinton).  A softmax function normalizes the output probabilities to ensure they sum to probability~$1$.  We selected this paradigm as it simplified the Tensor Flow implementation without affecting the quality of the results.
+  The final structure of our feed forward network is shown in Figure~\ref{fig:feedForwardNet}.  The number of input nodes is dictated by the number of rows in the embedding matrix; as mentioned in Section~\ref{sec:embeddingMatrix}, we used a rank of~$d=25$ in our experiments.  Our sole hidden layer has $m=256$ fully-connected neurons. There are two output nodes (e.g., one for ``Donald Trump'' and the other for ``Hillary Clinton'').  A softmax function normalizes the output probabilities to ensure they sum to probability~$1$.  We selected this paradigm as it simplified the Tensor Flow implementation without affecting the quality of the results.
   
   Our final feed-forward network design used the rectified linear and sigmoid activation functions for the hidden and output layers respectively.  Each neuron in the network also had its own bias input.
   
-  \subsection{Implementation} \label{sec:implementation}
-  
-  As specified in the homework description, our network is written in Python (specifically version~3.5.3) using Google's TensorFlow library.  Additional packages we used include: Pandas, NumPy, Scikit-Learn (for text preprocessing and vectorizing), and mlxtend (``Machine Learning Library Extension'' for generating the one-hot). 
-  
   \section{Experimental Results} \label{sec:experimentalResults}
+  
+  {\textcolor{red}{\Large NEED TO ADD}}
   
   \section{Extra Credit \#1: Bag of Words Model}
   
@@ -269,11 +288,12 @@
   
   We experimented with three activation configurations for the hidden layer.  In addition to rectified linear, we also tried a ``pass-through'' activation where the neuron's output was simply~$\textbf{w}\cdot\textbf{x} + b$, where $\textbf{w}$~is the weight vector, $\textbf{x}$~the input, and $b$~the bias term.  We also tried to use a sigmoid function.  However, these two other activation functions took more epochs to converge (an increase of approximately 200 to 1,000~training rounds) and yield worse testing error.
   
-  \subsection{Extra Credit \#2b: Additional Feed-Forward Hidden Layers}
-  
-  
-  \subsection{Extra Credit \#2b: Additional Neurons in the Hidden Layer}
+  \subsection{Extra Credit \#2b: Additional Neurons in the Hidden Layer}\label{sec:ecMoreHiddenLayerNeurons}
   
   This is a general (but not strict) correlation between the number of neurons in the hidden layer and the complexity of the function the network can learn.  Additional neurons also increase the possibility of overfitting.  We experiment with three different quantities of hidden layer neurons, namely $128$, $256$, and $512$.  We observed that $128$ and $512$ neurons had similarly poor performance of approximately~$\textbf{0.24}$ on the test set.  In addition, $512$ neurons significantly increased the training time (by a factor of two times).  In contrast, $256$~hidden layer neurons had a training error of~$\sim0.20$, that is why we selected~$d=256$ as discussed in Section~\ref{sec:neuralNetOverview}.
+     
+  \subsection{Extra Credit \#2c: Multiple Feed-Forward Hidden Layers}
+  
+  As illustrated in Figure~\ref{fig:feedForwardNet}, our feed-forward network only had a single-hidden layer.  We settled this architecture after experimenting with both two and three hidden layers.  Similar to the findings in Section~\ref{sec:ecMoreHiddenLayerNeurons}, increasing the complexity of the feed-forward network by adding more layers had a dual deleterious effect by both increasing the training time and reducing the reported score on the test set.
      
 \end{document}
