@@ -1,5 +1,8 @@
 import tensorflow as tf
 
+import const
+
+
 def _init_weights_zero(shape):
   """
   Zero Weight initializer
@@ -47,10 +50,20 @@ def _build_fully_connected_feed_forward(X, weights, biases):
   :return: Output tensor
   :rtype: tf.Tensor
   """
+  assert const.NUM_HIDDEN_LAYERS >= 1  # Need at least one hidden layer
   # Hidden fully connected layer with 256 neurons
-  hidden_layer = tf.nn.relu(tf.nn.sigmoid(tf.add(tf.matmul(X, weights['ff_hidden']), biases["ff_hidden"])))
+  hidden_layers = []
+  hidden_layers.append(tf.nn.relu(tf.nn.sigmoid(tf.add(tf.matmul(X, weights['ff_hidden1']), biases["ff_hidden1"]))))
+
+  # Create the hidden layers
+  for i in range(2, const.NUM_HIDDEN_LAYERS+1):
+    layer = tf.nn.relu(tf.nn.sigmoid(tf.add(tf.matmul(hidden_layers[i-2],
+                                                      weights['ff_hidden' + str(i)]),
+                                                      biases["ff_hidden" + str(i)])))
+    hidden_layers.append(layer)
+
   # Output fully connected layer with a neuron for each class
-  out_layer = tf.matmul(hidden_layer, weights['ff_out']) + biases["ff_out"]
+  out_layer = tf.matmul(hidden_layers[const.NUM_HIDDEN_LAYERS - 1], weights['ff_out']) + biases["ff_out"]
   return out_layer
 
 
@@ -68,17 +81,20 @@ def init(input_ff, n_classes):
 
   # Network Parameters
   n_input = input_ff.shape[1].value  # MNIST data input (img shape: 28*28)
-  n_hidden = 256  # 1st layer number of neurons
+  n_hidden = const.NUM_NEURON_HIDDEN_LAYER  # 1st layer number of neurons
 
   # Store layers weight & bias
   weights = {
-    'ff_hidden': init_weights_rand([n_input, n_hidden]),
+    'ff_hidden1': init_weights_rand([n_input, n_hidden]),
     'ff_out': init_weights_rand([n_hidden, n_classes])
   }
   biases = {
-    'ff_hidden': init_weights_rand([n_hidden]),
+    'ff_hidden1': init_weights_rand([n_hidden]),
     'ff_out': init_weights_rand([n_classes])
   }
+  for i in range(2, const.NUM_HIDDEN_LAYERS+1):
+    weights['ff_hidden' + str(i)] = init_weights_rand([n_hidden, n_hidden])
+    biases['ff_hidden' + str(i)] = init_weights_rand([n_hidden])
 
   logits = _build_fully_connected_feed_forward(input_ff, weights, biases)
   return logits
