@@ -7,6 +7,8 @@ from feed_forward import init
 import embedding_matrix
 import numpy as np
 
+NUM_BATCHES = 10
+
 # main
 if __name__ == '__main__':
   # Create the inputs
@@ -86,7 +88,7 @@ if __name__ == '__main__':
 
   # make a gradient descent optimizer
   global_step = tf.Variable(0, trainable=False)
-  const.LEARNING_RATE = 0.1
+  const.LEARNING_RATE = 1.
   learning_rate = tf.train.exponential_decay(const.LEARNING_RATE, global_step,
                                              const.EPOCHS_PER_DECAY, const.DECAY_RATE, staircase=True)
   # train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
@@ -100,16 +102,17 @@ if __name__ == '__main__':
   writer = tf.summary.FileWriter("/tmp/log/...", sess.graph)
 
   # Perform the training
+  TRAIN_BATCH_SIZE = const.BATCH_SIZE // NUM_BATCHES
   for epoch in range(const.NUM_EPOCHS):
     # Run optimization op (backprop) and cost op (to get loss value)
-    acc_err, _, c = sess.run(
-      [accuracy, train_step, loss],
-      {
-        X: train_x,
-        targets: train_y,
-        seqlen: train_sequence_lengths
-      }
-    )
+    for batch_num in range(0, NUM_BATCHES):
+      start_batch = batch_num * TRAIN_BATCH_SIZE
+      end_batch = (batch_num + 1) * TRAIN_BATCH_SIZE if batch_num != NUM_BATCHES - 1 else const.BATCH_SIZE
+      acc_err, _, c = sess.run([accuracy, train_step, loss],
+                               feed_dict={X: train_x[start_batch:end_batch],
+                                          targets: train_y[start_batch:end_batch],
+                                          seqlen: train_sequence_lengths[start_batch:end_batch]})
+
     classified, c = sess.run([accuracy, loss], feed_dict={X: train_x, targets: train_y, seqlen: train_sequence_lengths})
     print("Epoch: ", '%04d' % (epoch + 1), "cost={:.9f}".format(c))
 
