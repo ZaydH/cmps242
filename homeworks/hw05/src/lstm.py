@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
   # make sequence length vector s
   train_sequence_lengths = [len(l) for l in train_x]
-  test_sequence_lengths = [len(l) for l in test_x] + [0 for i in range(len(train_x) - len(test_x))]
+  test_sequence_lengths = [len(l) for l in test_x]
 
   # pad the examples with zeros
   max_seq_len = max(max(train_sequence_lengths), max(test_sequence_lengths))
@@ -38,14 +38,6 @@ if __name__ == '__main__':
         x_val.append(0)
     # assert that the dimensions are now consistent
     assert len({len(x) for x in x_vals}) == 1
-
-  test_x = np.array(test_x, dtype=np.int32)
-  TEST_INSTANCES = len(test_x)
-  # add bunch of all zero columns to test X
-  test_x = np.vstack((
-    test_x,
-    np.zeros((len(train_x) - len(test_x), max_seq_len))
-  ))
 
   # create placeholder for RNN input
   X = tf.placeholder(tf.int32, shape=[None, max_seq_len])
@@ -79,7 +71,8 @@ if __name__ == '__main__':
   )
 
   # get the last rnn outputs
-  idx = tf.range(const.BATCH_SIZE)*tf.shape(rnn_outputs)[1] + (seqlen - 1)
+  batch_size = tf.shape(rnn_outputs)[0]
+  idx = tf.range(batch_size)*tf.shape(rnn_outputs)[1] + (seqlen - 1)
   final_rnn_outputs = tf.gather(tf.reshape(rnn_outputs, [-1, const.HIDDEN_SIZE]), idx)
 
   # make the rnn outputs the inputs to a FF network
@@ -122,7 +115,6 @@ if __name__ == '__main__':
 
     # Store the probability results
     p_val = sess.run(preds, feed_dict={X: test_x, seqlen: test_sequence_lengths})
-    p_val = p_val[:TEST_INSTANCES]
     _build_output_file(p_val, output_file="results_%04d.csv" % (epoch + 1))
 
     # Print the training classification accuracy
