@@ -30,11 +30,11 @@ if __name__ == '__main__':
   test_sequence_lengths = [len(l) for l in test_x] + [0 for i in range(len(train_x) - len(test_x))]
 
   # pad the examples with zeros
+  max_seq_len = max(max(train_sequence_lengths), max(test_sequence_lengths))
   for seq_lens, x_vals in [(train_sequence_lengths, train_x),
                            (test_sequence_lengths, test_x)]:
-    max_len = max(seq_lens)
     for x_val in x_vals:
-      while len(x_val) < max_len:
+      while len(x_val) < max_seq_len:
         x_val.append(0)
     # assert that the dimensions are now consistent
     assert len({len(x) for x in x_vals}) == 1
@@ -44,24 +44,24 @@ if __name__ == '__main__':
   # add bunch of all zero columns to test X
   test_x = np.vstack((
     test_x,
-    np.zeros((len(train_x) - len(test_x),max_len))
+    np.zeros((len(train_x) - len(test_x), max_seq_len))
   ))
 
   # create placeholder for RNN input
-  X = tf.placeholder(tf.int32, shape=[const.BATCH_SIZE, None])
+  X = tf.placeholder(tf.int32, shape=[None, max_seq_len])
 
   # create a placeholder for the length of the sequences
-  seqlen = tf.placeholder(tf.int32, shape=[const.BATCH_SIZE])
+  seqlen = tf.placeholder(tf.int32, shape=[None])
 
   # get the rnn inputs
   embeddings = tf.get_variable('embedding_matrix', [len(vocab), const.HIDDEN_SIZE])
   rnn_inputs = tf.nn.embedding_lookup(embeddings, X)
  
   # target placeholder
-  targets = tf.placeholder(tf.float32, shape=(const.BATCH_SIZE, 2))
+  targets = tf.placeholder(tf.float32, shape=[None, 2])
 
   # create cell
-  cell = tf.nn.rnn_cell.BasicLSTMCell(
+  lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(
     const.HIDDEN_SIZE,
     state_is_tuple=True
   )
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
   # construct a connected RNN
   rnn_outputs, rnn_state = tf.nn.dynamic_rnn(
-    cell,
+    lstm_cell,
     rnn_inputs,
     # initial_state=initial_state,
     sequence_length=seqlen,
@@ -96,8 +96,8 @@ if __name__ == '__main__':
   const.LEARNING_RATE = 0.1
   learning_rate = tf.train.exponential_decay(const.LEARNING_RATE, global_step,
                                              const.EPOCHS_PER_DECAY, const.DECAY_RATE, staircase=True)
-  train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
-  # train_step = tf.train.AdamOptimizer(1e-2).minimize(loss)
+  # train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
+  train_step = tf.train.AdamOptimizer(1e-2).minimize(loss)
 
   # create a session
   sess = tf.Session()
