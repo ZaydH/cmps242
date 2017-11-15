@@ -2,8 +2,12 @@ import string
 import sklearn.feature_extraction.text as sklearntext
 import pandas as pd
 from mlxtend.preprocessing import one_hot
+import numpy as np
 import const
+import gensim
 
+# load the word2vec model from google
+w2v = None
 
 def parse():
   """
@@ -17,12 +21,22 @@ def parse():
   train = parse_csv_data_file("train.csv")
   test = parse_csv_data_file("test.csv")
 
+  # load the word2vec model from google
+  global w2v
+  w2v = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
+
   full_vocab = build_vocab(train, test)
 
   build_integer_token_representation(train, test, full_vocab)
 
   build_one_hot(train, test, full_vocab)
-  return train, test, full_vocab
+
+  build_word_vectors(train,test,full_vocab)
+
+  dummy_word = w2v.word_vec("poop")
+  w2v = None
+
+  return train, test, full_vocab, dummy_word
 
 
 def build_vocab(train_data, test_data):
@@ -68,8 +82,12 @@ def build_integer_token_representation(train_data, test_data, vocab):
   :type vocab: dict
   """
   f = lambda df: [[vocab[word] for word in tweet.split()] for tweet in df[const.COL_TWEET]]
-  train_data[const.COL_TWEET_TRANSFORM] = f(train_data)
-  test_data[const.COL_TWEET_TRANSFORM] = f(test_data)
+  train_data[const.COL_TWEET_INT_TRANSFORM] = f(train_data)
+  test_data[const.COL_TWEET_INT_TRANSFORM] = f(test_data)
+
+  f = lambda df: [[word for word in tweet.split()] for tweet in df[const.COL_TWEET]]
+  train_data[const.COL_TWEET_WORD_TRANSFORM] = f(train_data)
+  test_data[const.COL_TWEET_WORD_TRANSFORM] = f(test_data)
 
 
 def build_one_hot(train_data, test_data, vocab):
@@ -87,8 +105,34 @@ def build_one_hot(train_data, test_data, vocab):
   """
   for df in [train_data, test_data]:
     # one_hot = enc.transform(train_data[const.COL_TWEET_TRANSFORM])
-    df[const.COL_ONE_HOT] = df[const.COL_TWEET_TRANSFORM].apply(lambda x: one_hot(x, num_labels=len(vocab)))
+    df[const.COL_ONE_HOT] = df[const.COL_TWEET_INT_TRANSFORM].apply(lambda x: one_hot(x, num_labels=len(vocab)))
 
+
+
+def build_word2vec_list(word_list):
+  vecs = []
+  for word in word_list:
+    try:
+      vec = w2v.word_vec(word)
+      vecs.append(vec)
+    except KeyError:
+      continue
+  return vecs
+
+
+def build_word_vectors(train_data, test_data, vocab):
+  """
+
+  :param train_data: Training data set
+  :type train_data: pd.DataFrame
+  :param test_data: Test data set
+  :type test_data: pd.DataFrame
+  :param vocab: Full vocabulary for the training and test sets
+  :type vocab: dict
+  """
+  for df in [train_data, test_data]:
+    # one_hot = enc.transform(train_data[const.COL_TWEET_TRANSFORM])
+    df[const.COL_WORD2VEC] = df[const.COL_TWEET_WORD_TRANSFORM].apply(build_word2vec_list)
 
 def _remove_punctuation(s):
   """
