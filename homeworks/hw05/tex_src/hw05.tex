@@ -50,11 +50,11 @@
    
   \section{Tweet Text Preprocessor}\label{sec:textPreprocessor}
   
-  Since an LSTM is a recursive neural network, it can rely on both vocabulary and contextual information to perform classification.  Extensive text preprocessing has the potential to destroy subtle textual information.  As such, we performed very minimal text manipulation beyond vectorization.  For example, we left all stop words in place.  We removed some of the punctuation but left hashtags~(\#) and exclamation points as we theorized that they may be part of a specific user's unique tweet ``signature.''  This results in a vocabulary of approximately eleven thousand words; it should be noted that a small percentage of this vocabulary is gibberish, one-off, shortened URLs.  We believe that with additional effort, we may be able to derive useful information from these URLs, but we leave that as a future exercise.
+  Since an LSTM is a recurrent neural network, it can rely on both vocabulary and contextual information to perform classification.  Extensive text preprocessing has the potential to destroy subtle textual information.  As such, we performed very minimal text manipulation beyond vectorization.  For example, we left all stop words in place.  We removed some of the punctuation but left hashtags~(\#) and exclamation points as we theorized that they may be part of a specific user's unique tweet ``signature.''  This results in a vocabulary of approximately eleven thousand words; it should be noted that a small percentage of this vocabulary is gibberish, one-off, shortened URLs.  We believe that with additional effort, we may be able to derive useful information from these URLs, but we leave that as a future exercise.
    
   \section{Classifier Structure}
   
-  At a minimum, this homework's LSTM classifier must have the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network,which are described in the following subsections.
+  At a minimum, this homework's LSTM classifier must have the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network, each of which are described in the following subsections.
   
   \begin{figure}
     \centering
@@ -139,18 +139,18 @@
   
   \subsection{Implementation Overview}\label{sec:implementation}
   
-  As specified in the homework description, our network is written in Python (specifically version~3.5.3) using Google's TensorFlow library.  Additional packages we used include: Pandas, NumPy, Scikit-Learn (for text preprocessing and vectorizing), and mlxtend (``Machine Learning Library Extension'' for generating the one-hot). 
+  As specified in the homework description, our network is written in Python (specifically version~3.5.3) using Google's TensorFlow library.  Additional packages we used include: Pandas, NumPy, Scikit-Learn (for text preprocessing and vectorizing), and \texttt{mlxtend} (``Machine Learning Library Extension'' for generating the one-hot). 
   
   \subsection{One-Hot Vector Input}\label{sec:oneHotVector}
   
-  Neural networks perform best when information is encoded in a fixed-length, easily-decodable fashion.  Humans encode words through an ordered series of letters.  While this form is compact and well-suited for human consumption, it is not ideal for a machine input.  Instead, it is much simpler for the learning algorithm if a word is represented as an $N$-dimensional bit vector with each of the bits representing one word in the vocabulary.  Using this notation, each word would be represented by a vector of $N-1$~zeros and a single bit of~$1$; this is the reason that this encoding scheme is known as ``one-hot'' vectors.  
+  Neural networks perform best when information is encoded in a fixed-length, easily-decodable fashion.  Humans encode words through an ordered series of letters.  While this form is compact and well-suited for human consumption, it is not ideal for a machine input.  Instead, it is much simpler for the learning algorithm if a word is represented as an $N$-dimensional bit vector with each of the bits representing one word in the vocabulary.  Using this notation, each word would be represented by a vector of $N-1$~zeros and a single~$1$ bit; this is the reason why this encoding scheme is known as ``one-hot'' vectors.  
   
   A sentence of $v$~words is represented as an ordered sequence of $v$~one-hot vectors (with some vectors potentially repeated if a word appears multiple times in the sentence).  In our base architecture, each of these one-hot vectors is multiplied by the embedding matrix before being fed into the neural network.
   
   
   \subsection{Embedding Matrix}\label{sec:embeddingMatrix}
   
-  As mentioned in Section~\ref{sec:textPreprocessor}, this dataset's vocabulary size,~$N$, is greater than 11,000~words.  Using one's personal computer to train a neural network of that size is impractical and will yield severely degraded results. TensorFlow includes built-in support from \textbf{embedding matrices}, which via matrix multiplication maps the original sparse $N$-dimensional space into a much smaller and denser~$d$ dimensional space. (In our experiments, $d=25$ as proposed by Ehsan in lecture.)  
+  As mentioned in Section~\ref{sec:textPreprocessor}, this dataset's vocabulary size,~$N$, is greater than 11,000~words.  Using one's personal computer to train a neural network of that size is impractical and will yield severely degraded results. TensorFlow includes built-in support from \textbf{embedding matrices}, which via matrix multiplication map the original sparse $N$-dimensional space into a much smaller and denser~$d$ dimensional space. (In our experiments, we used~$d=25$ as proposed by Ehsan in lecture.)  
   
   The embedding matrix is a learned-object that also can encode relationships between words.  For example, in one canonical example, the relationship, 
   
@@ -161,7 +161,7 @@
   
   \subsection{Long Short-Term Memory Network Structure}\label{sec:lstemOverview}
   
-  Long short-term memory (LSTM) is a subtype of recursive neural networks.  LSTMs are a core block in tensor flow, whose primary hyperparameter is the number of units in the hidden layer.  Too few neurons in the system may not learn well.  Similarly, too many neurons will result in overfitting.  When using the embedding matrix, we observed that approximately 64~LSTM neurons yielded the best results.  When we used a public word model as described in Section~\ref{sec:openSourceWordModels}, the number of LSTM neurons had to match the model width, which in the case of Google's word2vec is rank~300.
+  Long short-term memory~(LSTM) is a subtype of recursive neural networks.  LSTMs are a core block in TensorFlow, whose primary hyperparameter is the number of neurons.  Too few neurons in the system may cause the LSTM to not learn well.  Similarly, too many neurons will result in overfitting.  When using the embedding matrix, we observed that approximately 64~LSTM neurons yielded the best results.  When we used a public word model as described in Section~\ref{sec:openSourceWordModels}, the number of LSTM neurons had to match the model width, which in the case of Google's word2vec is rank~300.
   
     
   \subsection{Feed-Forward Neural Network Structure}\label{sec:neuralNetOverview}
@@ -233,7 +233,7 @@
       }
       
       % Add the labels to the nodes
-      \foreach \l [count=\i] in {1,d}
+      \foreach \l [count=\i] in {1,k}
         \draw [<-] (input-\i) -- ++(-1,0)
         node [above, midway] {$I_\l$};
       
@@ -265,23 +265,23 @@
     \caption{Base Structure of Our Feed-Forward Network}\label{fig:feedForwardNet}
   \end{figure}
   
-  The final structure of our feed forward network is shown in Figure~\ref{fig:feedForwardNet}.  The number of input nodes is dictated by the number of rows in the embedding matrix; as mentioned in Section~\ref{sec:embeddingMatrix}, we used a rank of~$d=25$ in our experiments.  Our sole hidden layer has $m=256$ fully-connected neurons. There are two output nodes (e.g., one for ``Donald Trump'' and the other for ``Hillary Clinton'').  A softmax function normalizes the output probabilities to ensure they sum to probability~$1$.  We selected this paradigm as it simplified the Tensor Flow implementation without affecting the quality of the results.
+  The feed forward network structure we used is shown in Figure~\ref{fig:feedForwardNet}.  The number of input nodes is dictated by the output of the LSTM.  Our sole hidden layer has ${m=256}$~fully-connected neurons. There are two output nodes (e.g., one for ``Donald Trump'' and the other for ``Hillary Clinton'').  A softmax function normalizes the output probabilities to ensure they sum to probability~$1$.  We selected this paradigm as it simplified the TensorFlow implementation without affecting the quality of the results.
   
   Our final feed-forward network design used the rectified linear and sigmoid activation functions for the hidden and output layers respectively.  Each neuron in the network also had its own bias input.
   
   \section{Experimental Results} \label{sec:experimentalResults}
   
-  As of the writing of this document, our team is ranked sixth in the Kaggle competition with a minimum error of approximately~0.2. This section discusses only those that comply with the minimum requirements of the assignment.  Additional and extra credit experiments are discussed in Sections~\ref{sec:bagOfWords},~\ref{sec:extraNnExperiments}, and~\ref{sec:openSourceWordModels}.
+  As of the writing of this document, our team is ranked sixth in the Kaggle competition with a minimum log loss error of approximately~0.2. This section discusses only those experiments that align with the base requirements of the assignment.  Additional and extra credit experiments are discussed in Sections~\ref{sec:bagOfWords},~\ref{sec:extraNnExperiments}, and~\ref{sec:openSourceWordModels}.
   
-  LSTMs can have a greater tendency to overfit than most simple feed forward networks.  We observed this capability to poorly generalize on this dataset where we could get log loss training errors of approximately~$0.05$, but test errors of~$0.7$,~i.e. an increase of more than a order of magnitude.  This overfitting was not due to excessive epochs.  Rather these large divergences could be observed in fewer than 100~full batch trainings.  Even when we did mini-batches, we did not see a significant decrease in the generalization error.
+  LSTMs have a greater tendency to overfit than most simple feed forward networks.  We observed this potential to poorly generalize on this dataset where we could get log loss training errors of approximately~$0.05$ (or less), but test errors of~$0.7$,~i.e. an increase of more than a order of magnitude.  This overfitting was not due to excessive epochs.  Rather these large divergences could be observed in fewer than 100~full batch trainings.  Even when we did mini-batches, we did not see a significant decrease in the generalization error.
   
-  In our experience, LSTMs can be significantly more sensitive to variations in their hyperparameters than simple fully connected feed forward networks.  With our optimal configuration, we were able to achieve a minimum log-loss test error of approximately~\textbf{0.3} with the LSTM.  This required the use of an open-source word model as described in Section~\ref{sec:openSourceWordModels}.  Using a trained embedding matrix, our optimal score was~{0.38}. Overall, we expect that with a larger team and more time, we could have achieved results similar to some of the other teams.
+  In our experience, LSTMs can be significantly more sensitive to variations in their hyperparameters than simple fully connected feed forward networks.  With our optimal configuration, we were able to achieve a minimum log-loss test error of approximately~\textbf{0.3} with the LSTM.  This required the use of an open-source word model as described in Section~\ref{sec:openSourceWordModels}.  Using a trained embedding matrix, our optimal score was~{0.38}. Overall, we expect that with one or two more people and additional time, we could have achieved results similar to some of the other teams.
     
   \section{Extra Credit \#1: Bag of Words Model}\label{sec:bagOfWords}
     
-  In the ``bag of words'' model, each textual input, i.e., tweet, is transformed into an unordered set of words.  Hence, the contextual and word ordering information is discarded.  This approach removes any sequential relation in the data; hence, the LSTM added no specific value for training.  Hence, we removed the LSTM when performing this experiment and instead trained with just the embedding matrix and the feed-forward network. 
+  In the ``bag of words'' model, each textual input, i.e., tweet, is transformed into an unordered set of words.  Hence, the contextual and word ordering information is discarded.  This approach removes any sequential relation in the data; hence, the LSTM added no specific value for training.  As such, we removed the LSTM when performing this experiment and instead trained with just the embedding matrix and the feed-forward network. 
   
-  Using the previously described neural-network structure, we were able to get 100\%~accuracy on the complete training set.  Likewise, we get an best-case test set of~\textbf{0.20070} using this approach.
+  Using the previously described neural-network structure, we were able to get 100\%~accuracy on the complete training set.  Likewise, we get a best-case test set error of~\textbf{0.20070}.
   
   \section{Extra Credit \#2: Neural Network Experiments}\label{sec:extraNnExperiments}
   
@@ -289,26 +289,26 @@
   
   \subsection{Extra Credit \#2a: Hidden Layer Activation Functions}
   
-  We experimented with three activation configurations for the hidden layer.  In addition to rectified linear, we also tried a ``pass-through'' activation where the neuron's output was simply~$\textbf{w}\cdot\textbf{x} + b$, where $\textbf{w}$~is the weight vector, $\textbf{x}$~the input, and $b$~the bias term.  We also tried to use a sigmoid function.  However, these two other activation functions took more epochs to converge (an increase of approximately 200 to 1,000~training rounds) and yield worse testing error.
+  We experimented with three activation configurations for the hidden layer.  In addition to rectified linear, we also tried a ``pass-through'' activation where the neuron's output was simply~$\textbf{w}\cdot\textbf{x} + b$ ($\textbf{w}$~is the weight vector, $\textbf{x}$~the input, and $b$~the bias term).  We also tried to use the sigmoid function for the hidden layer.  However, these two other activation functions took more epochs to converge (an increase of approximately 200 to 1,000~training rounds) and yielded worse testing error.
   
   \subsection{Extra Credit \#2b: Additional Neurons in the Hidden Layer}\label{sec:ecMoreHiddenLayerNeurons}
   
-  This is a general (but not strict) correlation between the number of neurons in the hidden layer and the complexity of the function the network can learn.  Additional neurons also increase the possibility of overfitting.  We experiment with three different quantities of hidden layer neurons, namely $128$, $256$, and $512$.  We observed that $128$ and $512$ neurons had similarly poor performance of approximately~$\textbf{0.24}$ on the test set.  In addition, $512$ neurons significantly increased the training time (by a factor of two times).  In contrast, $256$~hidden layer neurons had a training error of~$\sim0.20$, that is why we selected~$d=256$ as discussed in Section~\ref{sec:neuralNetOverview}.
+  There is a general (but not strict) correlation between the number of neurons in the hidden layer and the complexity of the function the network can learn.  However, additional neurons increase the possibility of overfitting.  We experimented with three different quantities of hidden layer neurons, namely $128$, $256$, and $512$.  We observed that using either $128$~and $512$~neurons increased the test set's log loss by approximately~$\textbf{0.24}$.  In addition, $512$ neurons significantly increased the training time (by a factor of two times).  In contrast, $256$~hidden layer neurons had a training error of~${\sim}0.20$; that is why we selected~$d=256$ as discussed in Section~\ref{sec:neuralNetOverview}.
      
   \subsection{Extra Credit \#2c: Multiple Feed-Forward Hidden Layers}
   
-  As illustrated in Figure~\ref{fig:feedForwardNet}, our feed-forward network only had a single-hidden layer.  We settled this architecture after experimenting with both two and three hidden layers.  Similar to the findings in Section~\ref{sec:ecMoreHiddenLayerNeurons}, increasing the complexity of the feed-forward network by adding more layers had a dual deleterious effect by both increasing the training time and reducing the reported score on the test set.
+  As illustrated in Figure~\ref{fig:feedForwardNet}, our feed-forward network only had a single-hidden layer.  We settled on this architecture after experimenting with both two and three hidden layers.  Similar to the findings in Section~\ref{sec:ecMoreHiddenLayerNeurons}, increasing the complexity of the feed-forward network by adding more layers had a dual deleterious effect of increasing the training time and reducing the reported score on the test set.
      
      
   \subsection{Extra Credit \#2d: Optimizer Selection}
   
-  TensorFlow optimizers control the calculation of error gradients and application of these gradients to variables.  TensorFlow includes a suit of different optimizers, which each implementing a different learning algorithm, including: \texttt{AdamOptimizer} (Adaptive Moment Estimation), \texttt{GradientDescentOptimizer} (Stochastic Gradient Descent), \texttt{Adagradoptimizer} (Adaptive Gradient), \texttt{MomentumOptimizer} (Momentum Method), etc.  
+  TensorFlow optimizers control the calculation of error gradients as well as the application of these gradients to variables.  TensorFlow includes a suite of different optimizers, with each implementing a different learning algorithm, including: \texttt{AdamOptimizer} (Adaptive Moment Estimation), \texttt{GradientDescentOptimizer} (Stochastic Gradient Descent), \texttt{AdagradOptimizer} (Adaptive Gradient), \texttt{MomentumOptimizer} (Momentum Method), etc.  
   
-  As mentioned in Section~\ref{sec:experimentalResults}, tuning the learning rates for an LSTM can be challenging.  Likewise, different optimizers may require hyperparameters that are mutually exclusive to function properly.  In all our experiments, the \texttt{AdamOptimizer} significantly outperformed all other optimizers.  It converged faster and with lower loss on the training set than all the others.  The improvement it provided in training logistic loss could be as high as~\textbf{0.5}.  
+  As mentioned in Section~\ref{sec:experimentalResults}, tuning an LSTM's learning rate hyperparameter can be challenging.  Likewise, the set of learning rates that work well for one optimizer may be mutually exclusive to another optimizer's set of learning rates.  In all our experiments, the \texttt{AdamOptimizer} significantly outperformed the other optimizers.  It converged faster and with lower loss on the training set than all the others.  The improvement it provided in the training set's log loss could be as high as~\textbf{0.5} on the \textit{training} set.  
   
   \section{Extra Credit \#3: Use of Open-Source Word Models}\label{sec:openSourceWordModels}
   
-  Figure~\ref{fig:completeLstmClassifer} shows how an embedding matrix is due to reduce the dimension of the input and to improve learning performance.  Rather than having our neural network learn an embedding matrix solely on its own, an alternative is to use public embedding matrices.  The benefits of this approach include: significantly larger training set, improved embedding matrix coverage for on words that appear only in the test set, etc.  For example, the Google news word model, which we used, contains over three million words and was trained on more than 100~billion words.  In contrast, the tweets in this homework contained only about 11,000~words.
+  Figure~\ref{fig:completeLstmClassifer} shows the use of an embedding matrix to reduce the dimension of the input and to improve learning performance.  Rather than having TensorFlow learn an embedding matrix solely on its own, an alternative is to use publicly available word models.  The benefits of this approach include the use of a significantly larger training set and improved embedding matrix coverage for words that appear only in the test set.  For example, the Google News word model (which we used), contains over three million words and was trained on more than 100~billion words.  In contrast, the tweets in this homework contained only about 11,000~words.
   
   By switching to Google's word model, we saw a log loss improvement of approximately~0.2.
 \end{document}
