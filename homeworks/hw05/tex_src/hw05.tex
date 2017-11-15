@@ -42,19 +42,19 @@
   \suppressfloats % No images on the first page.
   \section{Homework Objective}
   
-  Develop a long short term memory-based (LSTM) neural network that classifies tweets as being sent by either Hillary Clinton (@HillaryClinton) or Donald Trump (@realDonald Trump).
+  Develop a long short term memory-based (LSTM) neural network that classifies tweets as being sent by either Hillary Clinton (@HillaryClinton) or Donald Trump (@realDonaldTrump).
   
   \section{Dataset Overview}
   
-  The dataset is a comma-separated list of tweets from either @HillaryClinton or @realDonaldTrump.  No additional information is provided by the tweet's text and potentially the class label.  The training set consists of 4,743~total tweets while the test set had 1,701~unlabeled tweets.
+  The dataset is a comma-separated list of tweets from either @HillaryClinton or @realDonaldTrump.  No additional information is provided beyond the tweet's text and potentially the class label.  The training set consists of 4,743~tweets while the test set has 1,701~unlabeled tweets.
    
   \section{Tweet Text Preprocessor}\label{sec:textPreprocessor}
   
-  Since an LSTM is a recursive neural network, it can rely on both vocabulary and contextual information to perform classification.  Extensive text preprocessing has the potential to destroy subtle textual information.  As such, we performed very minimal text manipulation beyond vectorization.  For example, we left all stop words in place.  We removed some of the punctuation but left hashtags~(\#) and exclamation points as we theorized that they may be part of a specific user's unique tweet ``signature.''  This results in a vocabulary of approximately eleven thousand words; it should be noted that a small percentage of this vocabulary is just largely gibberish shortened URLs.  We believe that with additional effort, we may be able to derive useful information from these URLs, but we leave that as a future exercise.
+  Since an LSTM is a recursive neural network, it can rely on both vocabulary and contextual information to perform classification.  Extensive text preprocessing has the potential to destroy subtle textual information.  As such, we performed very minimal text manipulation beyond vectorization.  For example, we left all stop words in place.  We removed some of the punctuation but left hashtags~(\#) and exclamation points as we theorized that they may be part of a specific user's unique tweet ``signature.''  This results in a vocabulary of approximately eleven thousand words; it should be noted that a small percentage of this vocabulary is gibberish, one-off, shortened URLs.  We believe that with additional effort, we may be able to derive useful information from these URLs, but we leave that as a future exercise.
    
   \section{Classifier Structure}
   
-  At a minimum, this homework's LSTM classifier must have the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network.  These modules are described in the following subsections.
+  At a minimum, this homework's LSTM classifier must have the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network,which are described in the following subsections.
   
   \begin{figure}
     \centering
@@ -143,9 +143,9 @@
   
   \subsection{One-Hot Vector Input}\label{sec:oneHotVector}
   
-  Neural networks perform best when information is encoded in a fixed-length easily decodable fashion.  Humans encode words through an ordered series of letters.  While this form is compact and well-suited for human consumption, it is not ideal for a machine input.  Instead, it is much simpler for the learning algorithm if a word is represented as an $N$-dimensional bit vector with each of the bits representing one word in the vocabulary.  Using this notation, each word would be represented by a vector of $N-1$~zeros and a single bit of~$1$; this is the reason that this encoding scheme is known as ``one-hot'' vectors.  
+  Neural networks perform best when information is encoded in a fixed-length, easily-decodable fashion.  Humans encode words through an ordered series of letters.  While this form is compact and well-suited for human consumption, it is not ideal for a machine input.  Instead, it is much simpler for the learning algorithm if a word is represented as an $N$-dimensional bit vector with each of the bits representing one word in the vocabulary.  Using this notation, each word would be represented by a vector of $N-1$~zeros and a single bit of~$1$; this is the reason that this encoding scheme is known as ``one-hot'' vectors.  
   
-  A sentence of $v$~words is represented an ordered sequence of $v$~one-hot vectors (with some vectors potentially repeated if a word is repeated in the sentence).  In our architecture, each of these one-hot vectors is multiplied by the embedding matrix before being fed into the neural network.
+  A sentence of $v$~words is represented as an ordered sequence of $v$~one-hot vectors (with some vectors potentially repeated if a word appears multiple times in the sentence).  In our base architecture, each of these one-hot vectors is multiplied by the embedding matrix before being fed into the neural network.
   
   
   \subsection{Embedding Matrix}\label{sec:embeddingMatrix}
