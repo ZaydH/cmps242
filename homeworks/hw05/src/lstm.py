@@ -61,19 +61,19 @@ if __name__ == '__main__':
   )
 
   # create an initial state
-  # initial_state = cell.zero_state(tf.shape(rnn_inputs)[1], tf.float32)
+  batch_size = tf.shape(X)[0]
+  initial_state = lstm_cell.zero_state(batch_size, tf.float32)
 
   # construct a connected RNN
   rnn_outputs, rnn_state = tf.nn.dynamic_rnn(
     lstm_cell,
     rnn_inputs,
-    # initial_state=initial_state,
+    initial_state=initial_state,
     sequence_length=seqlen,
     dtype=tf.float32
   )
 
   # get the last rnn outputs
-  batch_size = tf.shape(rnn_outputs)[0]
   idx = tf.range(batch_size)*tf.shape(rnn_outputs)[1] + (seqlen - 1)
   final_rnn_outputs = tf.gather(tf.reshape(rnn_outputs, [-1, const.HIDDEN_SIZE]), idx)
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
   # make a gradient descent optimizer
   global_step = tf.Variable(0, trainable=False)
-  const.LEARNING_RATE = 1.
+  const.LEARNING_RATE = .01
   learning_rate = tf.train.exponential_decay(const.LEARNING_RATE, global_step,
                                              const.EPOCHS_PER_DECAY, const.DECAY_RATE, staircase=True)
   # train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
