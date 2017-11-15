@@ -42,19 +42,19 @@
   \suppressfloats % No images on the first page.
   \section{Homework Objective}
   
-  Develop a long short term memory-based (LSTM) neural network that classifies tweets as being sent by either Hillary Clinton (@HillaryClinton) or Donald Trump (@realDonald Trump).
+  Develop a long short term memory-based (LSTM) neural network that classifies tweets as being sent by either Hillary Clinton (@HillaryClinton) or Donald Trump (@realDonaldTrump).
   
   \section{Dataset Overview}
   
-  The dataset is a comma-separated list of tweets from either @HillaryClinton or @realDonaldTrump.  No additional information is provided by the tweet's text and potentially the class label.  The training set consists of 4,743~total tweets while the test set had 1,701~unlabeled tweets.
+  The dataset is a comma-separated list of tweets from either @HillaryClinton or @realDonaldTrump.  No additional information is provided beyond the tweet's text and potentially the class label.  The training set consists of 4,743~tweets while the test set has 1,701~unlabeled tweets.
    
   \section{Tweet Text Preprocessor}\label{sec:textPreprocessor}
   
-  Since an LSTM is a recursive neural network, it can rely on both vocabulary and contextual information to perform classification.  Extensive text preprocessing has the potential to destroy subtle textual information.  As such, we performed very minimal text manipulation beyond vectorization.  For example, we left all stop words in place.  We removed some of the punctuation but left hashtags~(\#) and exclamation points as we theorized that they may be part of a specific user's unique tweet ``signature.''  This results in a vocabulary of approximately eleven thousand words; it should be noted that a small percentage of this vocabulary is just largely gibberish shortened URLs.  We believe that with additional effort, we may be able to derive useful information from these URLs, but we leave that as a future exercise.
+  Since an LSTM is a recursive neural network, it can rely on both vocabulary and contextual information to perform classification.  Extensive text preprocessing has the potential to destroy subtle textual information.  As such, we performed very minimal text manipulation beyond vectorization.  For example, we left all stop words in place.  We removed some of the punctuation but left hashtags~(\#) and exclamation points as we theorized that they may be part of a specific user's unique tweet ``signature.''  This results in a vocabulary of approximately eleven thousand words; it should be noted that a small percentage of this vocabulary is gibberish, one-off, shortened URLs.  We believe that with additional effort, we may be able to derive useful information from these URLs, but we leave that as a future exercise.
    
   \section{Classifier Structure}
   
-  At a minimum, this homework's LSTM classifier must have the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network.  These modules are described in the following subsections.
+  At a minimum, this homework's LSTM classifier must have the structure shown in Figure~\ref{fig:completeLstmClassifer}.  There are four primary components, namely the embedding matrix, one-hot vector, long short-term memory network, and feed-forward network,which are described in the following subsections.
   
   \begin{figure}
     \centering
@@ -143,9 +143,9 @@
   
   \subsection{One-Hot Vector Input}\label{sec:oneHotVector}
   
-  Neural networks perform best when information is encoded in a fixed-length easily decodable fashion.  Humans encode words through an ordered series of letters.  While this form is compact and well-suited for human consumption, it is not ideal for a machine input.  Instead, it is much simpler for the learning algorithm if a word is represented as an $N$-dimensional bit vector with each of the bits representing one word in the vocabulary.  Using this notation, each word would be represented by a vector of $N-1$~zeros and a single bit of~$1$; this is the reason that this encoding scheme is known as ``one-hot'' vectors.  
+  Neural networks perform best when information is encoded in a fixed-length, easily-decodable fashion.  Humans encode words through an ordered series of letters.  While this form is compact and well-suited for human consumption, it is not ideal for a machine input.  Instead, it is much simpler for the learning algorithm if a word is represented as an $N$-dimensional bit vector with each of the bits representing one word in the vocabulary.  Using this notation, each word would be represented by a vector of $N-1$~zeros and a single bit of~$1$; this is the reason that this encoding scheme is known as ``one-hot'' vectors.  
   
-  A sentence of $v$~words is represented an ordered sequence of $v$~one-hot vectors (with some vectors potentially repeated if a word is repeated in the sentence).  In our architecture, each of these one-hot vectors is multiplied by the embedding matrix before being fed into the neural network.
+  A sentence of $v$~words is represented as an ordered sequence of $v$~one-hot vectors (with some vectors potentially repeated if a word appears multiple times in the sentence).  In our base architecture, each of these one-hot vectors is multiplied by the embedding matrix before being fed into the neural network.
   
   
   \subsection{Embedding Matrix}\label{sec:embeddingMatrix}
@@ -161,8 +161,9 @@
   
   \subsection{Long Short-Term Memory Network Structure}\label{sec:lstemOverview}
   
-  {\textcolor{red}{\Large NEED TO ADD}}
+  Long short-term memory (LSTM) is a subtype of recursive neural networks.  LSTMs are a core block in tensor flow, whose primary hyperparameter is the number of units in the hidden layer.  Too few neurons in the system may not learn well.  Similarly, too many neurons will result in overfitting.  When using the embedding matrix, we observed that approximately 64~LSTM neurons yielded the best results.  When we used a public word model as described in Section~\ref{sec:openSourceWordModels}, the number of LSTM neurons had to match the model width, which in the case of Google's word2vec is rank~300.
   
+    
   \subsection{Feed-Forward Neural Network Structure}\label{sec:neuralNetOverview}
   
   \begin{figure}
@@ -270,15 +271,19 @@
   
   \section{Experimental Results} \label{sec:experimentalResults}
   
-  {\textcolor{red}{\Large NEED TO ADD}}
+  As of the writing of this document, our team is ranked sixth in the Kaggle competition with a minimum error of approximately~0.2. This section discusses only those that comply with the minimum requirements of the assignment.  Additional and extra credit experiments are discussed in Sections~\ref{sec:bagOfWords},~\ref{sec:extraNnExperiments}, and~\ref{sec:openSourceWordModels}.
   
-  \section{Extra Credit \#1: Bag of Words Model}
+  LSTMs can have a greater tendency to overfit than most simple feed forward networks.  We observed this capability to poorly generalize on this dataset where we could get log loss training errors of approximately~$0.05$, but test errors of~$0.7$,~i.e. an increase of more than a order of magnitude.  This overfitting was not due to excessive epochs.  Rather these large divergences could be observed in fewer than 100~full batch trainings.  Even when we did mini-batches, we did not see a significant decrease in the generalization error.
   
+  In our experience, LSTMs can be significantly more sensitive to variations in their hyperparameters than simple fully connected feed forward networks.  With our optimal configuration, we were able to achieve a minimum log-loss test error of approximately~\textbf{0.3} with the LSTM.  This required the use of an open-source word model as described in Section~\ref{sec:openSourceWordModels}.  Using a trained embedding matrix, our optimal score was~{0.38}. Overall, we expect that with a larger team and more time, we could have achieved results similar to some of the other teams.
+    
+  \section{Extra Credit \#1: Bag of Words Model}\label{sec:bagOfWords}
+    
   In the ``bag of words'' model, each textual input, i.e., tweet, is transformed into an unordered set of words.  Hence, the contextual and word ordering information is discarded.  This approach removes any sequential relation in the data; hence, the LSTM added no specific value for training.  Hence, we removed the LSTM when performing this experiment and instead trained with just the embedding matrix and the feed-forward network. 
   
   Using the previously described neural-network structure, we were able to get 100\%~accuracy on the complete training set.  Likewise, we get an best-case test set of~\textbf{0.20070} using this approach.
   
-  \section{Extra Credit \#2: Neural Network Experiments}
+  \section{Extra Credit \#2: Neural Network Experiments}\label{sec:extraNnExperiments}
   
   Below are additional experiments we tried beyond the base requirements.  
   
@@ -294,4 +299,16 @@
   
   As illustrated in Figure~\ref{fig:feedForwardNet}, our feed-forward network only had a single-hidden layer.  We settled this architecture after experimenting with both two and three hidden layers.  Similar to the findings in Section~\ref{sec:ecMoreHiddenLayerNeurons}, increasing the complexity of the feed-forward network by adding more layers had a dual deleterious effect by both increasing the training time and reducing the reported score on the test set.
      
+     
+  \subsection{Extra Credit \#2d: Optimizer Selection}
+  
+  TensorFlow optimizers control the calculation of error gradients and application of these gradients to variables.  TensorFlow includes a suit of different optimizers, which each implementing a different learning algorithm, including: \texttt{AdamOptimizer} (Adaptive Moment Estimation), \texttt{GradientDescentOptimizer} (Stochastic Gradient Descent), \texttt{Adagradoptimizer} (Adaptive Gradient), \texttt{MomentumOptimizer} (Momentum Method), etc.  
+  
+  As mentioned in Section~\ref{sec:experimentalResults}, tuning the learning rates for an LSTM can be challenging.  Likewise, different optimizers may require hyperparameters that are mutually exclusive to function properly.  In all our experiments, the \texttt{AdamOptimizer} significantly outperformed all other optimizers.  It converged faster and with lower loss on the training set than all the others.  The improvement it provided in training logistic loss could be as high as~\textbf{0.5}.  
+  
+  \section{Extra Credit \#3: Use of Open-Source Word Models}\label{sec:openSourceWordModels}
+  
+  Figure~\ref{fig:completeLstmClassifer} shows how an embedding matrix is due to reduce the dimension of the input and to improve learning performance.  Rather than having our neural network learn an embedding matrix solely on its own, an alternative is to use public embedding matrices.  The benefits of this approach include: significantly larger training set, improved embedding matrix coverage for on words that appear only in the test set, etc.  For example, the Google news word model, which we used, contains over three million words and was trained on more than 100~billion words.  In contrast, the tweets in this homework contained only about 11,000~words.
+  
+  By switching to Google's word model, we saw a log loss improvement of approximately~0.2.
 \end{document}
