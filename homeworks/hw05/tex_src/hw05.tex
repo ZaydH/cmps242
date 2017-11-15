@@ -161,8 +161,9 @@
   
   \subsection{Long Short-Term Memory Network Structure}\label{sec:lstemOverview}
   
-  {\textcolor{red}{\Large NEED TO ADD}}
+  Long short-term memory (LSTM) is a subtype of recursive neural networks.  LSTMs are a core block in tensor flow, whose primary hyperparameter is the number of units in the hidden layer.  Too few neurons in the system may not learn well.  Similarly, too many neurons will result in overfitting.  When using the embedding matrix, we observed that approximately 64~LSTM neurons yielded the best results.  When we used a public word model as described in Section~\ref{sec:openSourceWordModels}, the number of LSTM neurons had to match the model width, which in the case of Google's word2vec is rank~300.
   
+    
   \subsection{Feed-Forward Neural Network Structure}\label{sec:neuralNetOverview}
   
   \begin{figure}
@@ -270,15 +271,19 @@
   
   \section{Experimental Results} \label{sec:experimentalResults}
   
-  {\textcolor{red}{\Large NEED TO ADD}}
+  As of the writing of this document, our team is ranked sixth in the Kaggle competition with a minimum error of approximately~0.2. This section discusses only those that comply with the minimum requirements of the assignment.  Additional and extra credit experiments are discussed in Sections~\ref{sec:bagOfWords},~\ref{sec:extraNnExperiments}, and~\ref{sec:openSourceWordModels}.
   
-  \section{Extra Credit \#1: Bag of Words Model}
+  LSTMs can have a greater tendency to overfit than most simple feed forward networks.  We observed this capability to poorly generalize on this dataset where we could get log loss training errors of approximately~$0.05$, but test errors of~$0.7$,~i.e. an increase of more than a order of magnitude.  This overfitting was not due to excessive epochs.  Rather these large divergences could be observed in fewer than 100~full batch trainings.  Even when we did mini-batches, we did not see a significant decrease in the generalization error.
   
+  In our experience, LSTMs can be significantly more sensitive to variations in their hyperparameters than simple fully connected feed forward networks.  With our optimal configuration, we were able to achieve a minimum log-loss test error of approximately~\textbf{0.3} with the LSTM.  This required the use of an open-source word model as described in Section~\ref{sec:openSourceWordModels}.  Using a trained embedding matrix, our optimal score was~{0.38}. Overall, we expect that with a larger team and more time, we could have achieved results similar to some of the other teams.
+    
+  \section{Extra Credit \#1: Bag of Words Model}\label{sec:bagOfWords}
+    
   In the ``bag of words'' model, each textual input, i.e., tweet, is transformed into an unordered set of words.  Hence, the contextual and word ordering information is discarded.  This approach removes any sequential relation in the data; hence, the LSTM added no specific value for training.  Hence, we removed the LSTM when performing this experiment and instead trained with just the embedding matrix and the feed-forward network. 
   
   Using the previously described neural-network structure, we were able to get 100\%~accuracy on the complete training set.  Likewise, we get an best-case test set of~\textbf{0.20070} using this approach.
   
-  \section{Extra Credit \#2: Neural Network Experiments}
+  \section{Extra Credit \#2: Neural Network Experiments}\label{sec:extraNnExperiments}
   
   Below are additional experiments we tried beyond the base requirements.  
   
@@ -294,4 +299,16 @@
   
   As illustrated in Figure~\ref{fig:feedForwardNet}, our feed-forward network only had a single-hidden layer.  We settled this architecture after experimenting with both two and three hidden layers.  Similar to the findings in Section~\ref{sec:ecMoreHiddenLayerNeurons}, increasing the complexity of the feed-forward network by adding more layers had a dual deleterious effect by both increasing the training time and reducing the reported score on the test set.
      
+     
+  \subsection{Extra Credit \#2d: Optimizer Selection}
+  
+  TensorFlow optimizers control the calculation of error gradients and application of these gradients to variables.  TensorFlow includes a suit of different optimizers, which each implementing a different learning algorithm, including: \texttt{AdamOptimizer} (Adaptive Moment Estimation), \texttt{GradientDescentOptimizer} (Stochastic Gradient Descent), \texttt{Adagradoptimizer} (Adaptive Gradient), \texttt{MomentumOptimizer} (Momentum Method), etc.  
+  
+  As mentioned in Section~\ref{sec:experimentalResults}, tuning the learning rates for an LSTM can be challenging.  Likewise, different optimizers may require hyperparameters that are mutually exclusive to function properly.  In all our experiments, the \texttt{AdamOptimizer} significantly outperformed all other optimizers.  It converged faster and with lower loss on the training set than all the others.  The improvement it provided in training logistic loss could be as high as~\textbf{0.5}.  
+  
+  \section{Extra Credit \#3: Use of Open-Source Word Models}\label{sec:openSourceWordModels}
+  
+  Figure~\ref{fig:completeLstmClassifer} shows how an embedding matrix is due to reduce the dimension of the input and to improve learning performance.  Rather than having our neural network learn an embedding matrix solely on its own, an alternative is to use public embedding matrices.  The benefits of this approach include: significantly larger training set, improved embedding matrix coverage for on words that appear only in the test set, etc.  For example, the Google news word model, which we used, contains over three million words and was trained on more than 100~billion words.  In contrast, the tweets in this homework contained only about 11,000~words.
+  
+  By switching to Google's word model, we saw a log loss improvement of approximately~0.2.
 \end{document}
