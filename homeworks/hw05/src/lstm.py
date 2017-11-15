@@ -1,13 +1,10 @@
 import tensorflow as tf
 import input_parser
 import const
-import gensim
-from hw05 import extract_train_and_test, _build_output_file
+from hw05 import build_output_file
 from feed_forward import init
-import embedding_matrix
 import numpy as np
 
-NUM_BATCHES = 10
 
 # main
 if __name__ == '__main__':
@@ -99,7 +96,7 @@ if __name__ == '__main__':
 
     # Store the probability results
     p_val = sess.run(preds, feed_dict={X: test_w2v, seqlen: test_sequence_lengths})
-    _build_output_file(p_val[:num_test_inputs], output_file="results_%04d.csv" % (epoch + 1))
+    build_output_file(p_val[:num_test_inputs], output_file="results_%04d.csv" % (epoch + 1))
 
     # Print the training classification accuracy
     acc_err = np.mean(np.abs(classified - train_y))

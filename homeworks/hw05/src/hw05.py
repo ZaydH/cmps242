@@ -10,7 +10,7 @@ import embedding_matrix
 USE_BAG_OF_WORDS = True
 
 
-def _build_output_file(p_val, output_file="results.csv"):
+def build_output_file(p_val, output_file="results.csv"):
   """
   Results File Creator
 
@@ -121,7 +121,7 @@ def run():
     _, c = sess.run([train_op, loss_op], feed_dict={X: train_X, target: train_T})
     print("Epoch: ", '%04d' % (epoch + 1), "cost={:.9f}".format(c))
     p_val = sess.run(predict, feed_dict={X: test_X})
-    _build_output_file(p_val, output_file="results_%04d.csv" % (epoch + 1))
+    build_output_file(p_val, output_file="results_%04d.csv" % (epoch + 1))
     classified = sess.run(accuracy, feed_dict={X: train_X})
     acc_err = np.mean(np.abs(classified - train_T))
     print("Training accuracy: %.2f%%" % (100. - 100. * acc_err))
