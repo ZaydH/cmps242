@@ -1,0 +1,247 @@
+\documentclass{report}
+
+\usepackage{fullpage}
+\usepackage[skip=4pt]{caption} % ``skip'' sets the spacing between the figure and the caption.
+\usepackage{pgfplots}   % Needed for plotting
+\usepackage{amsmath}    % Allows for piecewise functions using the ``cases'' construct
+\usepackage{graphics}   % Allows figures in the document.
+\graphicspath{{img/}}
+\usepackage{multicol}   % Used for two column lists
+
+\usepackage{tikz}
+\usetikzlibrary{matrix, positioning, calc, shadows, decorations.markings, arrows.meta} % decorations.markings is used for the bus symbol on the arrow.
+% arrows.meta allows changing the arrow heads.
+
+\usepackage[hidelinks]{hyperref}   % Make the cross references clickable hyperlinks
+%\usepackage[bottom]{footmisc} % Prevents the table going below the footnote
+
+% Set up page formatting
+\usepackage{fancyhdr} % Used for every page footer and title.
+\pagestyle{fancy}
+\fancyhf{} % Clears both the header and footer
+\renewcommand{\headrulewidth}{0pt} % Eliminates line at the top of the page.
+\fancyfoot[LO]{CMPS242 \textendash{} Homework \#6} % Left
+\fancyfoot[CO]{\thepage} % Center
+\fancyfoot[RO]{Sherman \& Hammoudeh} %Right
+
+
+\renewcommand\thesection{\arabic{section}} % Prevent chapter number in section number.
+
+% Change interline spacing.
+\renewcommand{\baselinestretch}{1.1}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\newcommand{\basicNetStructure}[1][]{%
+    \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth] 
+
+% Must define nodes in the list before they can be used.
+\node [every netbox, drop shadow] (output) {Decision Engine};
+\node [neuron output, left of=output, xshift=-0.5in,  drop shadow] (softmax) {};
+\node [every netbox, left of=softmax, xshift=-0.5in, drop shadow] (feedforward) {Feed Forward Neural Network};
+\node [every netbox, left of=feedforward, xshift=-0.8in, drop shadow] (lstmbox) {LSTM};
+\node [every neuron, left of=lstmbox, xshift=-0.5in, drop shadow] (matmul) {\Large$\times$};
+\matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.5in, yshift = -0.4in] {
+  0 \\
+  1 \\
+  0 \\[-1ex]
+  \vdots \\
+  0\\};
+\node [left of=oneHotFirst, xshift=0.1in] (oneHotContinue) {\Large $\cdots$};
+\matrix (oneHotLast) [bmatrix, left of = oneHotContinue, xshift=0.1in] {
+  1 \\
+  0 \\
+  0 \\[-1ex]
+  \vdots \\
+  0\\};
+\node [above of=oneHotContinue, text centered, yshift =0.2in] (onehotlabel) {One-Hot Vector Input};
+
+\matrix (embedding) [bmatrix, above left of = matmul, xshift=-1in, yshift=0.5in] {
+  w_{1,1} \& w_{1,2} \&\cdots \& w_{1,N}\\
+  w_{2,1} \& w_{2,2} \&\cdots \& w_{2,N}\\[-1ex]
+  \vdots \& \& \&  \vdots\\
+  w_{d,1} \& w_{d,2} \&\cdots \& w_{d,N}\\};
+\node [above of=embedding, yshift=0.15in] (embeddinglabel) {Embedding Matrix};
+
+% Draw arrows
+\draw [->,thick] (embedding) -- (matmul);
+\draw [->,thick] (oneHotFirst) -- (matmul);
+\draw [->,thick] (matmul) -- (lstmbox);
+\draw [->,thick] (lstmbox) -- (feedforward);
+\draw [->,thick] (lstmbox) to[out=30, in=150, looseness=3] (lstmbox); % Numbers represent location on the unit circle.  0 is due east, 90 due north, 180 due west, and 270 due south.
+\draw [->,thick] (feedforward.north east) -- (softmax);
+\draw [->,thick] (feedforward) -- (softmax);
+\draw [->,thick] (feedforward.south east) -- (softmax);
+\draw [->,thick, postaction={decorate}] (softmax) -- node[below=1pt] {$|v|$} (output);
+\draw [->,thick] (output) -- ++(1,0);
+#1
+\end{tikzpicture} 
+}
+
+
+\title{\textbf{CMPS242 Homework \#6 \textendash{} Project Proposal}}
+\author{Benjamin Sherman \\~\\ \& \\~\\ Zayd Hammoudeh}
+\date{} % Remove date on cover page
+
+
+\begin{document}
+  \maketitle
+  
+  \begin{center}
+    {\Large \textbf{CMPS242 -- Project Proposal}} \\[.125in]
+  \end{center}
+  
+  \suppressfloats % No images on the first page.
+  \section{Primary Project Goal}
+  
+  Implement a character-level recurrent neural network (RNN) in TensorFlow  that will generate text in the style of President Donald Trump.
+  
+  \section{Training Set Overview}
+  
+  Our plan is to have the learner mimic Donald Trump's oratory style.  As such, we will train exclusively on Trump's public speeches. Although some prepared speeches may reflect the speechwriter's idiosyncrasies more than those of Mr.~Trump, we theorize that the president's improvisation digressions are common and unique enough that his style will be plain.
+  
+  \subsection{Possible Datasets}
+  
+  Multiple datasets currently exist that have collected speeches by Donald Trump.  Two of the largest datasets are available as GitHub repositories from users ``\href{https://github.com/PedramNavid/trump_speeches}{PedramNavid}'' and ``\href{https://github.com/ryanmcdermott/trump-speeches}{ryanmcdermott}.''
+  
+  \subsection{Vocabulary}\label{sec:vocabulary}
+  
+  As with all character-level RNNs, the vocabulary is set of individual characters; it consists of all letters -- both capitalized and lowercase, digits~(0-9), and punctuation (e.g.,~comma, space, newline, exclamation point, etc.).  The exact size of the vocabulary will be dictated by the specific dataset(s) on which we end up training.  Our preliminary studies indicate that the vocabulary size will be approximately 90~to 100~characters.
+   
+  \section{Neural Network Architecture}
+  
+  The planned structure for our character-level RNN is shown in Figure~\ref{fig:trumpLearnerArchitecture}.  It consists of five primary stages namely the embedding matrix, long short-term memory (LSTM), feed forward network, softmax layer, and the decision engine.  We describe each of these stages in the following subsections.
+  
+  \begin{figure}
+    \centering
+    \tikzset{
+      sigmoid/.style={path picture= {
+          \begin{scope}[x=1pt,y=10pt]
+            \draw plot[domain=-6:6] (\x,{1/(1 + exp(-\x))-0.5});
+          \end{scope}
+        }
+      },
+      every neuron/.style={
+        circle,
+        draw,
+        fill=white,
+        minimum size=1cm,
+      },
+      neuron output/.style={
+        every neuron,
+        sigmoid,
+      },
+      matrix multiply/.style={
+        every neuron,
+        font={\Large $\times$}
+      },
+      every netbox/.style={
+        rectangle,
+        draw,
+        text centered,
+        fill=white,
+        text width = 1.5cm,
+        minimum width = 1.9cm,
+        minimum height = 2cm,
+        rounded corners,
+      },
+      every left delimiter/.style={xshift=1ex},
+      every right delimiter/.style={xshift=-1ex},
+      bmatrix/.style={matrix of math nodes,
+        inner sep=0pt,
+        left delimiter={[},
+        right delimiter={]},
+        nodes={anchor=center, inner sep=.3333em},
+      },
+      decoration={
+        markings,
+        mark= at position 0.5 with {\node {/};}
+      }
+    }
+    
+    \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth] 
+    
+      % Must define nodes in the list before they can be used.
+      \node [every netbox, drop shadow] (output) {Decision Engine};
+      \node [neuron output, left of=output, xshift=-0.5in,  drop shadow] (softmax) {};
+      \node [every netbox, left of=softmax, xshift=-0.5in, drop shadow] (feedforward) {Feed Forward Neural Network};
+      \node [every netbox, left of=feedforward, xshift=-0.8in, drop shadow] (lstmbox) {LSTM};
+      \node [every neuron, left of=lstmbox, xshift=-0.5in, drop shadow] (matmul) {\Large$\times$};
+      \matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.5in, yshift = -0.4in] {
+        0 \\
+        1 \\
+        0 \\[-1ex]
+        \vdots \\
+        0\\};
+      \matrix (oneHotSecond) [bmatrix, left of = oneHotFirst, xshift=0.1in] {
+        0 \\
+        1 \\
+        0 \\[-1ex]
+        \vdots \\
+        0\\};
+      \node [left of=oneHotSecond, xshift=0.1in] (oneHotContinue) {\Large $\cdots$};
+      \matrix (oneHotLast) [bmatrix, left of = oneHotContinue, xshift=0.05in] {
+        1 \\
+        0 \\
+        0 \\[-1ex]
+        \vdots \\
+        0\\};
+      \node [above of=oneHotContinue, text centered, xshift=0.1in, yshift=0.2in] (onehotlabel) {One-Hot Vector Input};
+
+      \matrix (embedding) [bmatrix, above left of = matmul, xshift=-1in, yshift=0.5in] {
+        w_{1,1} & w_{1,2} &\cdots & w_{1,|v|}\\
+        w_{2,1} & w_{2,2} &\cdots & w_{2,|v|}\\[-1ex]
+        \vdots & & &  \vdots\\
+        w_{d,1} & w_{d,2} &\cdots & w_{d,|v|}\\};
+      \node [above of=embedding, yshift=0.15in] (embeddinglabel) {Embedding Matrix};
+                  
+      % Draw arrows
+      \draw [->,thick] (embedding) -- (matmul);
+      \draw [->,thick] (oneHotFirst) -- (matmul);
+      \draw [->,thick] (matmul) -- (lstmbox);
+      \draw [->,thick] (lstmbox) -- (feedforward);
+      \draw [->,thick] (lstmbox) to[out=30, in=150, looseness=3] (lstmbox); % Numbers represent location on the unit circle.  0 is due east, 90 due north, 180 due west, and 270 due south.
+      \draw [->,thick] (feedforward.north east) -- (softmax);
+      \draw [->,thick] (feedforward) -- (softmax);
+      \draw [->,thick] (feedforward.south east) -- (softmax);
+      \draw [->,thick, postaction={decorate}] (softmax) -- node[below=1pt] {$|v|$} (output);
+      \draw [->,thick] (output) -- ++(1,0);
+      \draw [-{Latex[scale=0.8]},thick,dashed] (output.east) -| ++(0.2,0) -| ++(0,-2.3) -| (oneHotLast.south);
+      \draw [{Latex[scale=0.8]}-,thick,dashed] (oneHotFirst.south) to[bend left] (oneHotSecond.south);
+      \draw [{Latex[scale=0.8]}-,thick,dashed] (oneHotSecond.south) to[bend left] ++(-0.4,0);
+      \draw [-{Latex[scale=0.8]},thick,dashed] (oneHotLast.south) to [bend right] ++(0.4,0);
+    \end{tikzpicture}
+    \vspace{0.3em} 
+    \caption{Planned ``Trump'' Character-Level RNN Architecture}\label{fig:trumpLearnerArchitecture}
+  \end{figure}
+
+  \subsection{Embedding Matrix}
+
+  As mentioned in Section~\ref{sec:vocabulary}, we expect the vocabulary to be approximately one hundred characters.  As such, some may argue that an embedding matrix is superfluous and may even be deleterious.  However, we plan to include it primarily for dimensionality reduction.  The number of columns in the embedding matrix is still equal to the size of the vocabulary (i.e.,~number of rows in the one-hot vector).  Recall again that this size,~$|v|$, is the number of unique characters not the number of different words.
+  
+  Our team has only two members and given the two to three weeks available to complete this project, time is very much a limiting factor.  As the input dimension increases, so does the training time (often non-linearly).  Our previous experiments indicate that training a character-level RNN without a GPU can take a full day or more even using state-of-the-art hardware.  As such, we see the embedding matrix as primarily an acceleration tool.
+  
+  \subsection{Long Short-Term Memory}
+  
+  Similar to the LSTM in homework \#5, this block is used to provide a state for the network.  This enables the construction of longer coherent words and phrases.  By training it on Donald Trump's speeches, it will be the primary driver that mimics his unique oratory style.  We may experiment with different cell configurations for the LSTM, but we have not finalized the set of deliverables.
+    
+  \subsection{Feed-Forward Network}
+  
+  The role of the feed-forward network is to map the dimensionality of the LSTM to the width of the softmax layer (i.e.,~the size of the vocabulary).  We expect it will only require a single hidden layer, but this remains to be determined. 
+  
+  \subsection{Softmax Layer}
+  
+  The fourth stage in the learner is the softmax layer. Its role is to normalize the values output by the feed forward layer; this hyperparameter may be studied as part of the set of deliverables.  
+  
+  \subsection{Decision Engine}
+  
+  In a typical classifier, the predicted class maximizes the output probability.  While this approach works well for ``one-off'' decisions like classification, it is often insufficient when generating a stream of related and inter-dependent characters.  What is more, we have observed in our preliminary experiments that simply selecting the character with maximum softmax probability can cause a character-level RNN to enter an infinite loop where it just continuously outputs the same short phrase continuously.
+  
+  For those reasons, we placed a ``decision engine'' as the last stage of our learner, as shown in Figure~\ref{fig:trumpLearnerArchitecture}.  This engine may not always select the character that maximizes the predictor and instead may make weighted, randomized decisions.  We believe this will reduce the likelihood of an infinite output loop and will yield more realistic sounding speech.  The exact algorithm to be used will be based on our future experiments.
+  
+  \section{Sentence Generation}
+  
+  The character-level RNN has a fixed time series window width,~$T$.  The user will enter a string that will seed the RNN.  If this seed is shorter than~$T$ , the architecture will prepend one or more dummy symbols to the beginning of the string.  In contrast, if the string's length exceeds the time series window width, only the last~$T$ characters will be used to seed the RNN.  This will then be fed into the RNN and a single character will be generated.
+  
+  The dashed lines in Figure~$\ref{fig:trumpLearnerArchitecture}$ shows how data is propagated when generating all subsequent characters.  Note that the network's previous output is fed back as the last input when generating the next output.  This process continues indefinitely until the output string is of the desired length.
+  
+\end{document}
