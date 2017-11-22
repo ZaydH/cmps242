@@ -1,10 +1,10 @@
-# =====================================================================#
-# parser.py
+#=====================================================================#
+# data_parser.py
 # functions for text processing for trump speech generator.
-# =====================================================================#
+#=====================================================================#
 
 import const
-
+import random
 
 def read_input():
     """
@@ -13,7 +13,7 @@ def read_input():
     return ' '.join([l.strip() for l in open('trump_speeches.txt').readlines() if l.strip()])
 
 
-def create_examples(input_string):
+def get_examples(input_string, size):
     """
     from the input, produce examples where the input is a sequence of integers
     representing a string of characters, and the target is the character immediately
@@ -26,14 +26,32 @@ def create_examples(input_string):
     # maps characters in the file to unique integers
     char2int = {c: i for i, c in enumerate(sorted(set(input_string)))}
 
-    # iterate over the file window by window
-    i = 0
+    if size == -1:
 
-    while i + const.WINDOW_SIZE + 1 < len(input_string):
-        sequences += [[char2int[c] for c in input_string[i: i + const.WINDOW_SIZE]]]
-        targets += [char2int[input_string[i + const.WINDOW_SIZE]]]
+        # get all examples
 
-        i += 1
+        # iterate over the file window by window
+        i = 0
+
+        while i + const.WINDOW_SIZE + 1 < len(input_string):
+            sequences += [[char2int[c] for c in input_string[i: i + const.WINDOW_SIZE]]]
+            targets += [char2int[input_string[i + const.WINDOW_SIZE]]]
+
+            i += 1
+
+    else:
+        
+        # get size many examples
+        for z in range(size):
+
+            # get a random starting point
+            r = random.choice(range(len(input_string) - const.WINDOW_SIZE - 1))
+
+            # get sequence
+            sequences += [[char2int[c] for c in input_string[r: r + const.WINDOW_SIZE]]]
+
+            # get target
+            targets += [char2int[input_string[r + const.WINDOW_SIZE]]]
 
     return [sequences, targets]
 
