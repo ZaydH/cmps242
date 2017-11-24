@@ -4,13 +4,19 @@
 #=====================================================================#
 
 import tensorflow as tf
-import const
 import data_parser
-
+from decision_engine import setup_decision_engine
+from feed_forward_and_softmax import setup_feed_forward_and_softmax
+from const import Config
 
 def construct_network(vocab_size):
     """
-    make neural net
+    Neural Network Constructor
+
+    Builds all layers of the neural network.
+
+    :param vocab_size: Number of elements in the vocabulary.
+    :type vocab_size: int
     """
 
     # create data input placeholder
@@ -22,7 +28,7 @@ def construct_network(vocab_size):
     # create a random embedding matrix 
     embed_matrix = tf.Variable(
             tf.random_uniform(
-                    [vocab_size, const.EMBEDDING_SIZE], -1.0, 1.0
+                    [vocab_size, Config.EMBEDDING_SIZE], -1.0, 1.0
                 )
         )
 
@@ -30,7 +36,7 @@ def construct_network(vocab_size):
     embedded = tf.nn.embedding_lookup(embed_matrix, X)
 
     # create RNN cell
-    lstm_cell = tf.contrib.rnn.LSTMCell(const.RNN_HIDDEN_SIZE, state_is_tuple = True)
+    lstm_cell = tf.contrib.rnn.LSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple = True)
 
     print(lstm_cell, embedded)
 
@@ -41,11 +47,13 @@ def construct_network(vocab_size):
 
     # transpose rnn_output into a time major form
     rnn_output = tf.transpose(rnn_output, [1, 0, 2])
-    
     # get the output of the last time-step
-    rnn_final_output = tf.gather(
-            rnn_output, const.WINDOW_SIZE - 1
-        )
+    rnn_final_output = tf.gather(rnn_output, Config.WINDOW_SIZE - 1)
+
+    softmax_out = setup_feed_forward_and_softmax(rnn_final_output, vocab_size)
+
+    decision_engine_out = setup_decision_engine(softmax_out)
+
 
     return {
             'X': X, 'Y': Y, 'RNN_OUTPUT': rnn_final_output
