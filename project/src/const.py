@@ -1,8 +1,10 @@
-import enum
+from enum import Enum
 import argparse
 import __main__
+import os
 
-class DecisionFunction(enum):
+
+class DecisionFunction(Enum):
   ArgMax = 0
 
 
@@ -13,6 +15,11 @@ class Config(object):
   WINDOW_SIZE = 50
   EMBEDDING_SIZE = 30
   RNN_HIDDEN_SIZE = 64
+
+  class Train(object):
+    input_file = "." + os.sep + "trump_speeches.txt"
+    epochs = 100
+    batch_size = 100
 
   class FF(object):
     depth = 1
@@ -26,9 +33,12 @@ class Config(object):
 
   @staticmethod
   def parse_args():
-    if __main__.__file__ == "train.py":
+    # Select the arguments based on what program is running
+    sep_loc = __main__.__file__.rfind(os.sep)
+    main_file_name = __main__.__file__[sep_loc + 1:]
+    if main_file_name == "train.py":
       Config._train_args()
-    elif __main__.__file__ == "trump.py":
+    elif main_file_name == "trump.py":
       Config._trump_args()
     else:
       raise ValueError("Unknown main file.")
@@ -37,14 +47,25 @@ class Config(object):
   def _train_args():
     parser = argparse.ArgumentParser("Character-Level RNN Trainer")
     parser.add_argument("--train", type=str, required=False,
-                        default="trump_speeches.txt",
-                        desc="Path to the training set file.")
+                        default=Config.Train.input_file,
+                        help="Path to the training set file.")
     parser.add_argument("--model", type=str, required=False,
                         default=Config.model_dir,
-                        desc="Directory to which to export the trained network")
+                        help="Directory to which to export the trained network")
     parser.add_argument("--seq-len", type=int, required=False,
                         default=Config.WINDOW_SIZE,
-                        desc="RNN sequence length")
+                        help="RNN sequence length")
+    parser.add_argument("--epochs", type=int, required=False,
+                        default=Config.Train.epochs,
+                        help="Number of training epochs")
+    parser.add_argument("--batch", type=int, required=False,
+                        default=Config.Train.batch_size,
+                        help="Batch size")
+    args = parser.parse_args()
+
+    Config.Train.input_file = args.train
+    Config.Train.epochs = args.epochs
+    Config.Train.batch_size = args.batch
 
   @staticmethod
   def _trump_args():

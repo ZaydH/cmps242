@@ -9,7 +9,7 @@ from decision_engine import setup_decision_engine
 from feed_forward_and_softmax import setup_feed_forward_and_softmax
 from const import Config
 
-def construct_network(vocab_size):
+def construct(vocab_size):
     """
     Neural Network Constructor
 
@@ -59,7 +59,8 @@ def construct_network(vocab_size):
             'X': X, 'Y': Y, 'RNN_OUTPUT': rnn_final_output
         }
 
-def run_network(feature_dict, sequences, targets):
+
+def run(feature_dict, sequences, targets):
     """
     run a tensor flow session and try feeding the network stuff.
     just for testing right now
@@ -70,17 +71,18 @@ def run_network(feature_dict, sequences, targets):
     sess = tf.Session()
     sess.run(init_op)
 
+
 # main
 if __name__ == '__main__':
 
     input_str = data_parser.read_input()
     vocab_size = len(set(input_str))
-    
+
     # get 1000 random examples
     sequences, targets = data_parser.get_examples(input_str, 1000)
 
-    # 
-    network_features = construct_network(vocab_size)
+    #
+    network_features = construct(vocab_size)
 
-    # 
-    run_network(network_features, sequences, targets)
+    #
+    run(network_features, sequences, targets)
