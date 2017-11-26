@@ -19,12 +19,10 @@ def construct():
     """
 
     # create data input placeholder
-    input_x = tf.placeholder(tf.int32, shape=[Config.Train.batch_size,
-                                              None])
+    input_x = tf.placeholder(tf.int32, shape=[Config.batch_size, None])
 
     # create target input placeholder
-    target = tf.placeholder(tf.float32, shape=[Config.Train.batch_size,
-                                               Config.vocab_size()])
+    target = tf.placeholder(tf.float32, shape=[Config.batch_size, Config.vocab_size()])
 
     # Create the embedding matrix
     embed_matrix = tf.get_variable("word_embeddings",
@@ -35,13 +33,13 @@ def construct():
     cell = tf.nn.rnn_cell.BasicLSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple=True)
 
     # get rnn outputs
-    seq_len = tf.placeholder(tf.int32, shape=[Config.Train.batch_size])
+    seq_len = tf.placeholder(tf.int32, shape=[Config.batch_size])
     rnn_output, rnn_state = tf.nn.dynamic_rnn(cell, embedded,
                                               sequence_length=seq_len,
                                               dtype=tf.float32)
 
     # transpose rnn_output into a time major form
-    seq_end = tf.range(Config.Train.batch_size) * tf.shape(rnn_output)[1] + (seq_len - 1)
+    seq_end = tf.range(Config.batch_size) * tf.shape(rnn_output)[1] + (seq_len - 1)
     rnn_final_output = tf.gather(tf.reshape(rnn_output, [-1, Config.RNN_HIDDEN_SIZE]), seq_end)
 
     softmax_out = setup_feed_forward_and_softmax(rnn_final_output)
@@ -54,7 +52,7 @@ def construct():
     else:
         final_output = softmax_out
     return {'X': input_x, 'target': target, 'RNN_OUTPUT': rnn_final_output,
-            'seq_len': seq_len, 'output': final_output}
+            'seq_len': seq_len, 'output': final_output, 'embedding': embed_matrix}
 
 
 def run():

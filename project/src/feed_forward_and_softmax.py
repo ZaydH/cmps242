@@ -87,7 +87,7 @@ def setup_feed_forward_and_softmax(ff_input):
   :return: Output from the softmax
   :rtype: tf.Tensor
   """
-  ff_output = _build_feed_forward(ff_input, _get_tf_rand_uniform)
+  ff_output = _build_feed_forward(ff_input, _get_tf_rand_normal)
 
   softmax_out = tf.nn.softmax(ff_output)
   return softmax_out

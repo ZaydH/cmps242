@@ -38,6 +38,7 @@ def create_examples(input_string, size=-1):
         i = 0
         while i + Config.sequence_length + 1 < len(input_string):
             sequences += [[Config.char2int[c] for c in input_string[i: i + Config.sequence_length]]]
+            depths.append(Config.sequence_length)
             targets += [Config.char2int[input_string[i + Config.sequence_length]]]
             i += 1
 

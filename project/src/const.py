@@ -35,12 +35,11 @@ class Config(object):
 
   sequence_length = 50
   EMBEDDING_SIZE = 30
-  RNN_HIDDEN_SIZE = 64
+  RNN_HIDDEN_SIZE = 30
   """
   Stores whether training is being executed.
   """
   _is_train = False
-
   """
   Name of the main file.
   """
@@ -50,6 +49,8 @@ class Config(object):
   sets.
   """
   training_split_ratio = 0.8
+
+  batch_size = 1000
 
   class Verify(object):
     x = None
@@ -63,6 +64,25 @@ class Config(object):
     Pickle file to store the verify_x and verify_t objects.
     """
     pk_file = "verify.pk"
+
+    _num_batch = -1
+
+    @staticmethod
+    def size():
+      """
+      Number of elements in the verification set
+
+      :return: Size of the verification set
+      :rtype: int
+      """
+      return len(Config.Verify.t)
+
+    @staticmethod
+    def num_batch():
+      if Config.Verify._num_batch <= 0:
+        Config.Verify._num_batch = int(math.ceil(1. * Config.Verify.size() /
+                                                 Config.batch_size))
+      return Config.Verify._num_batch
 
   class Train(object):
     """
@@ -94,10 +114,6 @@ class Config(object):
 
     num_epochs = 100
     """
-    Number of elements per batch.
-    """
-    batch_size = 100
-    """
     If true, restore the previous settings
     """
     restore = True
@@ -105,7 +121,7 @@ class Config(object):
     Number of epochs between model checkpoint.
     """
     checkpoint_frequency = 10
-    learning_rate = 1.0
+    learning_rate = 0.01
     _num_batch = -1
 
     @staticmethod
@@ -120,9 +136,15 @@ class Config(object):
 
     @staticmethod
     def num_batch():
+      """
+      Number of batches to test.
+
+      :return: Number of batches
+      :rtype: int
+      """
       if Config.Train._num_batch <= 0:
-        Config.Train._num_batch = int(math.ceil(Config.Train.size() /
-                                                Config.Train.batch_size))
+        Config.Train._num_batch = int(math.ceil(1. * Config.Train.size() /
+                                                Config.batch_size))
       return Config.Train._num_batch
 
   class FF(object):
@@ -130,7 +152,7 @@ class Config(object):
     Configuration settings for the feed-forward network.
     """
     depth = 1
-    hidden_width = 128
+    hidden_width = 64
 
   class DecisionEngine(object):
     """
@@ -200,7 +222,7 @@ class Config(object):
                         default=Config.Train.num_epochs,
                         help="Number of training epochs")
     parser.add_argument("--batch", type=int, required=False,
-                        default=Config.Train.batch_size,
+                        default=Config.batch_size,
                         help="Batch size")
     args = parser.parse_args()
 
@@ -213,7 +235,7 @@ class Config(object):
     Config.Train.training_file = args.train
     Config.Train.restore = args.restore
     Config.Train.num_epochs = args.epochs
-    Config.Train.batch_size = args.batch
+    Config.batch_size = args.batch
 
   @staticmethod
   def _trump_args():
@@ -271,8 +293,11 @@ class Config(object):
     logging.info("Importing the trained model...")
     model_file = (Config.model_dir + Config.model_name
                   + "-" + str(Config.Train.checkpoint_frequency) + ".meta")
-    new_saver = tf.train.import_meta_graph(model_file)
-    new_saver.restore(sess, tf.train.latest_checkpoint(Config.model_dir))
+    saver = tf.train.Saver()
+    saver.restore(sess, tf.train.latest_checkpoint(Config.model_dir))
+    # new_saver = tf.train.import_meta_graph(model_file)
+    # new_saver.restore(sess, tf.train.latest_checkpoint(Config.model_dir))
+
     logging.info("COMPLETED: Importing the trained model")
 
   @staticmethod
@@ -284,7 +309,7 @@ class Config(object):
     saver = tf.train.Saver(max_to_keep=20)
     # Only write the meta for the first checkpoint
     write_meta = (not Config.Train.restore) and (epoch == Config.Train.checkpoint_frequency)
-    saver.save(sess, Config.model_name, global_step=epoch,
+    saver.save(sess, Config.model_dir + Config.model_name, global_step=epoch,
                write_meta_graph=write_meta)
     # ToDo Implement exporting the TensorFlow model
     logging.info("COMPLETED Checkpoint: Exporting the trained model")

@@ -1,5 +1,3 @@
-import random
-
 import tensorflow as tf
 import logging
 import data_parser
@@ -29,36 +27,58 @@ def run_training():
 
   for epoch in range(0, Config.Train.num_epochs):
     # Shuffle the batches for each epoch
-    shuffled_list = list(range(Config.Train.size()))
-    random.shuffle(shuffled_list)
+    # shuffled_list = list(range(Config.Train.size()))
+    # random.shuffle(shuffled_list)
     train_err = 0
     for batch in range(0, Config.Train.num_batch()):
-      end_batch = min((batch + 1) * Config.Train.batch_size, Config.Train.size())
-      start_batch = max(0, end_batch - Config.Train.batch_size)
-
+      end_batch = min((batch + 1) * Config.batch_size, Config.Train.size())
+      start_batch = max(0, end_batch - Config.batch_size)
+      #
       # Use the randomized batches
-      train_x = list(map(lambda idx: Config.Train.x[idx], shuffled_list[start_batch:end_batch]))
-      train_t = list(map(lambda idx: Config.Train.t[idx], shuffled_list[start_batch:end_batch]))
-      seqlen = list(map(lambda idx: Config.Train.depth[idx], shuffled_list[start_batch:end_batch]))
-
+      # train_x = list(map(lambda idx: Config.Train.x[idx], shuffled_list[start_batch:end_batch]))
+      # train_t = list(map(lambda idx: Config.Train.t[idx], shuffled_list[start_batch:end_batch]))
+      # seqlen = list(map(lambda idx: Config.Train.depth[idx], shuffled_list[start_batch:end_batch]))
+      train_x = Config.Train.x[start_batch:end_batch]
+      train_t = Config.Train.t[start_batch:end_batch]
+      seqlen = Config.Train.depth[start_batch:end_batch]
       _, err = sess.run([train_op, loss_op], feed_dict={X: train_x, target: train_t,
                                                         seq_len: seqlen})
       train_err += err
 
+    # ToDo It would be nice to add perplexity here.
     train_err /= Config.Train.num_batch()
     logging.info("Epoch %05d: Training Error: \t\t%0.3f" % (epoch, train_err))
 
-    err = sess.run([loss_op], feed_dict={X: Config.Verify.x, target: Config.Verify.t})
-    logging.info("Epoch %05d: Verification Error: \t%0.3f" % (epoch, err))
+    test_err = _calculate_verify_error(sess, loss_op, X, target, seq_len)
+    logging.info("Epoch %05d: Verification Error: \t%0.3f" % (epoch, test_err))
 
-    if epoch % Config.Train.checkpoint_frequency == 0:
+    if epoch > 0 and epoch % Config.Train.checkpoint_frequency == 0:
       Config.export_model(sess, epoch)
 
   sess.close()
 
 
+def _calculate_verify_error(sess, loss_op, X, target, seq_len):
+  """
+  Determines the verification error
+  """
+  verify_err = 0
+  for batch in range(0, Config.Verify.num_batch()):
+    end_batch = min((batch + 1) * Config.batch_size, Config.Verify.size())
+    start_batch = max(0, end_batch - Config.batch_size)
+
+    # Use the randomized batches
+    verify_x = Config.Verify.x[start_batch:end_batch]
+    verify_t = Config.Verify.t[start_batch:end_batch]
+    seqlen = Config.Verify.depth[start_batch:end_batch]
+    err = sess.run(loss_op, feed_dict={X: verify_x, target: verify_t, seq_len: seqlen})
+    verify_err += err
+  verify_err /= Config.Verify.num_batch()
+  return verify_err
+
+
 if __name__ == "__main__":
   Config.parse_args()
-  data_parser.build_training_and_verification_sets(dataset_size=200)
+  data_parser.build_training_and_verification_sets(dataset_size=12500)
 
   run_training()
