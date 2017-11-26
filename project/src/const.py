@@ -147,6 +147,59 @@ class Config(object):
                                                 Config.batch_size))
       return Config.Train._num_batch
 
+  class Generate(object):
+    """
+    Reverse operation of the char2int.  This maps the output
+    integer back to a character.
+    """
+    _int2char = []
+    """
+    Text used to seed the text generator.
+    """
+    seed = ""
+
+    x = []
+    """
+    Length of the text to generate
+    """
+    output_len = 250
+
+    @staticmethod
+    def build_seed_x():
+      """
+      Converts the seed text to a list of integers for use to seed
+      the text generator.
+      """
+      if x:
+        return
+      assert len(Config.char2int) > 0
+      x = []
+      for char in Config.Generate.seed:
+        x.append(Config.char2int[char])
+
+    @staticmethod
+    def int2char():
+      if not Config.Generate._int2char:
+        return Config.Generate.build_int2char()
+      return Config.Generate._int2char
+
+    @staticmethod
+    def build_int2char():
+      """
+      Maps integers to a character.
+
+      :return: Mapping from integer to a character
+      :rtype: List[str]
+      """
+      if Config.Generate._int2char:
+        return Config.Generate._int2char
+      assert len(Config.char2int) > 0
+
+      Config.Generate._int2char = ["a"] * len(Config.char2int)
+      for key in Config.char2int.keys():
+        Config.Generate._int2char[Config.char2int[key]] = key
+      return Config.Generate._int2char
+
   class FF(object):
     """
     Configuration settings for the feed-forward network.
@@ -240,16 +293,32 @@ class Config(object):
   @staticmethod
   def _trump_args():
     parser = argparse.ArgumentParser("Character-Level Trump Text Generator")
-    parser.add_argument("--model", type=str, required=True,
+    parser.add_argument("--model", type=str, required=False,
                         desc="Directory containing the trained model")
     parser.add_argument("--seed", type=str, required=True,
                         desc="Text with which to seed the generator")
+    parser.add_argument("--len", type=int, required=False,
+                        default=Config.Generate.output_len,
+                        desc="Length of the string to generate")
     parser.add_argument("--decision", type=int, required=False,
                         default=DecisionFunction.ArgMax,
                         desc="Function of the decision engine.  Set to \"0\" to always select "
                              + "the character with maximum probability. Set to \"1\" to make a "
                              + "weighted random selection for the first character after a space "
                              + "and then use argmax")
+    args = parser.parse_args()
+
+    Config.model_dir = args.model
+
+    Config.DecisionEngine.function = args.decision
+
+    Config.Generate.output_len = args.len
+    Config.Generate.seed = args.seed
+
+  @staticmethod
+  def parse_seed_text():
+    assert len(Config.char2int) > 0
+
 
   @staticmethod
   def import_train_and_verification_data():
@@ -291,10 +360,10 @@ class Config(object):
     :type sess: tf.Session
     """
     logging.info("Importing the trained model...")
-    model_file = (Config.model_dir + Config.model_name
-                  + "-" + str(Config.Train.checkpoint_frequency) + ".meta")
     saver = tf.train.Saver()
     saver.restore(sess, tf.train.latest_checkpoint(Config.model_dir))
+    # model_file = (Config.model_dir + Config.model_name
+    #               + "-" + str(Config.Train.checkpoint_frequency) + ".meta")
     # new_saver = tf.train.import_meta_graph(model_file)
     # new_saver.restore(sess, tf.train.latest_checkpoint(Config.model_dir))
 
@@ -348,6 +417,7 @@ class Config(object):
     handler.setLevel(logging.INFO)
     logging.getLogger().addHandler(handler)
     logging.info("************************ New Run Beginning ************************")
+
 
 
 def _pickle_export(obj, filename):
