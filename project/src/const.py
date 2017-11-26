@@ -33,7 +33,7 @@ class Config(object):
   """
   char2int_pk_file = "char2int.pk"
 
-  WINDOW_SIZE = 50
+  sequence_length = 50
   EMBEDDING_SIZE = 30
   RNN_HIDDEN_SIZE = 64
   """
@@ -109,9 +109,19 @@ class Config(object):
     _num_batch = -1
 
     @staticmethod
+    def size():
+      """
+      Number of elements in the training set
+
+      :return: Size of the training set
+      :rtype: int
+      """
+      return len(Config.Train.t)
+
+    @staticmethod
     def num_batch():
       if Config.Train._num_batch <= 0:
-        Config.Train._num_batch = int(math.ceil(len(Config.Train.t) /
+        Config.Train._num_batch = int(math.ceil(Config.Train.size() /
                                                 Config.Train.batch_size))
       return Config.Train._num_batch
 
@@ -184,7 +194,7 @@ class Config(object):
                         default=Config.model_dir,
                         help="Directory to which to export the trained network")
     parser.add_argument("--seqlen", type=int, required=False,
-                        default=Config.WINDOW_SIZE,
+                        default=Config.sequence_length,
                         help="RNN sequence length")
     parser.add_argument("--epochs", type=int, required=False,
                         default=Config.Train.num_epochs,
@@ -194,7 +204,7 @@ class Config(object):
                         help="Batch size")
     args = parser.parse_args()
 
-    Config.WINDOW_SIZE = args.seqlen
+    Config.sequence_length = args.seqlen
 
     Config.model_dir = args.model
     if Config.model_dir[-1] != os.sep:

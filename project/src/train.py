@@ -1,3 +1,5 @@
+import random
+
 import tensorflow as tf
 import logging
 import data_parser
@@ -26,11 +28,20 @@ def run_training():
   train_op = optimizer.minimize(loss_op)
 
   for epoch in range(0, Config.Train.num_epochs):
-
+    # Shuffle the batches for each epoch
+    shuffled_list = list(range(Config.Train.size()))
+    random.shuffle(shuffled_list)
     train_err = 0
     for batch in range(0, Config.Train.num_batch()):
       # Build batches
-      _, err = sess.run([train_op, loss_op], feed_dict={X: train_X, target: train_T})
+      end_batch = min((batch + 1) * Config.Train.batch_size, Config.Train.size())
+      start_batch = max(0, end_batch - Config.Train.batch_size)
+
+      train_x = Config.Train.x[start_batch:end_batch]
+      train_t = Config.Train.t[start_batch:end_batch]
+      seq_len = [Config.sequence_length] * Config.Train.batch_size
+      _, err = sess.run([train_op, loss_op], feed_dict={X: train_x, target: train_t,
+                                                        seq_len: seq_len})
       train_err += err
 
     train_err /= Config.Train.num_batch()
@@ -47,6 +58,6 @@ def run_training():
 
 if __name__ == "__main__":
   Config.parse_args()
-  data_parser.build_training_and_verification_sets(dataset_size=1000)
+  data_parser.build_training_and_verification_sets(dataset_size=200)
 
   run_training()

@@ -1,7 +1,8 @@
-#=====================================================================#
-# network.py
-# construct RNN for character level text prediction
-#=====================================================================#
+"""
+ network.py
+
+ Construct RNN for character level text prediction
+"""
 
 import tensorflow as tf
 import data_parser
@@ -18,31 +19,32 @@ def construct():
     """
 
     # create data input placeholder
-    input_x = tf.placeholder(tf.int32, shape=(None, None))
+    input_x = tf.placeholder(tf.int32, shape=[Config.Train.batch_size,
+                                              Config.sequence_length,
+                                              Config.RNN_HIDDEN_SIZE])
 
     # create target input placeholder
-    target = tf.placeholder(tf.int32, shape=(None))
+    target = tf.placeholder(tf.int32, shape=[Config.Train.batch_size,
+                                             Config.vocab_size()])
 
-    # create a random embedding matrix 
-    embed_matrix = tf.Variable(
-            tf.random_uniform(
-                    [Config.vocab_size(), Config.EMBEDDING_SIZE], -1.0, 1.0
-                )
-        )
-
-    # create the embedding lookup
+    # Create the embedding matrix
+    embed_matrix = tf.get_variable('embedding_matrix',
+                                   [Config.vocab_size(), Config.EMBEDDING_SIZE])
     embedded = tf.nn.embedding_lookup(embed_matrix, input_x)
 
     # create RNN cell
-    lstm_cell = tf.contrib.rnn.LSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple=True)
+    cell = tf.nn.rnn_cell.BasicLSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple=True)
 
     # get rnn outputs
-    rnn_output, rnn_state = tf.nn.dynamic_rnn(lstm_cell, embedded, dtype=tf.float32)
+    seq_len = [Config.sequence_length] * Config.Train.batch_size
+    rnn_output, rnn_state = tf.nn.dynamic_rnn(cell, embedded,
+                                              sequence_length=seq_len,
+                                              dtype=tf.float32)
 
     # transpose rnn_output into a time major form
-    rnn_output = tf.transpose(rnn_output, [1, 0, 2])
-    # get the output of the last time-step
-    rnn_final_output = tf.gather(rnn_output, Config.WINDOW_SIZE - 1)
+    seq_len = tf.placeholder(tf.int32, shape=(Config.Train.batch_size))
+    seq_end = tf.range(Config.Train.batch_size) * tf.shape(rnn_output)[1] + (seq_len - 1)
+    rnn_final_output = tf.gather(tf.reshape(rnn_output, [-1, Config.RNN_HIDDEN_SIZE]), seq_end)
 
     softmax_out = setup_feed_forward_and_softmax(rnn_final_output)
 
