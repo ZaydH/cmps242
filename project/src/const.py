@@ -3,6 +3,8 @@ import argparse
 import __main__
 import os
 import pickle
+import tensorflow as tf
+import math
 
 from decision_engine import DecisionFunction
 
@@ -17,6 +19,10 @@ class Config(object):
   Directory to export the trained model.
   """
   model_dir = '.' + os.sep + 'model' + os.sep
+  """
+  Name assigned to the TensorFlow model
+  """
+  model_name = "trump"
   """
   Character to integer look up.
   """
@@ -34,6 +40,7 @@ class Config(object):
   Stores whether training is being executed.
   """
   _is_train = False
+
   """
   Name of the main file.
   """
@@ -43,6 +50,19 @@ class Config(object):
   sets.
   """
   training_split_ratio = 0.8
+
+  class Verify(object):
+    x = None
+    t = None
+    """
+    For each training object, it is the number of vectors before
+    the output is expected
+    """
+    depth = None
+    """
+    Pickle file to store the verify_x and verify_t objects.
+    """
+    pk_file = "verify.pk"
 
   class Train(object):
     """
@@ -55,30 +75,45 @@ class Config(object):
     """
     training_file = "." + os.sep + "trump_speeches.txt"
     """
-    Object containing the input training set.
+    Input training data
     """
-    train_x = None
-    train_t = None
+    x = None
+    """
+    Training Labels
+    """
+    t = None
+    """
+    For each training object, it is the number of vectors before
+    the output is expected
+    """
+    depth = None
     """
     Pickle file to export the input training set
     """
-    train_pk_file = "train.pk"
+    pk_file = "train.pk"
 
-    verify_x = None
-    verify_t = None
-    """
-    Pickle file to store the verify_x and verify_t objects.
-    """
-    verify_pk_file = "verify.pk"
-    epochs = 100
+    num_epochs = 100
     """
     Number of elements per batch.
     """
     batch_size = 100
     """
-    If true, restart the training from scratch. 
+    If true, restore the previous settings
     """
-    restart = True
+    restore = True
+    """
+    Number of epochs between model checkpoint.
+    """
+    checkpoint_frequency = 10
+    learning_rate = 1.0
+    _num_batch = -1
+
+    @staticmethod
+    def num_batch():
+      if Config.Train._num_batch <= 0:
+        Config.Train._num_batch = int(math.ceil(len(Config.Train.t) /
+                                                Config.Train.batch_size))
+      return Config.Train._num_batch
 
   class FF(object):
     """
@@ -143,7 +178,7 @@ class Config(object):
     parser.add_argument("--train", type=str, required=False,
                         default=Config.Train.training_file,
                         help="Path to the training set file.")
-    parser.add_argument("--use_existing", action="store_true",
+    parser.add_argument("--restore", action="store_true",
                         help="Continue training the existing model")
     parser.add_argument("--model", type=str, required=False,
                         default=Config.model_dir,
@@ -152,7 +187,7 @@ class Config(object):
                         default=Config.WINDOW_SIZE,
                         help="RNN sequence length")
     parser.add_argument("--epochs", type=int, required=False,
-                        default=Config.Train.epochs,
+                        default=Config.Train.num_epochs,
                         help="Number of training epochs")
     parser.add_argument("--batch", type=int, required=False,
                         default=Config.Train.batch_size,
@@ -166,8 +201,8 @@ class Config(object):
       Config.model_dir += os.sep
 
     Config.Train.training_file = args.train
-    Config.Train.restart = not args.use_existing
-    Config.Train.epochs = args.epochs
+    Config.Train.restore = args.restore
+    Config.Train.num_epochs = args.epochs
     Config.Train.batch_size = args.batch
 
   @staticmethod
@@ -187,17 +222,19 @@ class Config(object):
   @staticmethod
   def import_train_and_verification_data():
     logging.info("Importing the training and verification datasets.")
-    Config.Train.train_x, Config.Train.train_t = _pickle_import(Config.model_dir + Config.Train.train_pk_file)
-    Config.Train.verify_x, Config.Train.verify_t = _pickle_import(Config.model_dir + Config.Train.verify_pk_file)
+    Config.Train.x, Config.Train.t, Config.Train.depth \
+        = _pickle_import(Config.model_dir + Config.Train.pk_file)
+    Config.Verify.x, Config.Verify.t, Config.Verify.depth \
+        = _pickle_import(Config.model_dir + Config.Verify.pk_file)
     logging.info("COMPLETED: Importing the training and verificationdataset.")
 
   @staticmethod
   def export_train_and_verification_data():
     logging.info("Importing the training dataset and the character to integer map.")
-    _pickle_export([Config.Train.train_x, Config.Train.train_t],
-                   Config.model_dir + Config.Train.train_pk_file)
-    _pickle_export([Config.Train.verify_x, Config.Train.verify_t],
-                   Config.model_dir + Config.Train.verify_pk_file)
+    _pickle_export([Config.Train.x, Config.Train.t, Config.Train.depth],
+                   Config.model_dir + Config.Train.pk_file)
+    _pickle_export([Config.Verify.x, Config.Verify.t, Config.Verify.depth],
+                   Config.model_dir + Config.Verify.pk_file)
     logging.info("COMPLETED: Importing the training dataset.")
 
   @staticmethod
@@ -213,21 +250,32 @@ class Config(object):
     logging.info("COMPLETED: Importing the character to integer map")
 
   @staticmethod
-  def import_model():
+  def import_model(sess):
     """
     Imports the weights of the training network.  This can be used
     to continue training or when generating text.
+
+    :param sess: TensorFlow session to which to restore
+    :type sess: tf.Session
     """
     logging.info("Importing the trained model...")
-    # ToDo Implement importing the TensorFlow model
+    model_file = (Config.model_dir + Config.model_name
+                  + "-" + str(Config.Train.checkpoint_frequency) + ".meta")
+    new_saver = tf.train.import_meta_graph(model_file)
+    new_saver.restore(sess, tf.train.latest_checkpoint(Config.model_dir))
     logging.info("COMPLETED: Importing the trained model")
 
   @staticmethod
-  def export_model():
+  def export_model(sess, epoch):
     """
     Exports the network weights.
     """
     logging.info("Checkpoint: Exporting the trained model...")
+    saver = tf.train.Saver(max_to_keep=20)
+    # Only write the meta for the first checkpoint
+    write_meta = (not Config.Train.restore) and (epoch == Config.Train.checkpoint_frequency)
+    saver.save(sess, Config.model_name, global_step=epoch,
+               write_meta_graph=write_meta)
     # ToDo Implement exporting the TensorFlow model
     logging.info("COMPLETED Checkpoint: Exporting the trained model")
 

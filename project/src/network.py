@@ -53,8 +53,8 @@ def construct():
         final_output = decision_engine_out
     else:
         final_output = softmax_out
-    return {'X': input_x, 'Y': target, 'RNN_OUTPUT': rnn_final_output,
-            'FINAL_OUTPUT': final_output}
+    return {'X': input_x, 'target': target, 'RNN_OUTPUT': rnn_final_output,
+            'output': final_output}
 
 
 def run():

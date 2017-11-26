@@ -26,7 +26,10 @@ def create_examples(input_string, size=-1):
 
     sequences = []
     targets = []
+    depths = []
     Config.char2int = {c: i for i, c in enumerate(sorted(set(input_string)))}
+
+    # ToDo Discuss with Ben how we want to train on text shorter than the window size?
 
     # Get all examples
     if size == -1:
@@ -44,11 +47,9 @@ def create_examples(input_string, size=-1):
             # get a random starting point
             r = random.choice(range(len(input_string) - Config.WINDOW_SIZE - 1))
 
-            # get sequence
-            sequences += [[Config.char2int[c] for c in input_string[r: r + Config.WINDOW_SIZE]]]
-
-            # get target
-            targets += [Config.char2int[input_string[r + Config.WINDOW_SIZE]]]
+            sequences.append([Config.char2int[c] for c in input_string[r: r + Config.WINDOW_SIZE]])
+            depths.append(Config.WINDOW_SIZE)
+            targets.append(Config.char2int[input_string[r + Config.WINDOW_SIZE]])
 
     assert(len(sequences) == len(targets))
     # Define how to randomly split the input data into train and test
@@ -56,15 +57,25 @@ def create_examples(input_string, size=-1):
     random.shuffle(shuffled_list)
     split_point = int(Config.training_split_ratio * len(sequences))
 
-    Config.Train.train_x = [sequences[idx] for idx in shuffled_list[:split_point]]
-    Config.Train.train_t = [targets[idx] for idx in shuffled_list[:split_point]]
+    Config.Train.x = [sequences[idx] for idx in shuffled_list[:split_point]]
+    Config.Train.t = [targets[idx] for idx in shuffled_list[:split_point]]
 
-    Config.Train.verify_x = [sequences[idx] for idx in shuffled_list[split_point:]]
-    Config.Train.verify_t = [targets[idx] for idx in shuffled_list[split_point:]]
+    Config.Verify.x = [sequences[idx] for idx in shuffled_list[split_point:]]
+    Config.Verify.t = [targets[idx] for idx in shuffled_list[split_point:]]
 
 
 def build_training_and_verification_sets(dataset_size=-1):
-    if Config.Train.restart:
+    """
+    Training and Verification Set Builder
+
+    Builds the training and verification datasets.  Depending on the
+    configuration, this may be from the source files or from pickled
+    files.
+
+    :param dataset_size: Number of total elements in the training and verification sets.
+    :type dataset_size: int
+    """
+    if not Config.Train.restore:
         input_str = read_input()
         create_examples(input_str, dataset_size)
         # Character to integer map required during text generation
@@ -78,8 +89,8 @@ def build_training_and_verification_sets(dataset_size=-1):
 
     # Print basic statistics on the training set
     logging.info("Vocabulary Size: \t\t%d" % Config.vocab_size())
-    logging.info("Training Set Size: \t\t%d" % len(Config.Train.train_t))
-    logging.info("Verification Set Size: \t%d" % len(Config.Train.verify_t))
+    logging.info("Training Set Size: \t\t%d" % len(Config.Train.t))
+    logging.info("Verification Set Size: \t%d" % len(Config.Verify.t))
 
 
 # testing
