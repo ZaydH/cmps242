@@ -9,26 +9,24 @@ from decision_engine import setup_decision_engine
 from feed_forward_and_softmax import setup_feed_forward_and_softmax
 from const import Config
 
-def construct(vocab_size):
+
+def construct():
     """
-    Neural Network Constructor
+    Trump Neural Network Constructor
 
     Builds all layers of the neural network.
-
-    :param vocab_size: Number of elements in the vocabulary.
-    :type vocab_size: int
     """
 
     # create data input placeholder
     X = tf.placeholder(tf.int32, shape=(None, None))
 
     # create target input placeholder
-    Y = tf.placeholder(tf.int32, shape=(None))
+    target = tf.placeholder(tf.int32, shape=(None))
 
     # create a random embedding matrix 
     embed_matrix = tf.Variable(
             tf.random_uniform(
-                    [vocab_size, Config.EMBEDDING_SIZE], -1.0, 1.0
+                    [Config.vocab_size(), Config.EMBEDDING_SIZE], -1.0, 1.0
                 )
         )
 
@@ -54,17 +52,18 @@ def construct(vocab_size):
 
     decision_engine_out = setup_decision_engine(softmax_out)
 
-
-    return {
-            'X': X, 'Y': Y, 'RNN_OUTPUT': rnn_final_output
-        }
+    return {'X': X, 'Y': target, 'RNN_OUTPUT': rnn_final_output,
+            'FINAL_OUTPUT': decision_engine_out}
 
 
-def run(feature_dict, sequences, targets):
+def run():
     """
     run a tensor flow session and try feeding the network stuff.
     just for testing right now
     """
+
+    sequences = Config.Train.inputs
+    targets = Config.Train.targets
     
     # start the session
     init_op = tf.initialize_all_variables()
@@ -75,14 +74,10 @@ def run(feature_dict, sequences, targets):
 # main
 if __name__ == '__main__':
 
-    input_str = data_parser.read_input()
-    vocab_size = len(set(input_str))
-
-    # get 1000 random examples
-    sequences, targets = data_parser.get_examples(input_str, 1000)
+    data_parser.build_training_set()
 
     #
-    network_features = construct(vocab_size)
+    network_features = construct()
 
     #
-    run(network_features, sequences, targets)
+    run()

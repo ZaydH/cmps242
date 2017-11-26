@@ -2,10 +2,17 @@ import __main__
 import tensorflow as tf
 
 
-def _select_max_probability(input):
+def _select_max_probability(logits):
+  """
+  Most naive decision engine.  Always selects the character with
+  the greatest probability.
 
-  prediction = tf.argmax(input, axis=1)
-  return prediction
+  :param logits: Output from the soft max layer
+  :type logits: tf.Tensor
+
+  :return: Index corresponding to the character selected.
+  """
+  return tf.argmax(logits, axis=1)
 
 def _selected_weighted_random_probability(input):
   # ToDo Select the weighted random probability

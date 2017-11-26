@@ -7,10 +7,9 @@ from const import Config
 
 def run_training():
   input_str = data_parser.read_input()
-  vocab_size = len(set(input_str))
 
   # get 1000 random examples
-  sequences, targets = data_parser.get_examples(input_str, 1000)
+  sequences, targets = data_parser.create_examples(input_str, 1000)
   network_features = network.construct(vocab_size)
 
   init_op = tf.initialize_all_variables()
@@ -20,4 +19,6 @@ def run_training():
 
 if __name__ == "__main__":
   Config.parse_args()
+  data_parser.build_training_set()
+
   run_training()
