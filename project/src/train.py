@@ -9,8 +9,8 @@ def run_training():
   input_str = data_parser.read_input()
 
   # get 1000 random examples
-  sequences, targets = data_parser.create_examples(input_str, 1000)
-  network_features = network.construct(vocab_size)
+  data_parser.create_examples(input_str, 1000)
+  network.construct()
 
   init_op = tf.initialize_all_variables()
   with tf.Session() as sess:

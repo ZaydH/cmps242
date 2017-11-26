@@ -1,5 +1,10 @@
 import __main__
 import tensorflow as tf
+from enum import Enum
+
+
+class DecisionFunction(Enum):
+  ArgMax = 0
 
 
 def _select_max_probability(logits):
@@ -14,9 +19,11 @@ def _select_max_probability(logits):
   """
   return tf.argmax(logits, axis=1)
 
+
 def _selected_weighted_random_probability(input):
   # ToDo Select the weighted random probability
   pass
+
 
 def setup_decision_engine(input):
   """

@@ -1,14 +1,10 @@
 import logging
-from enum import Enum
 import argparse
 import __main__
 import os
-
 import pickle
 
-
-class DecisionFunction(Enum):
-  ArgMax = 0
+from decision_engine import DecisionFunction
 
 
 class Config(object):
@@ -30,6 +26,15 @@ class Config(object):
   WINDOW_SIZE = 50
   EMBEDDING_SIZE = 30
   RNN_HIDDEN_SIZE = 64
+
+  """
+  Stores whether training is being executed.
+  """
+  _is_train = False
+  """
+  Name of the main file.
+  """
+  _main = ""
 
   class Train(object):
     """
@@ -74,6 +79,19 @@ class Config(object):
     function = DecisionFunction.ArgMax
 
   @staticmethod
+  def main():
+    """
+    Main Python file
+
+    :return: Name of the main file.
+    :rtype: str
+    """
+    if not Config._main:
+      sep_loc = __main__.__file__.rfind(os.sep)
+      Config._main = __main__.__file__[sep_loc + 1:]
+    return Config._main
+
+  @staticmethod
   def vocab_size():
     """
     Vocabulary size accessor.
@@ -90,11 +108,11 @@ class Config(object):
     Parses the command line input arguments.
     """
     # Select the arguments based on what program is running
-    sep_loc = __main__.__file__.rfind(os.sep)
-    main_file_name = __main__.__file__[sep_loc + 1:]
-    if main_file_name == "train.py":
+    if Config.main() == "train.py":
+      Config._is_train = True
       Config._train_args()
-    elif main_file_name == "trump.py":
+    elif Config.main() == "trump.py":
+      Config._is_train = False
       Config._trump_args()
     else:
       raise ValueError("Unknown main file.")
@@ -161,6 +179,12 @@ class Config(object):
     logging.info("Checkpoint: Exporting the trained model...")
     # ToDo Implement exporting the TensorFlow model
     logging.info("COMPLETED Checkpoint: Exporting the trained model")
+
+  @staticmethod
+  def is_train():
+    if not Config._main:
+      Config.main()
+    return Config._is_train
 
 
 def _pickle_export(obj, file_name):

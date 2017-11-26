@@ -1,6 +1,5 @@
 import tensorflow as tf
-
-import const
+from const import Config
 
 
 def _get_tf_rand_uniform(shape):
@@ -37,17 +36,14 @@ def _get_tf_rand_normal(shape):
     return tf.Variable(obj)
 
 
-def _build_feed_forward(input, vocab_size, rand_func):
+def _build_feed_forward(ff_input, rand_func):
   """
   Feed-Forward Network Builder
 
   Constructs and initializes the feed-forward network.
 
-  :param input: Input to the feed-forward network.
-  :type input: tf.Tensor
-
-  :param vocab_size: Number of characters in the input set vocabulary.
-  :type vocab_size: int
+  :param ff_input: Input to the feed-forward network.
+  :type ff_input: tf.Tensor
 
   :param rand_func: Function to generate the
   :type rand_func: Callable
@@ -55,44 +51,42 @@ def _build_feed_forward(input, vocab_size, rand_func):
   :return: Output of the feed-forward network.
   :rtype: tf.Tensor
   """
-  for i in range(0, const.FF_DEPTH):
+  for i in range(0, Config.FF.depth):
     # For the first hidden layer, use the input layer
     if i == 0:
-      input_width = input.shape[1]
-      ff_in = input
+      input_width = ff_input.shape[1]
+      ff_in = ff_input
     # Otherwise, use the previous layer
     else:
-      input_width = const.FF_HIDDEN_WIDTH
+      input_width = Config.FF.hidden_width
       # noinspection PyUnboundLocalVariable
       ff_in = hidden_out
 
-    bias_input = rand_func(tf.shape([const.FF_HIDDEN_WIDTH, 1]))
-    hidden_layer = rand_func(tf.shape([input_width, const.FF_HIDDEN_WIDTH]))
+    bias_input = rand_func(tf.shape([Config.FF.hidden_width, 1]))
+    hidden_layer = rand_func(tf.shape([input_width, Config.FF.hidden_width]))
     hidden_out = tf.add(tf.matmul(ff_in, hidden_layer), bias_input)
 
   # Construct the output layer
-  bias_input = rand_func(tf.shape([vocab_size, 1]))
-  out_layer = rand_func(tf.shape([const.FF_HIDDEN_WIDTH, vocab_size]))
+  bias_input = rand_func(tf.shape([Config.vocab_size(), 1]))
+  out_layer = rand_func(tf.shape([Config.FF.hidden_width,
+                                  Config.vocab_size()]))
   # noinspection PyUnboundLocalVariable
   return tf.add(tf.matmul(hidden_out, out_layer), bias_input)
 
 
-def setup_feed_forward_and_softmax(input, vocab_size):
+def setup_feed_forward_and_softmax(ff_input):
   """
   Feed-Forward and Softmax Builder
 
   Builds the feed-forward network and softmax layers.
 
-  :param input: Item to be fed into the feed-forward network
-  :type input: tf.Tensor
-
-  :param vocab_size: Number of items in the vocabulary
-  :type vocab_size: int
+  :param ff_input: Item to be fed into the feed-forward network
+  :type ff_input: tf.Tensor
 
   :return: Output from the softmax
   :rtype: tf.Tensor
   """
-  output_ff = _build_feed_forward(input, vocab_size, _get_tf_rand_uniform)
+  ff_output = _build_feed_forward(ff_input, _get_tf_rand_uniform)
 
-  softmax_out = tf.nn.softmax(output_ff)
+  softmax_out = tf.nn.softmax(ff_output)
   return softmax_out

@@ -34,7 +34,7 @@ def construct():
     embedded = tf.nn.embedding_lookup(embed_matrix, X)
 
     # create RNN cell
-    lstm_cell = tf.contrib.rnn.LSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple = True)
+    lstm_cell = tf.contrib.rnn.LSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple=True)
 
     print(lstm_cell, embedded)
 
@@ -48,12 +48,18 @@ def construct():
     # get the output of the last time-step
     rnn_final_output = tf.gather(rnn_output, Config.WINDOW_SIZE - 1)
 
-    softmax_out = setup_feed_forward_and_softmax(rnn_final_output, vocab_size)
+    softmax_out = setup_feed_forward_and_softmax(rnn_final_output)
 
-    decision_engine_out = setup_decision_engine(softmax_out)
+    # In training mode, the decision engine is removed and compare directly
+    # to the softmax output.
+    if not Config.is_train():
+        decision_engine_out = setup_decision_engine(softmax_out)
+        final_output = decision_engine_out
+    else:
+        final_output = softmax_out
 
     return {'X': X, 'Y': target, 'RNN_OUTPUT': rnn_final_output,
-            'FINAL_OUTPUT': decision_engine_out}
+            'FINAL_OUTPUT': final_output}
 
 
 def run():
@@ -61,7 +67,6 @@ def run():
     run a tensor flow session and try feeding the network stuff.
     just for testing right now
     """
-
     sequences = Config.Train.inputs
     targets = Config.Train.targets
     
