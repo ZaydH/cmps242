@@ -8,11 +8,15 @@ from decision_engine import DecisionFunction
 
 
 class Config(object):
+  """
+  Master configuration class containing all settings related to
+  the network, training, etc.
+  """
 
   """
   Directory to export the trained model.
   """
-  model_dir = './model/'
+  model_dir = '.' + os.sep + 'model' + os.sep
   """
   Character to integer look up.
   """
@@ -26,7 +30,6 @@ class Config(object):
   WINDOW_SIZE = 50
   EMBEDDING_SIZE = 30
   RNN_HIDDEN_SIZE = 64
-
   """
   Stores whether training is being executed.
   """
@@ -35,6 +38,11 @@ class Config(object):
   Name of the main file.
   """
   _main = ""
+  """
+  Split between training and verification
+  sets.
+  """
+  training_split_ratio = 0.8
 
   class Train(object):
     """
@@ -49,17 +57,24 @@ class Config(object):
     """
     Object containing the input training set.
     """
-    inputs = None
+    train_x = None
+    train_t = None
     """
     Pickle file to export the input training set
     """
-    inputs_pk_file = "inputs.pk"
+    train_pk_file = "train.pk"
 
-    targets = None
-    targets_pk_file = "targets.pk"
+    verify_x = None
+    verify_t = None
+    """
+    Pickle file to store the verify_x and verify_t objects.
+    """
+    verify_pk_file = "verify.pk"
     epochs = 100
+    """
+    Number of elements per batch.
+    """
     batch_size = 100
-
     """
     If true, restart the training from scratch. 
     """
@@ -87,8 +102,7 @@ class Config(object):
     :rtype: str
     """
     if not Config._main:
-      sep_loc = __main__.__file__.rfind(os.sep)
-      Config._main = __main__.__file__[sep_loc + 1:]
+      Config._main = os.path.basename(__main__.__file__)
     return Config._main
 
   @staticmethod
@@ -116,9 +130,15 @@ class Config(object):
       Config._trump_args()
     else:
       raise ValueError("Unknown main file.")
+    Config.setup_logger()
 
   @staticmethod
   def _train_args():
+    """
+    Training Command Line Argument Parser
+
+    Parsers the command line arguments when performing training.
+    """
     parser = argparse.ArgumentParser("Character-Level RNN Trainer")
     parser.add_argument("--train", type=str, required=False,
                         default=Config.Train.training_file,
@@ -141,6 +161,10 @@ class Config(object):
 
     Config.WINDOW_SIZE = args.seqlen
 
+    Config.model_dir = args.model
+    if Config.model_dir[-1] != os.sep:
+      Config.model_dir += os.sep
+
     Config.Train.training_file = args.train
     Config.Train.restart = not args.use_existing
     Config.Train.epochs = args.epochs
@@ -161,33 +185,89 @@ class Config(object):
                              + "and then use argmax")
 
   @staticmethod
-  def import_training_data():
+  def import_train_and_verification_data():
+    logging.info("Importing the training and verification datasets.")
+    Config.Train.train_x, Config.Train.train_t = _pickle_import(Config.model_dir + Config.Train.train_pk_file)
+    Config.Train.verify_x, Config.Train.verify_t = _pickle_import(Config.model_dir + Config.Train.verify_pk_file)
+    logging.info("COMPLETED: Importing the training and verificationdataset.")
+
+  @staticmethod
+  def export_train_and_verification_data():
     logging.info("Importing the training dataset and the character to integer map.")
-    Config.Train.inputs = _pickle_import(Config.Train.inputs_pk_file)
-    Config.Train.targets = _pickle_import(Config.Train.targets_pk_file)
-    Config.char2int = _pickle_import(Config.char2int_pk_file)
+    _pickle_export([Config.Train.train_x, Config.Train.train_t],
+                   Config.model_dir + Config.Train.train_pk_file)
+    _pickle_export([Config.Train.verify_x, Config.Train.verify_t],
+                   Config.model_dir + Config.Train.verify_pk_file)
     logging.info("COMPLETED: Importing the training dataset.")
 
   @staticmethod
+  def export_character_to_integer_map():
+    logging.info("Exporting the character to integer map...")
+    _pickle_export(Config.char2int, Config.model_dir + Config.char2int_pk_file)
+    logging.info("COMPLETED: Exporting the character to integer map")
+
+  @staticmethod
+  def import_character_to_integer_map():
+    logging.info("Importing the character to integer map...")
+    Config.char2int = _pickle_import(Config.model_dir + Config.char2int_pk_file)
+    logging.info("COMPLETED: Importing the character to integer map")
+
+  @staticmethod
   def import_model():
+    """
+    Imports the weights of the training network.  This can be used
+    to continue training or when generating text.
+    """
     logging.info("Importing the trained model...")
     # ToDo Implement importing the TensorFlow model
     logging.info("COMPLETED: Importing the trained model")
 
   @staticmethod
   def export_model():
+    """
+    Exports the network weights.
+    """
     logging.info("Checkpoint: Exporting the trained model...")
     # ToDo Implement exporting the TensorFlow model
     logging.info("COMPLETED Checkpoint: Exporting the trained model")
 
   @staticmethod
   def is_train():
+    """
+    Gets whether the current run is training.
+
+    :return: true if training is being performed.
+    :rtype: bool
+    """
     if not Config._main:
       Config.main()
     return Config._is_train
 
+  @staticmethod
+  def setup_logger(log_level=logging.DEBUG):
+    """
+    Logger Configurator
 
-def _pickle_export(obj, file_name):
+    Configures the logger.
+
+    :param log_level: Level to log
+    :type log_level: int
+    """
+    data_format = '%m/%d/%Y %I:%M:%S %p'  # Example Time Format - 12/12/2010 11:46:36 AM
+
+    period_loc = Config.main().rfind(".")
+    filename = Config.main()[:period_loc] + ".log"
+    logging.basicConfig(filename=filename, level=log_level,
+                        format='%(asctime)s -- %(message)s', datefmt=data_format)
+
+    # Also print to stdout
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    logging.getLogger().addHandler(handler)
+    logging.info("************************ New Run Beginning ************************")
+
+
+def _pickle_export(obj, filename):
   """
   Pickle Exporter
 
@@ -196,22 +276,29 @@ def _pickle_export(obj, file_name):
   :param obj: Object to be pickled.
   :type obj: Object
 
-  :param file_name: File to write the specified object to.
-  :type file_name: str
+  :param filename: File to write the specified object to.
+  :type filename: str
   """
-  pickle.dump(obj, open(file_name, "wb"))
+  try:
+    os.makedirs(os.path.dirname(filename))
+  except FileExistsError:
+    pass
+  with open(filename, 'wb') as f:
+    pickle.dump(obj, f)
 
 
-def _pickle_import(file_name):
+def _pickle_import(filename):
   """
   Pickle Importer
 
   Helper function for importing pickled objects.
 
-  :param file_name: Name and path to the pickle file.
-  :type file_name: str
+  :param filename: Name and path to the pickle file.
+  :type filename: str
 
   :return: The pickled object
   :rtype: Object
   """
-  return pickle.load(open(file_name, "rb"))
+  with open(filename, 'rb') as f:
+    obj = pickle.load(f)
+  return obj

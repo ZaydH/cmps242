@@ -54,7 +54,7 @@ def _build_feed_forward(ff_input, rand_func):
   for i in range(0, Config.FF.depth):
     # For the first hidden layer, use the input layer
     if i == 0:
-      input_width = ff_input.shape[1]
+      input_width = int(ff_input.shape[1])
       ff_in = ff_input
     # Otherwise, use the previous layer
     else:
@@ -62,16 +62,17 @@ def _build_feed_forward(ff_input, rand_func):
       # noinspection PyUnboundLocalVariable
       ff_in = hidden_out
 
-    bias_input = rand_func(tf.shape([Config.FF.hidden_width, 1]))
-    hidden_layer = rand_func(tf.shape([input_width, Config.FF.hidden_width]))
-    hidden_out = tf.add(tf.matmul(ff_in, hidden_layer), bias_input)
+    bias_input = rand_func([Config.FF.hidden_width])
+    hidden_layer = rand_func([input_width, Config.FF.hidden_width])
+    a_hidden = tf.add(tf.matmul(ff_in, hidden_layer), bias_input)
+    hidden_out = tf.nn.relu(a_hidden)
 
   # Construct the output layer
-  bias_input = rand_func(tf.shape([Config.vocab_size(), 1]))
-  out_layer = rand_func(tf.shape([Config.FF.hidden_width,
-                                  Config.vocab_size()]))
+  bias_input = rand_func([Config.vocab_size()])
+  out_layer = rand_func([Config.FF.hidden_width, Config.vocab_size()])
   # noinspection PyUnboundLocalVariable
-  return tf.add(tf.matmul(hidden_out, out_layer), bias_input)
+  a_out = tf.add(tf.matmul(hidden_out, out_layer), bias_input)
+  return tf.nn.sigmoid(a_out)
 
 
 def setup_feed_forward_and_softmax(ff_input):

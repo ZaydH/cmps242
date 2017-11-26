@@ -6,19 +6,21 @@ from const import Config
 
 
 def run_training():
-  input_str = data_parser.read_input()
+  saver = tf.train.Saver()
 
-  # get 1000 random examples
-  data_parser.create_examples(input_str, 1000)
-  network.construct()
+  if not Config.Train.restart:
+    Config.import_model()
+  else:
+    init_op = tf.initialize_all_variables()
 
-  init_op = tf.initialize_all_variables()
   with tf.Session() as sess:
     sess.run(init_op)
 
 
 if __name__ == "__main__":
   Config.parse_args()
-  data_parser.build_training_set()
+  data_parser.build_training_and_verification_sets(dataset_size=1000)
+  network.construct()
+
 
   run_training()

@@ -18,7 +18,7 @@ def construct():
     """
 
     # create data input placeholder
-    X = tf.placeholder(tf.int32, shape=(None, None))
+    input_x = tf.placeholder(tf.int32, shape=(None, None))
 
     # create target input placeholder
     target = tf.placeholder(tf.int32, shape=(None))
@@ -31,17 +31,13 @@ def construct():
         )
 
     # create the embedding lookup
-    embedded = tf.nn.embedding_lookup(embed_matrix, X)
+    embedded = tf.nn.embedding_lookup(embed_matrix, input_x)
 
     # create RNN cell
     lstm_cell = tf.contrib.rnn.LSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple=True)
 
-    print(lstm_cell, embedded)
-
     # get rnn outputs
     rnn_output, rnn_state = tf.nn.dynamic_rnn(lstm_cell, embedded, dtype=tf.float32)
-
-    print(rnn_output)
 
     # transpose rnn_output into a time major form
     rnn_output = tf.transpose(rnn_output, [1, 0, 2])
@@ -57,8 +53,7 @@ def construct():
         final_output = decision_engine_out
     else:
         final_output = softmax_out
-
-    return {'X': X, 'Y': target, 'RNN_OUTPUT': rnn_final_output,
+    return {'X': input_x, 'Y': target, 'RNN_OUTPUT': rnn_final_output,
             'FINAL_OUTPUT': final_output}
 
 
@@ -67,9 +62,6 @@ def run():
     run a tensor flow session and try feeding the network stuff.
     just for testing right now
     """
-    sequences = Config.Train.inputs
-    targets = Config.Train.targets
-    
     # start the session
     init_op = tf.initialize_all_variables()
     sess = tf.Session()
@@ -79,9 +71,7 @@ def run():
 # main
 if __name__ == '__main__':
 
-    data_parser.build_training_set()
-
-    #
+    data_parser.build_training_and_verification_sets()
     network_features = construct()
 
     #
