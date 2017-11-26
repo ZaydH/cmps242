@@ -58,19 +58,19 @@ def create_examples(input_string, size=-1):
     random.shuffle(shuffled_list)
     split_point = int(Config.training_split_ratio * len(sequences))
 
-    # Config.Train.x = [sequences[idx] for idx in shuffled_list[:split_point]]
+    Config.Train.x = [sequences[idx] for idx in shuffled_list[:split_point]]
     # Config.Train.t = [targets[idx] for idx in shuffled_list[:split_point]]
     Config.Train.depth = [depths[idx] for idx in shuffled_list[:split_point]]
-    Config.Train.x = list(map(lambda idx: _build_input_sequence(sequences[idx]),
-                              shuffled_list[:split_point]))
+    # Config.Train.x = list(map(lambda idx: _build_input_sequence(sequences[idx]),
+    #                           shuffled_list[:split_point]))
     Config.Train.t = list(map(lambda idx: _build_target_vector(targets[idx]),
                               shuffled_list[:split_point]))
 
-    # Config.Verify.x = [sequences[idx] for idx in shuffled_list[split_point:]]
+    Config.Verify.x = [sequences[idx] for idx in shuffled_list[split_point:]]
     # Config.Verify.t = [targets[idx] for idx in shuffled_list[:split_point]]
     Config.Verify.depth = [depths[idx] for idx in shuffled_list[split_point:]]
-    Config.Verify.x = list(map(lambda idx: _build_input_sequence(sequences[idx]),
-                               shuffled_list[split_point:]))
+    # Config.Verify.x = list(map(lambda idx: _build_input_sequence(sequences[idx]),
+    #                            shuffled_list[split_point:]))
     Config.Verify.t = list(map(lambda idx: _build_target_vector(targets[idx]),
                                shuffled_list[split_point:]))
 

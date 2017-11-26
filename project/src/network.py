@@ -20,29 +20,27 @@ def construct():
 
     # create data input placeholder
     input_x = tf.placeholder(tf.int32, shape=[Config.Train.batch_size,
-                                              Config.sequence_length,
-                                              Config.RNN_HIDDEN_SIZE])
+                                              None])
 
     # create target input placeholder
-    target = tf.placeholder(tf.int32, shape=[Config.Train.batch_size,
-                                             Config.vocab_size()])
+    target = tf.placeholder(tf.float32, shape=[Config.Train.batch_size,
+                                               Config.vocab_size()])
 
     # Create the embedding matrix
-    embed_matrix = tf.get_variable('embedding_matrix',
-                                   [Config.vocab_size(), Config.EMBEDDING_SIZE])
+    embed_matrix = tf.get_variable("word_embeddings",
+                                   [Config.vocab_size(), Config.RNN_HIDDEN_SIZE])
     embedded = tf.nn.embedding_lookup(embed_matrix, input_x)
 
     # create RNN cell
     cell = tf.nn.rnn_cell.BasicLSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple=True)
 
     # get rnn outputs
-    seq_len = [Config.sequence_length] * Config.Train.batch_size
+    seq_len = tf.placeholder(tf.int32, shape=[Config.Train.batch_size])
     rnn_output, rnn_state = tf.nn.dynamic_rnn(cell, embedded,
                                               sequence_length=seq_len,
                                               dtype=tf.float32)
 
     # transpose rnn_output into a time major form
-    seq_len = tf.placeholder(tf.int32, shape=(Config.Train.batch_size))
     seq_end = tf.range(Config.Train.batch_size) * tf.shape(rnn_output)[1] + (seq_len - 1)
     rnn_final_output = tf.gather(tf.reshape(rnn_output, [-1, Config.RNN_HIDDEN_SIZE]), seq_end)
 
@@ -56,7 +54,7 @@ def construct():
     else:
         final_output = softmax_out
     return {'X': input_x, 'target': target, 'RNN_OUTPUT': rnn_final_output,
-            'output': final_output}
+            'seq_len': seq_len, 'output': final_output}
 
 
 def run():

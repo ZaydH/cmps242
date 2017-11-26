@@ -10,15 +10,9 @@ from const import Config
 def run_training():
   net_features = network.construct()
 
-  sess = tf.Session()
-  if Config.Train.restore:
-    Config.import_model(sess)
-  else:
-    init_op = tf.global_variables_initializer()
-    sess.run(init_op)
-
   X = net_features["X"]
   target = net_features["target"]
+  seq_len = net_features["seq_len"]
 
   # Setup the training procedure
   cross_h = tf.nn.softmax_cross_entropy_with_logits(logits=net_features["output"],
@@ -27,21 +21,28 @@ def run_training():
   optimizer = tf.train.AdamOptimizer(learning_rate=Config.Train.learning_rate)
   train_op = optimizer.minimize(loss_op)
 
+  sess = tf.Session()
+  if Config.Train.restore:
+    Config.import_model(sess)
+  else:
+    sess.run(tf.global_variables_initializer())
+
   for epoch in range(0, Config.Train.num_epochs):
     # Shuffle the batches for each epoch
     shuffled_list = list(range(Config.Train.size()))
     random.shuffle(shuffled_list)
     train_err = 0
     for batch in range(0, Config.Train.num_batch()):
-      # Build batches
       end_batch = min((batch + 1) * Config.Train.batch_size, Config.Train.size())
       start_batch = max(0, end_batch - Config.Train.batch_size)
 
-      train_x = Config.Train.x[start_batch:end_batch]
-      train_t = Config.Train.t[start_batch:end_batch]
-      seq_len = [Config.sequence_length] * Config.Train.batch_size
+      # Use the randomized batches
+      train_x = list(map(lambda idx: Config.Train.x[idx], shuffled_list[start_batch:end_batch]))
+      train_t = list(map(lambda idx: Config.Train.t[idx], shuffled_list[start_batch:end_batch]))
+      seqlen = list(map(lambda idx: Config.Train.depth[idx], shuffled_list[start_batch:end_batch]))
+
       _, err = sess.run([train_op, loss_op], feed_dict={X: train_x, target: train_t,
-                                                        seq_len: seq_len})
+                                                        seq_len: seqlen})
       train_err += err
 
     train_err /= Config.Train.num_batch()
