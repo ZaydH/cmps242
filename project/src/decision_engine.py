@@ -6,20 +6,20 @@ import numpy as np
 from const import Config
 
 
-def _select_max_probability(logits):
+def select_max_probability(sess, softmax_out):
   """
   Most naive decision engine.  Always selects the character with
   the greatest probability.
 
-  :param logits: Output from the soft max layer
-  :type logits: tf.Tensor
+  :param softmax_out: Output from the soft max layer
+  :type softmax_out: tf.Tensor
 
   :return: Index corresponding to the character selected.
   """
-  return tf.argmax(logits, axis=1)
+  return sess.run(tf.argmax(softmax_out, 0))
 
 
-def _selected_weighted_random_probability(logits):
+def _selected_weighted_random_probability(sess, logits):
   # ToDo Select the weighted random probability
   tot_sum = np.sum(logits)
   cum_sum = np.cumsum(logits)
@@ -27,11 +27,11 @@ def _selected_weighted_random_probability(logits):
   return int(np.searchsorted(cum_sum, random.random()))
 
 
-def _selected_weighted_random_after_space(logits):
+def selected_weighted_random_after_space(sess, logits):
   if Config.Generate.prev_char == " ":
-    return _selected_weighted_random_probability(logits)
+    return _selected_weighted_random_probability(sess, logits)
   else:
-    return _select_max_probability(logits)
+    return select_max_probability(sess, logits)
 
 
 def setup_decision_engine(input):
@@ -48,4 +48,4 @@ def setup_decision_engine(input):
   :return:
   """
   if __main__.__file__ == "train.py":
-    return _select_max_probability(input)
+    return select_max_probability(input)

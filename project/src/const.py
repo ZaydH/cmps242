@@ -11,6 +11,7 @@ import math
 
 class DecisionFunction(Enum):
   ArgMax = 0
+  WeightRandAfterSpace = 1
 
 
 class Config(object):
@@ -324,16 +325,23 @@ class Config(object):
                         default=Config.Generate.output_len,
                         help="Length of the string to generate")
     parser.add_argument("--decision", type=int, required=False,
-                        default=DecisionFunction.ArgMax,
-                        help="Function of the decision engine.  Set to \"0\" to always select "
-                             + "the character with maximum probability. Set to \"1\" to make a "
-                             + "weighted random selection for the first character after a space "
-                             + "and then use argmax")
+                        default=DecisionFunction.ArgMax.value,
+                        help=("Function of the decision engine.  Set to \"%d\" to always select "
+                              + "the character with maximum probability. Set to \"%d\" to make a "
+                              + "weighted random selection for the first character after a space "
+                              + "and then use argmax")
+                             % (DecisionFunction.ArgMax.value, DecisionFunction.WeightRandAfterSpace.value))
     args = parser.parse_args()
 
     Config.model_dir = args.model
 
-    Config.DecisionEngine.function = args.decision
+    import decision_engine  # Prevent circular dependencies
+    if args.decision == DecisionFunction.ArgMax.value:
+      Config.DecisionEngine.function = decision_engine.select_max_probability
+    elif args.decision == DecisionFunction.WeightRandAfterSpace.value:
+      Config.DecisionEngine.function = decision_engine.selected_weighted_random_after_space
+    else:
+      raise ValueError("Unknown decision function selected.")
 
     Config.Generate.output_len = args.len
     Config.Generate.seed_text = args.seed
@@ -342,7 +350,6 @@ class Config(object):
   def parse_seed_text():
     assert len(Config.char2int) > 0
 
-
   @staticmethod
   def import_train_and_verification_data():
     logging.info("Importing the training and verification datasets.")
@@ -350,7 +357,7 @@ class Config(object):
         = _pickle_import(Config.model_dir + Config.Train.pk_file)
     Config.Verify.x, Config.Verify.t, Config.Verify.depth \
         = _pickle_import(Config.model_dir + Config.Verify.pk_file)
-    logging.info("COMPLETED: Importing the training and verificationdataset.")
+    logging.info("COMPLETED: Importing the training and verification datasets.")
 
   @staticmethod
   def export_train_and_verification_data():
@@ -440,7 +447,6 @@ class Config(object):
     handler.setLevel(logging.INFO)
     logging.getLogger().addHandler(handler)
     logging.info("************************ New Run Beginning ************************")
-
 
 
 def _pickle_export(obj, filename):

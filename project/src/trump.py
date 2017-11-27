@@ -13,7 +13,7 @@ def generate_text():
   """
   net_features = network.construct()
 
-  X = net_features["X"]
+  x = net_features["X"]
   get_softmax = tf.identity(net_features["output"])[0, :]  # Just a pass through function.
   seq_len = net_features["seq_len"]
 
@@ -27,10 +27,10 @@ def generate_text():
     # Use the randomized batches
     seqlen = [cur_seq_len] * Config.batch_size
 
-    softmax_out = sess.run(get_softmax, feed_dict={X: input_x, seq_len: seqlen})
+    softmax_out = sess.run(get_softmax, feed_dict={x: input_x, seq_len: seqlen})
 
     # ToDo get the decision engine working
-    pred_char_id = sess.run(tf.argmax(softmax_out, 0))
+    pred_char_id = Config.DecisionEngine.function(sess, softmax_out)
 
     pred_char = Config.Generate.int2char()[pred_char_id]
     generated_text.append(pred_char)
