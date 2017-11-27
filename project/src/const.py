@@ -3,10 +3,14 @@ import argparse
 import __main__
 import os
 import pickle
+from enum import Enum
+import copy
 import tensorflow as tf
 import math
 
-from decision_engine import DecisionFunction
+
+class DecisionFunction(Enum):
+  ArgMax = 0
 
 
 class Config(object):
@@ -112,7 +116,7 @@ class Config(object):
     """
     pk_file = "train.pk"
 
-    num_epochs = 100
+    num_epochs = 10000
     """
     If true, restore the previous settings
     """
@@ -120,8 +124,8 @@ class Config(object):
     """
     Number of epochs between model checkpoint.
     """
-    checkpoint_frequency = 10
-    learning_rate = 0.01
+    checkpoint_frequency = 250
+    learning_rate = 0.025
     _num_batch = -1
 
     @staticmethod
@@ -156,13 +160,17 @@ class Config(object):
     """
     Text used to seed the text generator.
     """
-    seed = ""
+    seed_text = ""
 
-    x = []
+    seed_x = []
     """
     Length of the text to generate
     """
     output_len = 250
+    """
+    Last selected character by the learner.
+    """
+    prev_char = ""
 
     @staticmethod
     def build_seed_x():
@@ -170,12 +178,27 @@ class Config(object):
       Converts the seed text to a list of integers for use to seed
       the text generator.
       """
-      if x:
+      if Config.Generate.seed_x:
         return
       assert len(Config.char2int) > 0
-      x = []
-      for char in Config.Generate.seed:
-        x.append(Config.char2int[char])
+      Config.Generate.seed_x = []
+      for char in Config.Generate.seed_text:
+        Config.Generate.seed_x.append(Config.char2int[char])
+
+    @staticmethod
+    def build_initial_x():
+      if not Config.Generate.seed_x:
+        Config.Generate.build_seed_x()
+
+      extended_seed_x = copy.copy(Config.Generate.seed_x)
+      while len(extended_seed_x) < Config.sequence_length:
+        extended_seed_x.append(0)
+
+      batch_x = []
+      while len(batch_x) < Config.batch_size:
+        batch_x.append(copy.copy(extended_seed_x))
+
+      return batch_x
 
     @staticmethod
     def int2char():
@@ -293,16 +316,16 @@ class Config(object):
   @staticmethod
   def _trump_args():
     parser = argparse.ArgumentParser("Character-Level Trump Text Generator")
-    parser.add_argument("--model", type=str, required=False,
-                        desc="Directory containing the trained model")
+    parser.add_argument("--model", type=str, required=False, default=Config.model_dir,
+                        help="Directory containing the trained model")
     parser.add_argument("--seed", type=str, required=True,
-                        desc="Text with which to seed the generator")
+                        help="Text with which to seed the generator")
     parser.add_argument("--len", type=int, required=False,
                         default=Config.Generate.output_len,
-                        desc="Length of the string to generate")
+                        help="Length of the string to generate")
     parser.add_argument("--decision", type=int, required=False,
                         default=DecisionFunction.ArgMax,
-                        desc="Function of the decision engine.  Set to \"0\" to always select "
+                        help="Function of the decision engine.  Set to \"0\" to always select "
                              + "the character with maximum probability. Set to \"1\" to make a "
                              + "weighted random selection for the first character after a space "
                              + "and then use argmax")
@@ -313,7 +336,7 @@ class Config(object):
     Config.DecisionEngine.function = args.decision
 
     Config.Generate.output_len = args.len
-    Config.Generate.seed = args.seed
+    Config.Generate.seed_text = args.seed
 
   @staticmethod
   def parse_seed_text():

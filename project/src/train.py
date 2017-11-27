@@ -15,7 +15,7 @@ def run_training():
   # Setup the training procedure
   cross_h = tf.nn.softmax_cross_entropy_with_logits(logits=net_features["output"],
                                                     labels=target)
-  loss_op = tf.reduce_mean(cross_h)
+  loss_op = tf.reduce_sum(cross_h)
   optimizer = tf.train.AdamOptimizer(learning_rate=Config.Train.learning_rate)
   train_op = optimizer.minimize(loss_op)
 
