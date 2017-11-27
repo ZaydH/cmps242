@@ -6,9 +6,8 @@
 
 import tensorflow as tf
 import data_parser
-from decision_engine import setup_decision_engine
 from feed_forward_and_softmax import setup_feed_forward_and_softmax
-from const import Config
+from basic_config import Config
 
 
 def construct():
@@ -44,12 +43,6 @@ def construct():
 
     softmax_out = setup_feed_forward_and_softmax(rnn_final_output)
 
-    # # In training mode, the decision engine is removed and compare directly
-    # # to the softmax output.
-    # if not Config.is_train():
-    #     decision_engine_out = setup_decision_engine(softmax_out)
-    #     final_output = decision_engine_out
-    # else:
     final_output = softmax_out
     return {'X': input_x, 'target': target, 'RNN_OUTPUT': rnn_final_output,
             'seq_len': seq_len, 'output': final_output, 'embedding': embed_matrix}

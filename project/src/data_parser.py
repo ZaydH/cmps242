@@ -6,7 +6,7 @@
 import logging
 import random
 import numpy as np
-from const import Config
+from basic_config import Config
 
 
 def read_input():

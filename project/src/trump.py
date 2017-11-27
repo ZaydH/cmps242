@@ -2,7 +2,7 @@
 
 """
 import network
-from const import Config
+from basic_config import Config
 import tensorflow as tf
 import logging
 
@@ -23,13 +23,12 @@ def generate_text():
   cur_seq_len = min(len(Config.Generate.seed_text), Config.sequence_length)
   input_x = Config.Generate.build_initial_x()
   generated_text = []
+  # Generate the text character by character
   while len(generated_text) < Config.Generate.output_len:
-    # Use the randomized batches
-    seqlen = [cur_seq_len] * Config.batch_size
+    phrase_seq_len = [cur_seq_len] * Config.batch_size
 
-    softmax_out = sess.run(get_softmax, feed_dict={x: input_x, seq_len: seqlen})
+    softmax_out = sess.run(get_softmax, feed_dict={x: input_x, seq_len: phrase_seq_len})
 
-    # ToDo get the decision engine working
     pred_char_id = Config.DecisionEngine.function(sess, softmax_out)
 
     pred_char = Config.Generate.int2char()[pred_char_id]

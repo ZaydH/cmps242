@@ -2,13 +2,13 @@ import tensorflow as tf
 import logging
 import data_parser
 import network
-from const import Config
+from basic_config import Config
 
 
 def run_training():
   net_features = network.construct()
 
-  X = net_features["X"]
+  input_x = net_features["X"]
   target = net_features["target"]
   seq_len = net_features["seq_len"]
 
@@ -41,7 +41,7 @@ def run_training():
       train_x = Config.Train.x[start_batch:end_batch]
       train_t = Config.Train.t[start_batch:end_batch]
       seqlen = Config.Train.depth[start_batch:end_batch]
-      _, err = sess.run([train_op, loss_op], feed_dict={X: train_x, target: train_t,
+      _, err = sess.run([train_op, loss_op], feed_dict={input_x: train_x, target: train_t,
                                                         seq_len: seqlen})
       train_err += err
 
@@ -49,7 +49,7 @@ def run_training():
     train_err /= Config.Train.num_batch()
     logging.info("Epoch %05d: Training Error: \t\t%0.3f" % (epoch, train_err))
 
-    test_err = _calculate_verify_error(sess, loss_op, X, target, seq_len)
+    test_err = _calculate_verify_error(sess, loss_op, input_x, target, seq_len)
     logging.info("Epoch %05d: Verification Error: \t%0.3f" % (epoch, test_err))
 
     if epoch > 0 and epoch % Config.Train.checkpoint_frequency == 0:
@@ -58,7 +58,7 @@ def run_training():
   sess.close()
 
 
-def _calculate_verify_error(sess, loss_op, X, target, seq_len):
+def _calculate_verify_error(sess, loss_op, input_x, target, seq_len):
   """
   Determines the verification error
   """
@@ -71,7 +71,8 @@ def _calculate_verify_error(sess, loss_op, X, target, seq_len):
     verify_x = Config.Verify.x[start_batch:end_batch]
     verify_t = Config.Verify.t[start_batch:end_batch]
     seqlen = Config.Verify.depth[start_batch:end_batch]
-    err = sess.run(loss_op, feed_dict={X: verify_x, target: verify_t, seq_len: seqlen})
+    err = sess.run(loss_op, feed_dict={input_x: verify_x, target: verify_t,
+                                       seq_len: seqlen})
     verify_err += err
   verify_err /= Config.Verify.num_batch()
   return verify_err

@@ -3,7 +3,7 @@ import random
 import __main__
 import tensorflow as tf
 import numpy as np
-from const import Config
+from basic_config import Config
 
 
 def select_max_probability(sess, softmax_out):

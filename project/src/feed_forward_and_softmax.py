@@ -1,5 +1,5 @@
 import tensorflow as tf
-from const import Config
+from basic_config import Config
 
 
 def _get_tf_rand_uniform(shape):

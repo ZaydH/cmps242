@@ -324,13 +324,14 @@ class Config(object):
     parser.add_argument("--len", type=int, required=False,
                         default=Config.Generate.output_len,
                         help="Length of the string to generate")
+    help_msg = "Function of the decision engine.  Set to \"%d\" to always select " \
+               + "the character with maximum probability. Set to \"%d\" to make a "\
+               + "weighted random selection for the first character after a space "\
+               + "and then use argmax"
+    text_params = (DecisionFunction.ArgMax.value, DecisionFunction.WeightRandAfterSpace.value)
     parser.add_argument("--decision", type=int, required=False,
                         default=DecisionFunction.ArgMax.value,
-                        help=("Function of the decision engine.  Set to \"%d\" to always select "
-                              + "the character with maximum probability. Set to \"%d\" to make a "
-                              + "weighted random selection for the first character after a space "
-                              + "and then use argmax")
-                             % (DecisionFunction.ArgMax.value, DecisionFunction.WeightRandAfterSpace.value))
+                        help=help_msg % text_params)
     args = parser.parse_args()
 
     Config.model_dir = args.model
@@ -410,7 +411,6 @@ class Config(object):
     write_meta = (not Config.Train.restore) and (epoch == Config.Train.checkpoint_frequency)
     saver.save(sess, Config.model_dir + Config.model_name, global_step=epoch,
                write_meta_graph=write_meta)
-    # ToDo Implement exporting the TensorFlow model
     logging.info("COMPLETED Checkpoint: Exporting the trained model")
 
   @staticmethod
