@@ -15,15 +15,29 @@ def select_max_probability(sess, softmax_out):
   :type softmax_out: tf.Tensor
 
   :return: Index corresponding to the character selected.
+  :rtype: int
   """
   return sess.run(tf.argmax(softmax_out, 0))
 
 
-def _selected_weighted_random_probability(sess, logits):
-  # ToDo Select the weighted random probability
-  tot_sum = np.sum(logits)
-  cum_sum = np.cumsum(logits)
-  assert(abs(tot_sum - 1) < 10^(-3)) # Since softmax, sum should be close to 1
+def _selected_weighted_random_probability(_, softmax_out):
+  """
+  Performs a weighted random selection where the likelihood a particular
+  character is selected is proportional to the softmax output of that
+  character.
+
+  :param _: Ignored parameter for consistency with other decision functions
+
+  :param softmax_out: Output from the soft max layer
+  :type softmax_out: tf.Tensor
+
+  :return: Index corresponding to the selected character
+  :rtype: int
+  """
+  tot_sum = np.sum(softmax_out)
+  assert abs(tot_sum - 1) < 10 ** (-3)  # Since softmax, sum should be close to 1
+
+  cum_sum = np.cumsum(softmax_out)
   return int(np.searchsorted(cum_sum, random.random()))
 
 
