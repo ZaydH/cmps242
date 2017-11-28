@@ -40,7 +40,6 @@ class Config(object):
 
   sequence_length = 50
   EMBEDDING_SIZE = 30
-  RNN_HIDDEN_SIZE = 30
   """
   Stores whether training is being executed.
   """
@@ -126,7 +125,7 @@ class Config(object):
     Number of epochs between model checkpoint.
     """
     checkpoint_frequency = 250
-    learning_rate = 0.025
+    learning_rate = 0.002
     _num_batch = -1
 
     @staticmethod
@@ -237,6 +236,10 @@ class Config(object):
     """
     function = DecisionFunction.ArgMax
 
+  class RNN(object):
+    num_layers = 1
+    hidden_size = 10
+
   @staticmethod
   def main():
     """
@@ -292,6 +295,12 @@ class Config(object):
     parser.add_argument("--model", type=str, required=False,
                         default=Config.model_dir,
                         help="Directory to which to export the trained network")
+    parser.add_argument("--rnn_layers", type=int, required=False,
+                        default=Config.RNN.num_layers,
+                        help="Number of RNN layers")
+    parser.add_argument("--hidden_size", type=int, required=False,
+                        default=Config.RNN.num_layers,
+                        help="Number of neurons in the RNN hidden layer")
     parser.add_argument("--seqlen", type=int, required=False,
                         default=Config.sequence_length,
                         help="RNN sequence length")
@@ -308,6 +317,9 @@ class Config(object):
     Config.model_dir = args.model
     if Config.model_dir[-1] != os.sep:
       Config.model_dir += os.sep
+
+    Config.RNN.hidden_size = args.hidden_size
+    Config.RNN.num_layers = args.rnn_layers
 
     Config.Train.training_file = args.train
     Config.Train.restore = args.restore
@@ -446,7 +458,7 @@ class Config(object):
     handler = logging.StreamHandler()
     handler.setLevel(logging.INFO)
     logging.getLogger().addHandler(handler)
-    logging.info("************************ New Run Beginning ************************")
+    logging.info("**********************  New Run Beginning  **********************")
 
 
 def _pickle_export(obj, filename):

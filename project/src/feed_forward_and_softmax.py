@@ -72,7 +72,7 @@ def _build_feed_forward(ff_input, rand_func):
   out_layer = rand_func([Config.FF.hidden_width, Config.vocab_size()])
   # noinspection PyUnboundLocalVariable
   a_out = tf.add(tf.matmul(hidden_out, out_layer), bias_input)
-  return tf.nn.sigmoid(a_out)
+  return tf.nn.relu(a_out)
 
 
 def setup_feed_forward_and_softmax(ff_input):

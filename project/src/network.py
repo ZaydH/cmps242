@@ -25,11 +25,13 @@ def construct():
 
     # Create the embedding matrix
     embed_matrix = tf.get_variable("word_embeddings",
-                                   [Config.vocab_size(), Config.RNN_HIDDEN_SIZE])
+                                   [Config.vocab_size(), Config.RNN.hidden_size])
     embedded = tf.nn.embedding_lookup(embed_matrix, input_x)
 
     # create RNN cell
-    cell = tf.nn.rnn_cell.BasicLSTMCell(Config.RNN_HIDDEN_SIZE, state_is_tuple=True)
+    cells = []
+    for _ in Config.RNN.num_layers:
+        cells.append(tf.nn.rnn_cell.BasicLSTMCell(Config.RNN.hidden_size, state_is_tuple=True))
 
     # get rnn outputs
     seq_len = tf.placeholder(tf.int32, shape=[Config.batch_size])
