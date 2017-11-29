@@ -26,22 +26,31 @@ def construct():
     # Create the embedding matrix
     embed_matrix = tf.get_variable("word_embeddings",
                                    [Config.vocab_size(), Config.RNN.hidden_size])
+    
     embedded = tf.nn.embedding_lookup(embed_matrix, input_x)
 
     # create RNN cell
     cells = []
-    for _ in Config.RNN.num_layers:
-        cells.append(tf.nn.rnn_cell.BasicLSTMCell(Config.RNN.hidden_size, state_is_tuple=True))
+    for _ in range(Config.RNN.num_layers):
+        cells.append(tf.nn.rnn_cell.BasicLSTMCell(Config.RNN.hidden_size))
+
+    cells = [tf.contrib.rnn.DropoutWrapper(
+        cell,
+        output_keep_prob=0.8)
+               for cell in cells]
 
     # get rnn outputs
     seq_len = tf.placeholder(tf.int32, shape=[Config.batch_size])
-    rnn_output, rnn_state = tf.nn.dynamic_rnn(cell, embedded,
+    
+    multi_cell = tf.contrib.rnn.MultiRNNCell(cells)
+    
+    rnn_output, rnn_state = tf.nn.dynamic_rnn(multi_cell, embedded,
                                               sequence_length=seq_len,
                                               dtype=tf.float32)
 
     # transpose rnn_output into a time major form
     seq_end = tf.range(Config.batch_size) * tf.shape(rnn_output)[1] + (seq_len - 1)
-    rnn_final_output = tf.gather(tf.reshape(rnn_output, [-1, Config.RNN_HIDDEN_SIZE]), seq_end)
+    rnn_final_output = tf.gather(tf.reshape(rnn_output, [-1, Config.RNN.hidden_size]), seq_end)
 
     softmax_out = setup_feed_forward_and_softmax(rnn_final_output)
 
