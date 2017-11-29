@@ -15,9 +15,20 @@ def run_training():
   # Setup the training procedure
   cross_h = tf.nn.softmax_cross_entropy_with_logits(logits=net_features["output"],
                                                     labels=target)
+  
   loss_op = tf.reduce_sum(cross_h)
   optimizer = tf.train.AdamOptimizer(learning_rate=Config.Train.learning_rate)
-  train_op = optimizer.minimize(loss_op)
+  
+  tvars = tf.trainable_variables()
+  grads, _ = tf.clip_by_global_norm(tf.gradients(loss_op, tvars), 5.)
+  
+  global_step = tf.get_variable('global_step', [],
+                                       initializer=tf.constant_initializer(0.0))
+  
+  train_op = optimizer.apply_gradients(zip(grads, tvars),
+                                                global_step=global_step)
+  
+  # train_op = optimizer.minimize(loss_op)
 
   sess = tf.Session()
   if Config.Train.restore:
