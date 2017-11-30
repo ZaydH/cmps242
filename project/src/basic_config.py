@@ -238,7 +238,7 @@ class Config(object):
 
   class RNN(object):
     num_layers = 1
-    hidden_size = 10
+    hidden_size = 128
 
   @staticmethod
   def main():
@@ -299,7 +299,7 @@ class Config(object):
                         default=Config.RNN.num_layers,
                         help="Number of RNN layers")
     parser.add_argument("--hidden_size", type=int, required=False,
-                        default=Config.RNN.num_layers,
+                        default=Config.RNN.hidden_size,
                         help="Number of neurons in the RNN hidden layer")
     parser.add_argument("--seqlen", type=int, required=False,
                         default=Config.sequence_length,
