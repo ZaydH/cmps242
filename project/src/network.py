@@ -6,7 +6,7 @@
 
 import tensorflow as tf
 import data_parser
-from feed_forward_and_softmax import setup_feed_forward_and_softmax
+from feed_forward import setup_feed_forward
 from basic_config import Config
 
 
@@ -34,10 +34,7 @@ def construct():
     for _ in range(Config.RNN.num_layers):
         cells.append(tf.nn.rnn_cell.BasicLSTMCell(Config.RNN.hidden_size))
 
-    cells = [tf.contrib.rnn.DropoutWrapper(
-        cell,
-        output_keep_prob=0.8)
-               for cell in cells]
+    cells = [tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=0.8) for cell in cells]
 
     # get rnn outputs
     seq_len = tf.placeholder(tf.int32, shape=[Config.batch_size])
@@ -52,11 +49,11 @@ def construct():
     seq_end = tf.range(Config.batch_size) * tf.shape(rnn_output)[1] + (seq_len - 1)
     rnn_final_output = tf.gather(tf.reshape(rnn_output, [-1, Config.RNN.hidden_size]), seq_end)
 
-    softmax_out = setup_feed_forward_and_softmax(rnn_final_output)
+    softmax_out = setup_feed_forward(rnn_final_output)
 
     final_output = softmax_out
-    return {'X': input_x, 'target': target, 'RNN_OUTPUT': rnn_final_output,
-            'seq_len': seq_len, 'output': final_output, 'embedding': embed_matrix}
+    return {'X': input_x, 'target': target,
+            'seq_len': seq_len, 'output': final_output}
 
 
 def run():

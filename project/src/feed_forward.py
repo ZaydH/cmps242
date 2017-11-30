@@ -51,13 +51,12 @@ def _build_feed_forward(ff_input, rand_func):
   :return: Output of the feed-forward network.
   :rtype: tf.Tensor
   """
+
+  # Separate from the for loop in case no hidden layers
+  input_width = int(ff_input.shape[1])
+  ff_in = ff_input
   for i in range(0, Config.FF.depth):
-    # For the first hidden layer, use the input layer
-    if i == 0:
-      input_width = int(ff_input.shape[1])
-      ff_in = ff_input
-    # Otherwise, use the previous layer
-    else:
+    if i > 0:
       input_width = Config.FF.hidden_width
       # noinspection PyUnboundLocalVariable
       ff_in = hidden_out
@@ -69,17 +68,17 @@ def _build_feed_forward(ff_input, rand_func):
 
   # Construct the output layer
   bias_input = rand_func([Config.vocab_size()])
-  out_layer = rand_func([Config.FF.hidden_width, Config.vocab_size()])
+  out_layer = rand_func([input_width, Config.vocab_size()])
   # noinspection PyUnboundLocalVariable
-  a_out = tf.add(tf.matmul(hidden_out, out_layer), bias_input)
-  return tf.nn.relu(a_out)
+  a_out = tf.nn.relu(tf.add(tf.matmul(ff_in, out_layer), bias_input))
+  return a_out
 
 
-def setup_feed_forward_and_softmax(ff_input):
+def setup_feed_forward(ff_input):
   """
-  Feed-Forward and Softmax Builder
+  Feed-Forward Builder
 
-  Builds the feed-forward network and softmax layers.
+  Builds the feed-forward network.
 
   :param ff_input: Item to be fed into the feed-forward network
   :type ff_input: tf.Tensor
@@ -89,5 +88,4 @@ def setup_feed_forward_and_softmax(ff_input):
   """
   ff_output = _build_feed_forward(ff_input, _get_tf_rand_normal)
 
-  softmax_out = tf.nn.softmax(ff_output)
-  return softmax_out
+  return ff_output

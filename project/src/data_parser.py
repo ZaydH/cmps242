@@ -18,7 +18,7 @@ def read_input():
     return ' '.join(input_text.splitlines())
 
 
-def create_examples(input_string, size=-1):
+def create_examples(input_string, ):
     """
     from the input, produce examples where the input is a sequence of integers
     representing a string of characters, and the target is the character immediately
@@ -33,7 +33,7 @@ def create_examples(input_string, size=-1):
     # ToDo Discuss with Ben how we want to train on text shorter than the window size?
 
     # Get all examples
-    if size == -1:
+    if Config.dataset_size == -1:
         # iterate over the file window by window
         i = 0
         while i + Config.sequence_length + 1 < len(input_string):
@@ -44,7 +44,7 @@ def create_examples(input_string, size=-1):
 
     else:
         # get size many examples
-        for z in range(size):
+        for z in range(Config.dataset_size):
 
             # get a random starting point
             r = random.choice(range(len(input_string) - Config.sequence_length - 1))
@@ -67,12 +67,12 @@ def create_examples(input_string, size=-1):
     Config.Train.t = list(map(lambda idx: _build_target_vector(targets[idx]),
                               shuffled_list[:split_point]))
 
-    Config.Verify.x = [sequences[idx] for idx in shuffled_list[split_point:]]
+    Config.Validation.x = [sequences[idx] for idx in shuffled_list[split_point:]]
     # Config.Verify.t = [targets[idx] for idx in shuffled_list[:split_point]]
-    Config.Verify.depth = [depths[idx] for idx in shuffled_list[split_point:]]
+    Config.Validation.depth = [depths[idx] for idx in shuffled_list[split_point:]]
     # Config.Verify.x = list(map(lambda idx: _build_input_sequence(sequences[idx]),
     #                            shuffled_list[split_point:]))
-    Config.Verify.t = list(map(lambda idx: _build_target_vector(targets[idx]),
+    Config.Validation.t = list(map(lambda idx: _build_target_vector(targets[idx]),
                                shuffled_list[split_point:]))
 
 
@@ -119,7 +119,7 @@ def _build_target_vector(idx):
     return one_hot
 
 
-def build_training_and_verification_sets(dataset_size=-1):
+def build_training_and_verification_sets():
     """
     Training and Verification Set Builder
 
@@ -132,7 +132,7 @@ def build_training_and_verification_sets(dataset_size=-1):
     """
     if not Config.Train.restore:
         input_str = read_input()
-        create_examples(input_str, dataset_size)
+        create_examples(input_str)
         # Character to integer map required during text generation
         Config.export_character_to_integer_map()
         # Export the training and verification data in case
@@ -142,10 +142,12 @@ def build_training_and_verification_sets(dataset_size=-1):
         Config.import_character_to_integer_map()
         Config.import_train_and_verification_data()
 
+    Config.dataset_size = Config.Train.size() + Config.Validation.size()
+
     # Print basic statistics on the training set
     logging.info("Vocabulary Size: \t\t%d" % Config.vocab_size())
-    logging.info("Training Set Size: \t\t%d" % len(Config.Train.t))
-    logging.info("Verification Set Size: \t%d" % len(Config.Verify.t))
+    logging.info("Training Set Size: \t\t%d" % Config.Train.size())
+    logging.info("Validation Set Size: \t%d" % Config.Validation.size())
 
 
 # testing

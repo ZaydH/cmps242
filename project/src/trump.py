@@ -14,7 +14,7 @@ def generate_text():
   net_features = network.construct()
 
   x = net_features["X"]
-  get_softmax = tf.identity(net_features["output"])[0, :]  # Just a pass through function.
+  get_softmax = tf.nn.softmax(net_features["output"])[0, :]
   seq_len = net_features["seq_len"]
 
   sess = tf.Session()

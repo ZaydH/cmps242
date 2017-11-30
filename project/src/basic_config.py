@@ -54,9 +54,15 @@ class Config(object):
   """
   training_split_ratio = 0.8
 
-  batch_size = 1000
+  batch_size = 50
 
-  class Verify(object):
+  """
+  Number of sequences in the training and verification sets.
+  Enter "-1" to import all possible samples.
+  """
+  dataset_size = -1
+
+  class Validation(object):
     x = None
     t = None
     """
@@ -79,14 +85,16 @@ class Config(object):
       :return: Size of the verification set
       :rtype: int
       """
-      return len(Config.Verify.t)
+      return len(Config.Validation.t)
 
     @staticmethod
     def num_batch():
-      if Config.Verify._num_batch <= 0:
-        Config.Verify._num_batch = int(math.ceil(1. * Config.Verify.size() /
-                                                 Config.batch_size))
-      return Config.Verify._num_batch
+      if Config.Validation._num_batch <= 0:
+        Config.Validation._num_batch = int(math.ceil(1. * Config.Validation.size() /
+                                                     Config.batch_size))
+      return Config.Validation._num_batch
+
+    dataset_size = None
 
   class Train(object):
     """
@@ -116,7 +124,7 @@ class Config(object):
     """
     pk_file = "train.pk"
 
-    num_epochs = 10000
+    num_epochs = 100
     """
     If true, restore the previous settings
     """
@@ -124,7 +132,7 @@ class Config(object):
     """
     Number of epochs between model checkpoint.
     """
-    checkpoint_frequency = 250
+    checkpoint_frequency = 2
     learning_rate = 0.002
     _num_batch = -1
 
@@ -161,6 +169,11 @@ class Config(object):
     Text used to seed the text generator.
     """
     seed_text = ""
+    """
+    Minimum length for the seed text.  That ensures the learner
+    has some valid text to learn.
+    """
+    min_seed_len = 10
 
     seed_x = []
     """
@@ -228,7 +241,7 @@ class Config(object):
     Configuration settings for the feed-forward network.
     """
     depth = 1
-    hidden_width = 64
+    hidden_width = 256
 
   class DecisionEngine(object):
     """
@@ -237,7 +250,7 @@ class Config(object):
     function = DecisionFunction.ArgMax
 
   class RNN(object):
-    num_layers = 1
+    num_layers = 2
     hidden_size = 128
 
   @staticmethod
@@ -329,13 +342,25 @@ class Config(object):
   @staticmethod
   def _trump_args():
     parser = argparse.ArgumentParser("Character-Level Trump Text Generator")
-    parser.add_argument("--model", type=str, required=False, default=Config.model_dir,
-                        help="Directory containing the trained model")
     parser.add_argument("--seed", type=str, required=True,
                         help="Text with which to seed the generator")
     parser.add_argument("--len", type=int, required=False,
                         default=Config.Generate.output_len,
                         help="Length of the string to generate")
+
+    parser.add_argument("--model", type=str, required=False, default=Config.model_dir,
+                        help="Directory containing the trained model")
+
+    parser.add_argument("--rnn_layers", type=int, required=False,
+                        default=Config.RNN.num_layers,
+                        help="Number of RNN layers")
+    parser.add_argument("--hidden_size", type=int, required=False,
+                        default=Config.RNN.hidden_size,
+                        help="Number of neurons in the RNN hidden layer")
+    parser.add_argument("--seqlen", type=int, required=False,
+                        default=Config.sequence_length,
+                        help="RNN sequence length")
+
     help_msg = "Function of the decision engine.  Set to \"%d\" to always select " \
                + "the character with maximum probability. Set to \"%d\" to make a "\
                + "weighted random selection for the first character after a space "\
@@ -358,6 +383,17 @@ class Config(object):
 
     Config.Generate.output_len = args.len
     Config.Generate.seed_text = args.seed
+    m
+    if len(Config.Generate.seed_text) < Config.Generate.min_seed_len:
+      raise ValueError("Seed text must be at least %d characters long"
+                       % Config.Generate.min_seed_len)
+
+    Config.RNN.hidden_size = args.hidden_size
+    Config.RNN.num_layers = args.rnn_layers
+    Config.sequence_length = args.seqlen
+
+    # Always a batch size of one during generation.
+    Config.batch_size = 1
 
   @staticmethod
   def parse_seed_text():
@@ -368,8 +404,8 @@ class Config(object):
     logging.info("Importing the training and verification datasets.")
     Config.Train.x, Config.Train.t, Config.Train.depth \
         = _pickle_import(Config.model_dir + Config.Train.pk_file)
-    Config.Verify.x, Config.Verify.t, Config.Verify.depth \
-        = _pickle_import(Config.model_dir + Config.Verify.pk_file)
+    Config.Validation.x, Config.Validation.t, Config.Validation.depth \
+        = _pickle_import(Config.model_dir + Config.Validation.pk_file)
     logging.info("COMPLETED: Importing the training and verification datasets.")
 
   @staticmethod
@@ -377,8 +413,8 @@ class Config(object):
     logging.info("Importing the training dataset and the character to integer map.")
     _pickle_export([Config.Train.x, Config.Train.t, Config.Train.depth],
                    Config.model_dir + Config.Train.pk_file)
-    _pickle_export([Config.Verify.x, Config.Verify.t, Config.Verify.depth],
-                   Config.model_dir + Config.Verify.pk_file)
+    _pickle_export([Config.Validation.x, Config.Validation.t, Config.Validation.depth],
+                   Config.model_dir + Config.Validation.pk_file)
     logging.info("COMPLETED: Importing the training dataset.")
 
   @staticmethod
