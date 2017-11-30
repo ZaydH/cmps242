@@ -39,7 +39,6 @@ class Config(object):
   char2int_pk_file = "char2int.pk"
 
   sequence_length = 50
-  EMBEDDING_SIZE = 30
   """
   Stores whether training is being executed.
   """
@@ -133,7 +132,7 @@ class Config(object):
     Number of epochs between model checkpoint.
     """
     checkpoint_frequency = 2
-    learning_rate = 0.002
+    learning_rate = 0.0005
     _num_batch = -1
 
     @staticmethod

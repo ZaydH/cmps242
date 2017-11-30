@@ -37,6 +37,8 @@ def run_training():
   else:
     sess.run(tf.global_variables_initializer())
 
+  num_batches = 0
+
   for epoch in range(0, Config.Train.num_epochs):
     # Shuffle the batches for each epoch
     shuffled_list = list(range(Config.Train.size()))
@@ -55,12 +57,18 @@ def run_training():
                                                         seq_len: seqlen})
       train_err += err
 
+      num_batches += 1
+      BATCH_PRINT_FREQUENCY = 1000
+      if num_batches % BATCH_PRINT_FREQUENCY == 0:
+        print("Epoch %d: Total Batches %d: Last Batch Error: %0.3f" % (epoch, num_batches, err))
+
     # ToDo It would be nice to add perplexity here.
+    logging.info("EPOCH #%05d COMPLETED" % epoch)
     train_err /= Config.Train.num_batch()
-    logging.info("Epoch %05d: Training Error: \t\t%0.3f" % (epoch, train_err))
+    logging.info("Epoch %05d: Average Batch Training Error: \t\t%0.3f" % (epoch, train_err))
 
     test_err = _calculate_validation_error(sess, loss_op, input_x, target, seq_len)
-    logging.info("Epoch %05d: Verification Error: \t%0.3f" % (epoch, test_err))
+    logging.info("Epoch %05d: Average Batch Verification Error: \t%0.3f" % (epoch, test_err))
 
     if epoch % Config.Train.checkpoint_frequency == 0:
       Config.export_model(sess, epoch)
