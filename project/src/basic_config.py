@@ -382,7 +382,7 @@ class Config(object):
 
     Config.Generate.output_len = args.len
     Config.Generate.seed_text = args.seed
-    m
+
     if len(Config.Generate.seed_text) < Config.Generate.min_seed_len:
       raise ValueError("Seed text must be at least %d characters long"
                        % Config.Generate.min_seed_len)

@@ -17,7 +17,9 @@ def read_input():
   with open(Config.Train.training_file, "r") as f:
     input_text = f.read()
   input_text = re.sub("SPEECH\s+\d+", "", input_text)  # Remove the speech headers
-  input_text = re.sub("\n+", "\n", input_text)  # Remove the speech headers
+  input_text = re.sub("\n+", "\n", input_text)
+  input_text = re.sub("\d+\\\d+\\\d+", "", input_text)  # Remove the dates
+  input_text = re.sub(" +", " ", input_text)  # Remove double spaces.
   return ' '.join(input_text.splitlines())
 
 
