@@ -33,8 +33,9 @@ def construct():
     cells = []
     for _ in range(Config.RNN.num_layers):
         cells.append(tf.nn.rnn_cell.BasicLSTMCell(Config.RNN.hidden_size))
-
-    cells = [tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=0.8) for cell in cells]
+    if Config.is_train():
+        cells = [tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=0.8)
+                 for cell in cells]
 
     # get rnn outputs
     seq_len = tf.placeholder(tf.int32, shape=[Config.batch_size])

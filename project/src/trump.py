@@ -2,6 +2,7 @@
 
 """
 import network
+import os
 from basic_config import Config
 import tensorflow as tf
 import logging
@@ -11,6 +12,10 @@ def generate_text():
   """
   Generates the text that is hopefully Trumpian.
   """
+  # Minimize TF warnings which are not helpful in generate mode.
+  os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+  tf.logging.set_verbosity(tf.logging.ERROR)
+
   net_features = network.construct()
 
   x = net_features["X"]

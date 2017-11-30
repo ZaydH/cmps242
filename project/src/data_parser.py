@@ -61,23 +61,22 @@ def create_examples(input_string, ):
   # Define how to randomly split the input data into train and test
   shuffled_list = list(range(len(sequences)))
   random.shuffle(shuffled_list)
-  split_point = int(Config.training_split_ratio * len(sequences))
+  # Determine whether to do a validation split
+  if Config.perform_validation():
+    split_point = int(Config.training_split_ratio * len(sequences))
+  else:
+    split_point = len(sequences)
 
   Config.Train.x = [sequences[idx] for idx in shuffled_list[:split_point]]
-  # Config.Train.t = [targets[idx] for idx in shuffled_list[:split_point]]
   Config.Train.depth = [depths[idx] for idx in shuffled_list[:split_point]]
-  # Config.Train.x = list(map(lambda idx: _build_input_sequence(sequences[idx]),
-  #                           shuffled_list[:split_point]))
   Config.Train.t = list(map(lambda idx: _build_target_vector(targets[idx]),
                             shuffled_list[:split_point]))
 
-  Config.Validation.x = [sequences[idx] for idx in shuffled_list[split_point:]]
-  # Config.Verify.t = [targets[idx] for idx in shuffled_list[:split_point]]
-  Config.Validation.depth = [depths[idx] for idx in shuffled_list[split_point:]]
-  # Config.Verify.x = list(map(lambda idx: _build_input_sequence(sequences[idx]),
-  #                            shuffled_list[split_point:]))
-  Config.Validation.t = list(map(lambda idx: _build_target_vector(targets[idx]),
-                                 shuffled_list[split_point:]))
+  if Config.perform_validation():
+    Config.Validation.x = [sequences[idx] for idx in shuffled_list[split_point:]]
+    Config.Validation.depth = [depths[idx] for idx in shuffled_list[split_point:]]
+    Config.Validation.t = list(map(lambda idx: _build_target_vector(targets[idx]),
+                                   shuffled_list[split_point:]))
 
 
 def _build_input_sequence(int_sequence):
@@ -130,9 +129,6 @@ def build_training_and_verification_sets():
   Builds the training and verification datasets.  Depending on the
   configuration, this may be from the source files or from pickled
   files.
-
-  :param dataset_size: Number of total elements in the training and verification sets.
-  :type dataset_size: int
   """
   if not Config.Train.restore:
     input_str = read_input()
@@ -142,15 +138,23 @@ def build_training_and_verification_sets():
     # Export the training and verification data in case
     # the previous setup will be trained on aga
     Config.export_train_and_verification_data()
+
+    Config.word_count = len(input_str.split(" "))
   else:
     Config.import_character_to_integer_map()
     Config.import_train_and_verification_data()
 
   Config.dataset_size = Config.Train.size() + Config.Validation.size()
+  _print_basic_text_statistics()
 
+
+def _print_basic_text_statistics():
   # Print basic statistics on the training set
+  logging.info("Total Number of Characters: %d" % Config.dataset_size())
+  if Config.word_count > 0:
+    logging.info("Total Word Count: \t%d" % Config.word_count)
   logging.info("Vocabulary Size: \t\t%d" % Config.vocab_size())
-  logging.info("Training Set Size: \t\t%d" % Config.Train.size())
+  logging.info("Training Set Size: \t%d" % Config.Train.size())
   logging.info("Validation Set Size: \t%d" % Config.Validation.size())
 
 

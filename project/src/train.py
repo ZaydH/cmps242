@@ -28,7 +28,6 @@ def run_training():
   
   train_op = optimizer.apply_gradients(zip(grads, tvars),
                                        global_step=global_step)
-  
   # train_op = optimizer.minimize(loss_op)
 
   sess = tf.Session()
@@ -67,8 +66,9 @@ def run_training():
     train_err /= Config.Train.num_batch()
     logging.info("Epoch %05d: Average Batch Training Error: \t\t%0.3f" % (epoch, train_err))
 
-    test_err = _calculate_validation_error(sess, loss_op, input_x, target, seq_len)
-    logging.info("Epoch %05d: Average Batch Verification Error: \t%0.3f" % (epoch, test_err))
+    if Config.perform_validation():
+      test_err = _calculate_validation_error(sess, loss_op, input_x, target, seq_len)
+      logging.info("Epoch %05d: Average Batch Verification Error: \t%0.3f" % (epoch, test_err))
 
     if epoch % Config.Train.checkpoint_frequency == 0:
       Config.export_model(sess, epoch)

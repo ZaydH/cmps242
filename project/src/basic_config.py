@@ -51,10 +51,21 @@ class Config(object):
   Split between training and verification
   sets.
   """
-  training_split_ratio = 0.8
+  # training_split_ratio = 0.8
+  training_split_ratio = 1
+
+  @staticmethod
+  def perform_validation():
+    """
+    Returns whether validation should be performed.
+
+    :return: True validation is to be performed.
+    """
+    return Config.training_split_ratio != 1
 
   batch_size = 50
 
+  word_count = -1
   """
   Number of sequences in the training and verification sets.
   Enter "-1" to import all possible samples.
