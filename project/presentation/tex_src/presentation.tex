@@ -1,0 +1,71 @@
+\documentclass{beamer}
+
+\mode<presentation>
+{
+	\usetheme{default}      % we can experiment with different themes
+	\usecolortheme{default} % we can try different colors
+	\usefonttheme{default}  % we can try different fonts
+	\setbeamertemplate{navigation symbols}{}
+	\setbeamertemplate{caption}[numbered]
+} 
+
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+
+\title{Trump Talk}
+\author{Benjamin Sherman \& Zayd Hammoudeh}
+\institute{Computer Science 242 Fall 2017 @ UCSC}
+\date{Tuesday, December 5}
+
+\begin{document}
+	
+	\begin{frame}
+		\titlepage
+	\end{frame}
+	
+	% introduction slide
+	\begin{frame}{Introduction}
+		
+		\begin{itemize}
+			\item Character level RNNs (recurrent neural networks) learn generative models for text at the character level
+			
+			\item Our aim was to construct an RNN that would train on speeches made by Donald Trump and then be able to generate Trump-esque speech
+			
+		\end{itemize}
+		
+	\end{frame}
+	
+	% overview of what character level RNNs are
+	\begin{frame}{Character Level RNNs}
+		
+		\begin{itemize}
+			\item Given a sequence of characters, a character level RNN learns a probability distribution over the possible subsequent characters
+			
+			\item Example: if you give as input ``We will build a great wal'', the RNN should return a distribution $p$ over a vocabulary of characters $V$ s.t. $p(\text{`l'})$ is large
+			
+			\item Given some text, you can repeatedly choose a subsequent character based on the distribution produced by the network given the previous $L$ characters
+			
+		\end{itemize}
+		
+	\end{frame}
+	
+	% our network architecture for training
+	\begin{frame}{High Level Architecture}
+		
+		% I think this slide should just the pic of our architecture from the 
+		
+	\end{frame}
+	
+	% decision engine/generation process
+	\begin{frame}{Decision Engine}
+		
+		\begin{itemize}
+			\item Greedy Sampling
+			\item Dropout
+			\item Random
+			\item Blowup % meaning exponentiate and re-normalize the distribution
+		\end{itemize}
+		
+	\end{frame}
+	
+\end{document}
