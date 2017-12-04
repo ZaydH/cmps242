@@ -112,11 +112,16 @@ UC, Santa Cruz\\
 	\begin{frame}{\textbf{Quick Review of Character Level RNNs}}
 		
 		\begin{itemize}
-			\item Given a sequence of characters, a character level RNN learns a probability distribution over the possible subsequent characters
+			\onslide<+->{
+				\item Given a sequence of characters, a character level RNN learns a probability distribution over the possible subsequent characters
+			}
+			\onslide<+->{
+				\item Example: if you give as input ``We will build a great wal'', the RNN should return a distribution $p$ over a vocabulary of characters $V$ s.t. $p(\text{`l'})$ is large
+			}
 			
-			\item Example: if you give as input ``We will build a great wal'', the RNN should return a distribution $p$ over a vocabulary of characters $V$ s.t. $p(\text{`l'})$ is large
-			
-			\item Given some text, you can repeatedly choose a subsequent character based on the distribution produced by the network given the previous $L$ characters
+			\onslide<+->{
+				\item Given some text, you can repeatedly choose a subsequent character based on the distribution produced by the network given the previous $L$ characters
+			}
 			
 		\end{itemize}
 		
@@ -433,20 +438,49 @@ UC, Santa Cruz\\
   
   \end{frame}
 
-
-
-	
 	% decision engine/generation process
   \section{Decision Engine}
 	\begin{frame}{\textbf{Decision Engine}}
-		
 		\begin{itemize}
-			\item Greedy Sampling
-			\item Dropout
-			\item Random
-			\item Blowup % meaning exponentiate and re-normalize the distribution
+			\onslide<+->{
+				\item \textbf{Greedy }\textit{always take the most probable character}
+				
+				\begin{itemize}
+					\onslide<+->{\item Always makes a confident choice}
+					\onslide<+->{\item Leads to looping behavior }
+					\onslide<+->{\item Example: \textit{``the people from the people from the people from...''}}
+				\end{itemize}
+			}
+			
+			
+			\onslide<+->{
+				\item \textbf{Random }\textit{select a random character according to the given distribution}
+				
+				\begin{itemize}
+					\onslide<+->{\item Avoids getting into loops}
+					\onslide<+->{\item Has a non-zero probability of doing something ridiculous}
+				\end{itemize}
+			}
+			
+			\onslide<+->{
+				\item \textbf{Top-k }\textit{Make a random choice amongst the $k$ most probable characters according}
+				
+				\begin{itemize}
+					\onslide<+->{\item Throws out ridiculous random choices}
+				\end{itemize}
+				
+			}
+			
+			\onslide<+->{
+				\item \textbf{Mixing }\textit{Greedily choose each character at the beginning of a word, then complete the word with random choices.}
+				
+				\begin{itemize}
+					\onslide<+->{\item Breaks loops at the word level but doesn't shatter overall sentence structure.}
+				\end{itemize}
+				
+			}
+			
 		\end{itemize}
-		
 	\end{frame}
 
 	% decision engine/generation process
