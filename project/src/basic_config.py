@@ -196,6 +196,8 @@ class Config(object):
     """
     prev_char = ""
 
+    enable_dropout = False
+
     @staticmethod
     def build_seed_x():
       """
@@ -348,6 +350,7 @@ class Config(object):
     Config.Train.training_file = args.train
     Config.Train.restore = args.restore
     Config.Train.num_epochs = args.epochs
+
     Config.batch_size = args.batch
 
   @staticmethod
@@ -361,6 +364,9 @@ class Config(object):
 
     parser.add_argument("--model", type=str, required=False, default=Config.model_dir,
                         help="Directory containing the trained model")
+
+    parser.add_argument("--dropout", action="store_true",
+                        help="Enable dropout during speech generation")
 
     parser.add_argument("--rnn_layers", type=int, required=False,
                         default=Config.RNN.num_layers,
@@ -394,6 +400,7 @@ class Config(object):
 
     Config.Generate.output_len = args.len
     Config.Generate.seed_text = args.seed
+    Config.Generate.enable_dropout = args.dropout
 
     if len(Config.Generate.seed_text) < Config.Generate.min_seed_len:
       raise ValueError("Seed text must be at least %d characters long"
