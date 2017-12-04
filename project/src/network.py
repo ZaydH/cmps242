@@ -33,7 +33,7 @@ def construct():
     cells = []
     for _ in range(Config.RNN.num_layers):
         cells.append(tf.nn.rnn_cell.BasicLSTMCell(Config.RNN.hidden_size))
-    if Config.is_train():
+    if Config.is_train() or Config.Generate.enable_dropout:
         cells = [tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=0.8)
                  for cell in cells]
 
