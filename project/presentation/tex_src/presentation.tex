@@ -1,28 +1,88 @@
-\documentclass{beamer}
+\documentclass[10pt]{beamer}
+%\documentclass[handout,10pt]{beamer}  % Remove pauses and disable commands like "onslide"
+\usetheme[
+%%% options passed to the outer theme
+%    hidetitle,           % hide the (short) title in the sidebar
+%    hideauthor,          % hide the (short) author in the sidebar
+%    hideinstitute,       % hide the (short) institute in the bottom of the sidebar
+%    shownavsym,          % show the navigation symbols
+%    width=2cm,           % width of the sidebar (default is 2 cm)
+%    hideothersubsections,% hide all subsections but the subsections in the current section
+%    hideallsubsections,  % hide all subsections
+left               % right of left position of sidebar (default is right)
+%%% options passed to the color theme
+%    lightheaderbg,       % use a light header background
+]{UCSCsidebar}
 
-\mode<presentation>
-{
-	\usetheme{default}      % we can experiment with different themes
-	\usecolortheme{default} % we can try different colors
-	\usefonttheme{default}  % we can try different fonts
-	\setbeamertemplate{navigation symbols}{}
-	\setbeamertemplate{caption}[numbered]
-} 
-
+\usepackage{environ}
+\usepackage{tikz}
+\usepackage{listings} % Used for printing source code in papers
+\usepackage{pgfplots}\pgfplotsset{compat=newest} % Used to create graphs
+\usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+% Or whatever. Note that the encoding and the font should match. If T1
+% does not look nice, try deleting the line with the fontenc.
+\usepackage{helvet}
+\usepackage{makecell} % Used to create thick links in tables
+\usepackage{multirow} % Allows merging rows or columns in a table
 
-\title{Trump Talk}
-\author{Benjamin Sherman \& Zayd Hammoudeh}
-\institute{Computer Science 242 Fall 2017 @ UCSC}
-\date{Tuesday, December 5}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%   Scales tikz images to slide size   %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\makeatletter
+\newsavebox{\measure@tikzpicture}
+\NewEnviron{scaletikzpicturetowidth}[1]{%
+  \def\tikz@width{#1}%
+  \def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}%
+    \BODY
+  \end{lrbox}%
+  \pgfmathparse{#1/\wd\measure@tikzpicture}%
+  \edef\tikzscale{\pgfmathresult}%
+  \BODY
+}
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\title[Trump-ian Speech Generation]% optional, use only with long paper titles
+{\textbf{Make RNNs Great Again}}
+
+\subtitle{Character-Level Sequence Generation in the Style of Donald Trump}  % could also be a conference name
+
+\date{December 5, 2017}
+
+\author[Sherman \& Hammoudeh] % optional, use only with lots of authors
+{
+  \href{mailto:bcsherma@ucsc.edu}{{Benjamin Sherman}}\\
+  \&\\  
+  \href{mailto:zayd@ucsc.edu}{{Zayd Hammoudeh}}
+}
+% - Give the names in the same order as they appear in the paper.
+% - Use the \inst{?} command only if the authors have different
+%   affiliation. See the beamer manual for an example
+
+\institute[
+%  {\includegraphics[scale=0.2]{SJSU_segl}}\\ %insert a company, department or university logo
+Dept.\ of Computer Science\\
+UC, Santa Cruz\\
+] % optional - is placed in the bottom of the sidebar on every slide
+{% is placed on the title page
+  Dept.\ of Computer Science\\
+  University of California, Santa Cruz\\
+  
+  %there must be an empty line above this line - otherwise some unwanted space is added between the university and the country (I do not know why;( )
+}
+
 
 \begin{document}
-	
-	\begin{frame}
-		\titlepage
-	\end{frame}
-	
+  % the titlepage
+  {\begin{frame}[plain,noframenumbering]{}{} % the plain option removes the sidebar and header from the title page
+    \titlepage
+  \end{frame}}
+  %%%%%%%%%%%%%%%%
+
 	% introduction slide
 	\begin{frame}{Introduction}
 		
