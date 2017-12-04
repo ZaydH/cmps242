@@ -5,6 +5,24 @@ import tensorflow as tf
 import numpy as np
 from basic_config import Config
 
+def select_random_from_top_k(sess, softmax_out):
+    """
+    take the k most probable options and make a random choice amongst them
+
+    :param softmax_out: Output from the soft max layer
+    :type softmax_out: tf.Tensor
+
+    :return: Index corresponding to the character selected.
+    :rtype: int
+    """
+
+    values, indices = tf.nn.top_k(softmax_out)
+
+    tot_sum = np.sum(softmax_out)
+    assert abs(tot_sum - 1) < 10 ** (-3)  # Since softmax, sum should be close to 1
+    cum_sum = np.cumsum(values)
+    return indices[int(np.searchsorted(cum_sum/np.linalg.norm(cum_sum), random.random()))]
+
 
 def select_max_probability(sess, softmax_out):
   """
@@ -18,7 +36,6 @@ def select_max_probability(sess, softmax_out):
   :rtype: int
   """
   return sess.run(tf.argmax(softmax_out, 0))
-
 
 def _selected_weighted_random_probability(_, softmax_out):
   """
