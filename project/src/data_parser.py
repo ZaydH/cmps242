@@ -150,7 +150,7 @@ def build_training_and_verification_sets():
 
 def _print_basic_text_statistics():
   # Print basic statistics on the training set
-  logging.info("Total Number of Characters: %d" % Config.dataset_size())
+  logging.info("Total Number of Characters: %d" % Config.dataset_size)
   if Config.word_count > 0:
     logging.info("Total Word Count: \t%d" % Config.word_count)
   logging.info("Vocabulary Size: \t\t%d" % Config.vocab_size())

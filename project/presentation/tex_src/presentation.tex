@@ -1,8 +1,8 @@
-\documentclass[10pt]{beamer}
+\documentclass[10pt,aspectratio=169]{beamer}
 %\documentclass[handout,10pt]{beamer}  % Remove pauses and disable commands like "onslide"
 \usetheme[
 %%% options passed to the outer theme
-%    hidetitle,           % hide the (short) title in the sidebar
+    hidetitle,           % hide the (short) title in the sidebar
 %    hideauthor,          % hide the (short) author in the sidebar
 %    hideinstitute,       % hide the (short) institute in the bottom of the sidebar
 %    shownavsym,          % show the navigation symbols
@@ -16,6 +16,8 @@ left               % right of left position of sidebar (default is right)
 
 \usepackage{environ}
 \usepackage{tikz}
+\usetikzlibrary{matrix, positioning, calc, shadows, decorations.markings, arrows.meta} % decorations.markings is used for the bus symbol on the arrow.
+% arrows.meta allows changing the arrow heads.
 \usepackage{listings} % Used for printing source code in papers
 \usepackage{pgfplots}\pgfplotsset{compat=newest} % Used to create graphs
 \usepackage[utf8]{inputenc}
@@ -55,9 +57,9 @@ left               % right of left position of sidebar (default is right)
 
 \author[Sherman \& Hammoudeh] % optional, use only with lots of authors
 {
-  \href{mailto:bcsherma@ucsc.edu}{{Benjamin Sherman}}\\
+  \href{mailto:bcsherma@ucsc.edu}{Benjamin Sherman}\\
   \&\\  
-  \href{mailto:zayd@ucsc.edu}{{Zayd Hammoudeh}}
+  \href{mailto:zayd@ucsc.edu}{Zayd Hammoudeh}
 }
 % - Give the names in the same order as they appear in the paper.
 % - Use the \inst{?} command only if the authors have different
@@ -76,6 +78,9 @@ UC, Santa Cruz\\
 }
 
 
+
+
+
 \begin{document}
   % the titlepage
   {\begin{frame}[plain,noframenumbering]{}{} % the plain option removes the sidebar and header from the title page
@@ -84,19 +89,27 @@ UC, Santa Cruz\\
   %%%%%%%%%%%%%%%%
 
 	% introduction slide
-	\begin{frame}{Introduction}
+	\begin{frame}{\textbf{Project Objectives}}
 		
 		\begin{itemize}
-			\item Character level RNNs (recurrent neural networks) learn generative models for text at the character level
-			
-			\item Our aim was to construct an RNN that would train on speeches made by Donald Trump and then be able to generate Trump-esque speech
-			
-		\end{itemize}
-		
+      \setlength\itemsep{1.5em}
+      \onslide<+->{
+			 \item \textbf{Primary Objective}: Develop a character-level neural network that can generate text in the style of Donald Trump.
+      }
+  
+      \onslide<+->{
+        \item \textbf{Secondary Objectives}:
+      	\begin{enumerate}
+          \setlength\itemsep{1.5em}
+          \item Develop and compare novel \textit{decision engine} algorithms for character selection.
+          \item Improve short-sequence generation through multi-length training.
+        \end{enumerate}
+      }
+    \end{itemize}
 	\end{frame}
 	
 	% overview of what character level RNNs are
-	\begin{frame}{Character Level RNNs}
+	\begin{frame}{\textbf{Quick Review of Character Level RNNs}}
 		
 		\begin{itemize}
 			\item Given a sequence of characters, a character level RNN learns a probability distribution over the possible subsequent characters
@@ -109,15 +122,323 @@ UC, Santa Cruz\\
 		
 	\end{frame}
 	
-	% our network architecture for training
-	\begin{frame}{High Level Architecture}
-		
-		% I think this slide should just the pic of our architecture from the 
-		
-	\end{frame}
+	\section{Learner Architecture}
+  \begin{frame}{\textbf{Base} Learner Architecture}
+    \centering
+    \tikzset{
+      sigmoid/.style={path picture= {
+          \begin{scope}[x=1pt,y=10pt]
+            \draw plot[domain=-6:6] (\x,{1/(1 + exp(-\x))-0.5});
+          \end{scope}
+        }
+      },
+      every neuron/.style={
+        circle,
+        draw,
+        fill=white,
+        minimum size=0.6cm,
+      },
+      neuron output/.style={
+        every neuron,
+        sigmoid,
+      },
+      matrix multiply/.style={
+        every neuron,
+        font={\Large $\times$}
+      },
+      every netbox/.style={
+        rectangle,
+        draw,
+        text centered,
+        fill=white,
+        text width = 1.3cm,
+        minimum width = 1.5cm,
+        minimum height = 1.5cm,
+        rounded corners,
+      },
+      every left delimiter/.style={xshift=1ex},
+      every right delimiter/.style={xshift=-1ex},
+      bmatrix/.style={matrix of math nodes,
+        inner sep=0pt,
+        left delimiter={[},
+        right delimiter={]},
+        nodes={anchor=center, inner sep=.3333em},
+      },
+      decoration={
+        markings,
+        mark= at position 0.5 with {\node {/};}
+      }
+    }
+    
+    \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth] 
+    
+    % Must define nodes in the list before they can be used.
+    \node [neuron output,  drop shadow] (softmax) {};
+    \node [every netbox, left of=softmax, xshift=-0.35in, drop shadow] (feedforward) {FF};
+    \node [every netbox, left of=feedforward, xshift=-0.45in, drop shadow] (lstmbox) {LSTM};
+    \node [every neuron, left of=lstmbox, xshift=-0.25in, drop shadow] (matmul) {\Large$\times$};
+    \matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.2in, yshift = -0.4in] {\tiny
+      0 \\
+      1 \\
+      0 \\[-1.5ex]
+      \vdots \\
+      0\\};
+    \matrix (oneHotSecond) [bmatrix, left of = oneHotFirst, xshift=0.1in] {\tiny
+      0 \\
+      1 \\
+      0 \\[-1.5ex]
+      \vdots \\
+      0\\};
+    \node [left of=oneHotSecond, xshift=0.1in] (oneHotContinue) {\Large $\cdots$};
+    \matrix (oneHotLast) [bmatrix,left of = oneHotContinue, xshift=0.05in] {\tiny
+      1 \\
+      0 \\
+      0 \\[-1.5ex]
+      \vdots \\
+      0\\};
+    \node [above of=oneHotContinue, text centered, xshift=0.1in, yshift=0.16in] (onehotlabel) {One-Hot Vector Inputs};
+    
+    \matrix (embedding) [bmatrix, above left of = matmul, xshift=-0.7in, yshift=0.5in,ampersand replacement=\&] {
+      w_{1,1} \& \cdots \& w_{1,|v|}\\[-1ex]
+      \vdots \& \ddots \& \vdots\\
+      w_{d,1} \& \cdots \& w_{d,|v|}\\};
+    \node [above of=embedding, yshift=0.05in] (embeddinglabel) {Embedding Matrix};
+    
+    % Draw arrows
+    \draw [->,thick,line width=0.4mm] (embedding) -- (matmul);
+    \draw [->,thick,line width=0.4mm] (oneHotFirst) -- (matmul);
+    \draw [->,thick,line width=0.4mm] (matmul) -- (lstmbox);
+    \draw [->,thick,line width=0.4mm] (lstmbox) -- (feedforward);
+    \draw [->,thick,line width=0.4mm] (lstmbox) to[out=30, in=150, looseness=3] (lstmbox); % Numbers represent location on the unit circle.  0 is due east, 90 due north, 180 due west, and 270 due south.
+    \draw [->,thick,line width=0.4mm] (feedforward.north east) -- (softmax);
+    \draw [->,thick,line width=0.4mm] (feedforward) -- (softmax);
+    \draw [->,thick,line width=0.4mm] (feedforward.south east) -- (softmax);
+    \draw [->,thick,line width=0.4mm,postaction={decorate}] (softmax) -- node[below=1pt] {$|v|$} ++(0.9,0);
+    \end{tikzpicture}
+    
+  \end{frame}
+  
+  
+  
+  \begin{frame}{\textbf{Learner Architecture -- Summary}}
+  
+    \begin{itemize}
+      \setlength\itemsep{0.8em}
+      \onslide<+->{
+        \item \textbf{Five Primary Stages}:
+        \begin{itemize}
+          \setlength\itemsep{0.4em}
+          \item One-Hot \textit{Character} Encoding
+          \item Embedding Matrix
+          \item Multi-Layer LSTM
+          \item Feed-Forward Network
+          \item Softmax Layer
+        \end{itemize}
+      }
+  
+      \onslide<+->{
+        \item \textbf{One-Hot \& Softmax Dimension}: \textasciitilde95 Characters
+      }
+    
+      \onslide<+->{
+        \item \textbf{LSTM}: 
+        \begin{itemize}
+          \setlength\itemsep{0.4em}
+          \item Two Layers
+          \item Hidden Layer Width: 128
+          \item Dropout -- Surprisingly important! (\textit{More details to come})
+        \end{itemize}
+      }
+    
+      \onslide<+->{
+        \item \textbf{Feed-Forward Network}:
+        \begin{itemize}
+          \item One Hidden Layer with 256 Neurons
+        \end{itemize}
+      }
+    \end{itemize}  
+  \end{frame}
+
+  \section{Training Overview}
+  \begin{frame}{\textbf{Discussion on Character-Level Text Generation}}
+    \begin{itemize}
+      \setlength\itemsep{1em}
+      \onslide<+->{
+        \item \textbf{Question: }\textit{Wouldn't a word-level RNN be better?}
+      }
+      \onslide<+->{
+        \item \textbf{Short Answer:} Word level is not practical.  
+      }
+      \onslide<+->{
+        \item \textbf{Long Answer:}
+        \begin{itemize}
+          \setlength\itemsep{1em}
+          \onslide<+->{
+            \item Too many words (i.e., classes)
+          }
+          \onslide<+->{
+            \item Limited hardware availability
+          }
+          \onslide<+->{
+            \item Limited training time
+          }
+        \end{itemize}
+      }
+      \onslide<+->{
+        \item \textbf{Question: }\textit{Is character-level text generation ideal?}
+      }
+      \onslide<+->{
+        \item \textbf{No.} We do \textbf{not} expect a character-level RNN to create perfectly coherent text.  
+        \begin{itemize}
+          \item It will only successfully mimic short phrases or at most a single paragraph.
+        \end{itemize}
+      }
+    \end{itemize}
+  
+  \end{frame}
+  
+  \section{Training Overview}
+  \begin{frame}{\textbf{Overview of the Training Dataset \& Procedure}}
+
+  \begin{itemize}
+    \item Datasets
+    \begin{itemize}
+      \item Approximately 115 speeches
+      \item Two Github Repositories
+    \end{itemize}
+  
+    \item Speeches Only
+  
+    \item New Innovation: Variable length sequence training
+    \begin{itemize}
+      \item Talk how we are the only ones training at different lengths (we will add this).
+    \end{itemize}
+  \end{itemize}
+
+  
+  \end{frame}
+  
+  
+  \section{Text Generation}
+  \centering
+  \begin{frame}{\textbf{Text Generation Architecture}}
+  \tikzset{
+    sigmoid/.style={path picture= {
+        \begin{scope}[x=1pt,y=10pt]
+          \draw plot[domain=-6:6] (\x,{1/(1 + exp(-\x))-0.5});
+        \end{scope}
+      }
+    },
+    every neuron/.style={
+      circle,
+      draw,
+      fill=white,
+      minimum size=0.6cm,
+    },
+    neuron output/.style={
+      every neuron,
+      sigmoid,
+    },
+    matrix multiply/.style={
+      every neuron,
+      font={\Large $\times$}
+    },
+    every netbox/.style={
+      rectangle,
+      draw,
+      text centered,
+      fill=white,
+      text width = 1.3cm,
+      minimum width = 1.5cm,
+      minimum height = 1.5cm,
+      rounded corners,
+    },
+    every left delimiter/.style={xshift=1ex},
+    every right delimiter/.style={xshift=-1ex},
+    bmatrix/.style={matrix of math nodes,
+      inner sep=0pt,
+      left delimiter={[},
+      right delimiter={]},
+      nodes={anchor=center, inner sep=.3333em},
+    },
+    decoration={
+      markings,
+      mark= at position 0.5 with {\node {/};}
+    }
+  }
+  
+  \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth] 
+  
+  % Must define nodes in the list before they can be used.
+  \onslide<3->{
+    \node [every netbox, drop shadow] (output) {\color{ucscBlue} Decision Engine};
+  }
+  \node [neuron output, left of=output, xshift=-0.35in,  drop shadow] (softmax) {};
+  \node [every netbox, left of=softmax, xshift=-0.35in, drop shadow] (feedforward) {FF};
+  \node [every netbox, left of=feedforward, xshift=-0.45in, drop shadow] (lstmbox) {LSTM};
+  \node [every neuron, left of=lstmbox, xshift=-0.25in, drop shadow] (matmul) {\Large$\times$};
+  \matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.2in, yshift = -0.4in] {\tiny
+    0 \\
+    1 \\
+    0 \\[-1.5ex]
+    \vdots \\
+    0\\};
+  \matrix (oneHotSecond) [bmatrix, left of = oneHotFirst, xshift=0.1in] {\tiny
+    0 \\
+    1 \\
+    0 \\[-1.5ex]
+    \vdots \\
+    0\\};
+  \node [left of=oneHotSecond, xshift=0.1in] (oneHotContinue) {\Large $\cdots$};
+  \matrix (oneHotLast) [bmatrix,left of = oneHotContinue, xshift=0.05in] {\tiny
+    1 \\
+    0 \\
+    0 \\[-1.5ex]
+    \vdots \\
+    0\\};
+  \node [above of=oneHotContinue, text centered, xshift=0.1in, yshift=0.16in] (onehotlabel) {One-Hot Vector Inputs};
+  
+  \matrix (embedding) [bmatrix, above left of = matmul, xshift=-0.7in, yshift=0.5in,ampersand replacement=\&] {
+    w_{1,1} \& \cdots \& w_{1,|v|}\\[-1ex]
+    \vdots \& \ddots \& \vdots\\
+    w_{d,1} \& \cdots \& w_{d,|v|}\\};
+  \node [above of=embedding, yshift=0.05in] (embeddinglabel) {Embedding Matrix};
+  
+  % Draw arrows
+  \draw [->,thick,line width=0.4mm] (embedding) -- (matmul);
+  \draw [->,thick,line width=0.4mm] (oneHotFirst) -- (matmul);
+  \draw [->,thick,line width=0.4mm] (matmul) -- (lstmbox);
+  \draw [->,thick,line width=0.4mm] (lstmbox) -- (feedforward);
+  \draw [->,thick,line width=0.4mm] (lstmbox) to[out=30, in=150, looseness=3] (lstmbox); % Numbers represent location on the unit circle.  0 is due east, 90 due north, 180 due west, and 270 due south.
+  \draw [->,thick,line width=0.4mm] (feedforward.north east) -- (softmax);
+  \draw [->,thick,line width=0.4mm] (feedforward) -- (softmax);
+  \draw [->,thick,line width=0.4mm] (feedforward.south east) -- (softmax);
+  \draw [->,thick,line width=0.4mm,postaction={decorate}] (softmax) -- node[below=1pt] {$|v|$} (output);
+  \onslide<2-3>{
+    \draw [{Latex[scale=0.8]}-,line width=0.4mm,darkGreen] (oneHotFirst.south) -- ++(0,-0.25);
+    \draw [{Latex[scale=0.8]}-,line width=0.4mm,darkGreen] (oneHotSecond.south) -- ++(0,-0.25);
+    \draw [{Latex[scale=0.8]}-,line width=0.4mm,darkGreen] (oneHotLast.south) -- ++(0,-0.25);
+    \node [below of=oneHotContinue, text centered, xshift=0.1in, yshift=-0.35in] (seedTextInput) {\color{darkGreen} \textbf{Seed Text}};
+  }
+  \onslide<3->{
+    \draw [->,line width=0.4mm,ucscBlue] (output) -- ++(0.9,0);
+  }
+  \onslide<5->{
+    \draw [-{Latex[scale=0.8]},line width=0.4mm,dashed,red] (output.east) -| ++(0.15,0) -| ++(0,-2.3) -| (oneHotLast.south);
+    \draw [{Latex[scale=0.8]}-,line width=0.4mm,dashed,red] (oneHotFirst.south) to[bend left] (oneHotSecond.south);
+    \draw [{Latex[scale=0.8]}-,line width=0.4mm,dashed,red] (oneHotSecond.south) to[bend left] ++(-0.4,0);
+    \draw [-{Latex[scale=0.8]},line width=0.4mm,dashed,red] (oneHotLast.south) to [bend right] ++(0.4,0);
+  }
+  \end{tikzpicture}
+  
+  \end{frame}
+
+
+
 	
 	% decision engine/generation process
-	\begin{frame}{Decision Engine}
+  \section{Decision Engine}
+	\begin{frame}{\textbf{Decision Engine}}
 		
 		\begin{itemize}
 			\item Greedy Sampling
@@ -127,5 +448,28 @@ UC, Santa Cruz\\
 		\end{itemize}
 		
 	\end{frame}
+
+	% decision engine/generation process
+  \section{Conclusions}
+  \begin{frame}{\textbf{Summary and Future Work}}
+  
+  \end{frame}
+
+  \begin{frame}{\textbf{Download the Source Code}}
+  
+    Our full source code is available at:
+    
+    \begin{center}
+      \href{https://github.com/ZaydH/trump_char_rnn}{\textbf{\color{ucscBlue} https://github.com/ZaydH/trump\_char\_rnn}}
+    \end{center}
+  
+  \end{frame}
+
+
+  %% Optional Table of Contents
+  \begin{frame}{\textbf{Summary of Topics}}{}
+    \tableofcontents
+  \end{frame}
+  %%%%%%%%%%%%%%%%
 	
 \end{document}

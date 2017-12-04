@@ -37,6 +37,11 @@ def construct():
         cells = [tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=0.8)
                  for cell in cells]
 
+    #     cells = [tf.contrib.rnn.DropoutWrapper(cell, input_keep_prob=1.0, output_keep_prob=0.8,
+    #                                            state_keep_prob=1.0) for cell in cells]
+    # else:
+    #     cells = [tf.contrib.rnn.DropoutWrapper(cell, input_keep_prob=0.98, output_keep_prob=0.98,
+    #                                            state_keep_prob=1.0) for cell in cells]
     # get rnn outputs
     seq_len = tf.placeholder(tf.int32, shape=[Config.batch_size])
     
