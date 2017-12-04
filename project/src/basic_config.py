@@ -7,6 +7,7 @@ from enum import Enum
 import copy
 import tensorflow as tf
 import math
+import sys
 
 
 class DecisionFunction(Enum):
@@ -501,7 +502,7 @@ class Config(object):
                         format='%(asctime)s -- %(message)s', datefmt=data_format)
 
     # Also print to stdout
-    handler = logging.StreamHandler()
+    handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.INFO)
     logging.getLogger().addHandler(handler)
     logging.info("**********************  New Run Beginning  **********************")

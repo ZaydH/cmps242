@@ -153,7 +153,7 @@ def _print_basic_text_statistics():
   logging.info("Total Number of Characters: %d" % Config.dataset_size)
   if Config.word_count > 0:
     logging.info("Total Word Count: \t%d" % Config.word_count)
-  logging.info("Vocabulary Size: \t\t%d" % Config.vocab_size())
+  logging.info("Vocabulary Size: \t%d" % Config.vocab_size())
   logging.info("Training Set Size: \t%d" % Config.Train.size())
   logging.info("Validation Set Size: \t%d" % Config.Validation.size())
 
