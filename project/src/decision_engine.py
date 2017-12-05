@@ -16,12 +16,15 @@ def select_random_from_top_k(sess, softmax_out):
     :rtype: int
     """
 
-    values, indices = tf.nn.top_k(softmax_out)
+    values, indices = tf.nn.top_k(softmax_out, k=5)
 
-    tot_sum = np.sum(softmax_out)
-    assert abs(tot_sum - 1) < 10 ** (-3)  # Since softmax, sum should be close to 1
-    cum_sum = np.cumsum(values)
-    return indices[int(np.searchsorted(cum_sum/np.linalg.norm(cum_sum), random.random()))]
+    values = values.eval(session=sess)
+    indices = indices.eval(session=sess)
+
+    cum_sum = np.cumsum(values / np.sum(values))
+
+    idx = int(np.searchsorted(cum_sum, random.random()))
+    return indices[idx]
 
 
 def select_max_probability(sess, softmax_out):
