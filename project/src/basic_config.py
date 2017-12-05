@@ -395,7 +395,7 @@ class Config(object):
                Set to \"%d\" to make a weighted random selection ONLY for the first
                character after a space and perform greedy sampling otherwise.  
                Set to \"%d\" to take a weight random selection amongst only the  
-               top 3 characters.  Set to \"%d\" to perform top-K selection after only
+               top 5 characters.  Set to \"%d\" to perform top-K selection after only
                a space and use greedy sampling otherwise.
                """
     help_msg = help_msg.replace("  ", " ")
