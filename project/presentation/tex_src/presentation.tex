@@ -448,7 +448,7 @@ UC, Santa Cruz\\
 	\begin{frame}{\textbf{Decision Engine}}
 		\begin{itemize}
 			\onslide<+->{
-				\item \textbf{Greedy }\textit{always take the most probable character}
+				\item \textbf{Greedy }\textit{Always take the most probable character}
 				
 				\begin{itemize}
 					\onslide<+->{\item Always makes a confident choice}
@@ -459,7 +459,7 @@ UC, Santa Cruz\\
 			
 			
 			\onslide<+->{
-				\item \textbf{Random }\textit{select a random character according to the given distribution}
+				\item \textbf{Random }\textit{Select a random character according to the given distribution}
 				
 				\begin{itemize}
 					\onslide<+->{\item Avoids getting into loops}
@@ -469,16 +469,37 @@ UC, Santa Cruz\\
 			}
 			
 			\onslide<+->{
-				\item \textbf{Top-k }\textit{Make a random choice amongst the $k$ most probable characters according}
+				\item \textbf{Top-k }\textit{Make a random choice amongst the $k$ most probable characters according to the sub-distribution}
 				
 				\begin{itemize}
 					\onslide<+->{\item Throws out ridiculous random choices}
 					\onslide<+->{\item \textit{``The media is so dishonest. And they don’t know where you see it. I'm going to bring back the world.''}}
 				\end{itemize}
-				
 			}
 			
 		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}{Decision Engine Contd.}
+		
+		\begin{itemize}
+			\onslide<+->{\item \textbf{Random-Start + Greedy Finish} \textit{Make random choices for the first character of a word, then greedily finish each word}}
+			
+				\begin{itemize}
+					\onslide<+->{\item Gets us out of infinite loops}
+					\onslide<+->{\item Does not mangle characters within words}
+				\end{itemize}
+			
+			\onslide<+->{\item \textbf{Boosting Lopsidedness} \textit{Exponentiate the distribution then re-normalize}}
+				
+				\begin{itemize}
+					\onslide<+->{\item Boosts the chance of a making a more probable choice}
+				\end{itemize}
+			
+		\end{itemize}
+		
+		\onslide<+->{\textbf{We can combine these with the algorithms above to create a wide variety of sampling methods}}
+		
 	\end{frame}
 
 	% decision engine/generation process
