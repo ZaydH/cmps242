@@ -201,6 +201,8 @@ class Config(object):
 
     enable_dropout = False
 
+    loop = False
+
     @staticmethod
     def build_seed_x():
       """
@@ -216,8 +218,7 @@ class Config(object):
 
     @staticmethod
     def build_initial_x():
-      if not Config.Generate.seed_x:
-        Config.Generate.build_seed_x()
+      Config.Generate.build_seed_x()
 
       extended_seed_x = copy.copy(Config.Generate.seed_x)
       while len(extended_seed_x) < Config.sequence_length:
@@ -368,6 +369,9 @@ class Config(object):
     parser.add_argument("--model", type=str, required=False, default=Config.model_dir,
                         help="Directory containing the trained model")
 
+    parser.add_argument("--loop", action="store_true",
+                        help="Loop the text generator to allow multiple text seeds.")
+
     parser.add_argument("--dropout", action="store_true",
                         help="Enable dropout during speech generation")
 
@@ -422,6 +426,7 @@ class Config(object):
     Config.Generate.output_len = args.len
     Config.Generate.seed_text = args.seed
     Config.Generate.enable_dropout = args.dropout
+    Config.Generate.loop = args.loop
 
     if len(Config.Generate.seed_text) < Config.Generate.min_seed_len:
       raise ValueError("Seed text must be at least %d characters long"

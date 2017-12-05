@@ -18,12 +18,32 @@ def generate_text():
 
   net_features = network.construct()
 
+  sess = tf.Session()
+  Config.import_model(sess)
+  # Enable the user to enter multiple text strings with a do-while loop
+  while True:
+    _generate_output(sess, net_features)
+
+    if not Config.Generate.loop:
+      break
+
+    while True:
+      print("")
+      logging.info("Please supply a new seed text then press enter when complete: ")
+      Config.Generate.seed_text = input("")
+      if len(Config.Generate.seed_text) > Config.Generate.min_seed_len:
+        print("You entered: \"" + Config.Generate.seed_text + "\"")
+        print("")
+        break
+      logging.info("Invalid Seed Text.  Must be at least %d characters long"
+                   % Config.Generate.min_seed_len)
+
+  sess.close()
+
+def _generate_output(sess, net_features):
   x = net_features["X"]
   get_softmax = tf.nn.softmax(net_features["output"])[0, :]
   seq_len = net_features["seq_len"]
-
-  sess = tf.Session()
-  Config.import_model(sess)
 
   cur_seq_len = min(len(Config.Generate.seed_text), Config.sequence_length)
   input_x = Config.Generate.build_initial_x()
@@ -48,7 +68,6 @@ def generate_text():
     input_x[0].insert(cur_seq_len - 1, pred_char_id)
     Config.Generate.prev_char = pred_char
 
-  sess.close()
   logging.info("Output Text: " + Config.Generate.seed_text + "".join(generated_text))
 
 
