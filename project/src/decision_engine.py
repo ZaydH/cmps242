@@ -31,7 +31,7 @@ def select_random_from_top_k(sess, softmax_out):
     return indices[idx]
 
 
-def select_max_probability(_, softmax_out):
+def select_max_probability(sess, softmax_out):
   """
   Most naive decision engine.  Always selects the character with
   the greatest probability.
@@ -70,14 +70,14 @@ def select_weighted_random_after_space(sess, logits):
   if Config.Generate.prev_char == " ":
     return select_weighted_random_probability(sess, logits)
   else:
-    return select_max_probability(None, logits)
+    return select_max_probability(sess, logits)
 
 
 def select_top_k_after_space(sess, logits):
   if Config.Generate.prev_char == " ":
     return select_random_from_top_k(sess, logits)
   else:
-    return select_max_probability(None, logits)
+    return select_max_probability(sess, logits)
 
 
 def setup_decision_engine(input):
