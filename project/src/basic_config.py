@@ -99,6 +99,9 @@ class Config(object):
       :return: Size of the verification set
       :rtype: int
       """
+      if Config.Validation.t is None:
+        return 0
+
       return len(Config.Validation.t)
 
     @staticmethod

@@ -109,16 +109,17 @@ UC, Santa Cruz\\
 	\end{frame}
 	
 	% overview of what character level RNNs are
-	\begin{frame}{\textbf{Quick Review of Character Level RNNs}}
+	\begin{frame}{\textbf{Quick Review of Character-Level RNNs}}
 		
 		\begin{itemize}
 			\onslide<+->{
-				\item Given a sequence of characters, a character level RNN learns a probability distribution over the possible subsequent characters
+				\item Given a sequence of characters, a character-level RNN learns a probability distribution over the possible subsequent characters
 			}
+      \vfill
 			\onslide<+->{
-				\item Example: if you give as input ``We will build a great wal'', the RNN should return a distribution $p$ over a vocabulary of characters $V$ s.t. $p(\text{`l'})$ is large
+				\item \textbf{Example:} if you give as input ``We will build a great wal'', the RNN should return a distribution $p$ over a vocabulary of characters $V$ s.t. $p(\text{`l'})$ is large
 			}
-			
+			\vfill
 			\onslide<+->{
 				\item Given some text, you can repeatedly choose a subsequent character based on the distribution produced by the network given the previous $L$ characters
 			}
@@ -272,7 +273,7 @@ UC, Santa Cruz\\
         \item \textbf{Question: }\textit{Wouldn't a word-level RNN be better?}
       }
       \onslide<+->{
-        \item \textbf{Short Answer:} Word level is not practical.  
+        \item \textbf{Short Answer:} Word-level is not practical.  
       }
       \onslide<+->{
         \item \textbf{Long Answer:}
@@ -290,7 +291,7 @@ UC, Santa Cruz\\
         \end{itemize}
       }
       \onslide<+->{
-        \item \textbf{Question: }\textit{Is character-level text generation ideal?}
+        \item \textbf{Question:} \textit{Is character-level text generation ideal?}
       }
       \onslide<+->{
         \item \textbf{No.} We do \textbf{not} expect a character-level RNN to create perfectly coherent text.  
@@ -308,15 +309,19 @@ UC, Santa Cruz\\
   \begin{itemize}
     \item Datasets
     \begin{itemize}
-      \item Approximately 115 speeches
-      \item Two Github Repositories
+      \item Approximately 115~speeches
+      \item Basic Statistics:
+      \begin{itemize}
+        \item >365,000 Words
+        \item >2,000,000 Training Sequences
+      \end{itemize}
     \end{itemize}
-  
+    \vfill
     \item Speeches Only
-  
+    \vfill
     \item New Innovation: Variable length sequence training
     \begin{itemize}
-      \item Talk how we are the only ones training at different lengths (we will add this).
+      \item Rather than training only the maximum sequence length, we train intermediary sequence lengths to ensure quality outputs even on short sequences.
     \end{itemize}
   \end{itemize}
 
