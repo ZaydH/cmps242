@@ -11,10 +11,11 @@ import sys
 
 
 class DecisionFunction(Enum):
-  ArgMax = 0
-  WeightRand = 1
-  WeightRandAfterSpace = 2
-  WeightRandTopK = 3
+  ArgMax = 1
+  WeightRand = 10
+  WeightRandAfterSpace = 11
+  WeightRandTopK = 20
+  WeightRandTopKAfterSpace = 21
 
 
 class Config(object):
@@ -386,14 +387,16 @@ class Config(object):
                a character based off a weight random value of all characters. 
                Set to \"%d\" to make a weighted random selection ONLY for the first
                character after a space and perform greedy sampling otherwise.  
-               Set to \"%d\" to take a weight random selection 
-               amongst only the top 3 characters.
+               Set to \"%d\" to take a weight random selection amongst only the  
+               top 3 characters.  Set to \"%d\" to perform top-K selection after only
+               a space and use greedy sampling otherwise.
                """
     help_msg = help_msg.replace("  ", " ")
     text_params = (DecisionFunction.ArgMax.value,
                    DecisionFunction.WeightRand.value,
                    DecisionFunction.WeightRandAfterSpace.value,
-                   DecisionFunction.WeightRandTopK.value)
+                   DecisionFunction.WeightRandTopK.value,
+                   DecisionFunction.WeightRandTopKAfterSpace.value)
     parser.add_argument("--decision", type=int, required=False,
                         default=DecisionFunction.ArgMax.value,
                         help=help_msg % text_params)
@@ -402,7 +405,6 @@ class Config(object):
     Config.model_dir = args.model
 
     import decision_engine  # Prevent circular dependencies
-    dec_func = None
     if args.decision == DecisionFunction.ArgMax.value:
       dec_func = decision_engine.select_max_probability
     elif args.decision == DecisionFunction.WeightRand.value:
@@ -411,6 +413,8 @@ class Config(object):
       dec_func = decision_engine.select_weighted_random_after_space
     elif args.decision == DecisionFunction.WeightRandTopK.value:
       dec_func = decision_engine.select_random_from_top_k
+    elif args.decision == DecisionFunction.WeightRandTopKAfterSpace.value:
+      dec_func = decision_engine.select_top_k_after_space
     else:
       raise ValueError("Unknown decision function selected.")
     Config.DecisionEngine.function = dec_func

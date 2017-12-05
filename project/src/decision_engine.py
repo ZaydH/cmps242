@@ -5,9 +5,13 @@ import tensorflow as tf
 import numpy as np
 from basic_config import Config
 
+
 def select_random_from_top_k(sess, softmax_out):
     """
     take the k most probable options and make a random choice amongst them
+
+    :param sess: Currently running tensorflow session.
+    :type sess: tf.Session
 
     :param softmax_out: Output from the soft max layer
     :type softmax_out: tf.Tensor
@@ -27,7 +31,7 @@ def select_random_from_top_k(sess, softmax_out):
     return indices[idx]
 
 
-def select_max_probability(sess, softmax_out):
+def select_max_probability(_, softmax_out):
   """
   Most naive decision engine.  Always selects the character with
   the greatest probability.
@@ -66,7 +70,14 @@ def select_weighted_random_after_space(sess, logits):
   if Config.Generate.prev_char == " ":
     return select_weighted_random_probability(sess, logits)
   else:
-    return select_max_probability(sess, logits)
+    return select_max_probability(None, logits)
+
+
+def select_top_k_after_space(sess, logits):
+  if Config.Generate.prev_char == " ":
+    return select_random_from_top_k(sess, logits)
+  else:
+    return select_max_probability(None, logits)
 
 
 def setup_decision_engine(input):
