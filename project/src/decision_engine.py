@@ -37,7 +37,8 @@ def select_max_probability(sess, softmax_out):
   """
   return sess.run(tf.argmax(softmax_out, 0))
 
-def _selected_weighted_random_probability(_, softmax_out):
+
+def select_weighted_random_probability(_, softmax_out):
   """
   Performs a weighted random selection where the likelihood a particular
   character is selected is proportional to the softmax output of that
@@ -58,9 +59,9 @@ def _selected_weighted_random_probability(_, softmax_out):
   return int(np.searchsorted(cum_sum, random.random()))
 
 
-def selected_weighted_random_after_space(sess, logits):
+def select_weighted_random_after_space(sess, logits):
   if Config.Generate.prev_char == " ":
-    return _selected_weighted_random_probability(sess, logits)
+    return select_weighted_random_probability(sess, logits)
   else:
     return select_max_probability(sess, logits)
 

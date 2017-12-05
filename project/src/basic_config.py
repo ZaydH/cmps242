@@ -12,7 +12,9 @@ import sys
 
 class DecisionFunction(Enum):
   ArgMax = 0
-  WeightRandAfterSpace = 1
+  WeightRand = 1
+  WeightRandAfterSpace = 2
+  WeightRandTopK = 3
 
 
 class Config(object):
@@ -378,11 +380,20 @@ class Config(object):
                         default=Config.sequence_length,
                         help="RNN sequence length")
 
-    help_msg = "Function of the decision engine.  Set to \"%d\" to always select " \
-               + "the character with maximum probability. Set to \"%d\" to make a "\
-               + "weighted random selection for the first character after a space "\
-               + "and then use argmax"
-    text_params = (DecisionFunction.ArgMax.value, DecisionFunction.WeightRandAfterSpace.value)
+    help_msg = """
+               Function of the decision engine.  Set to \"%d\" to always greedily select
+               the character with maximum probability. Set to \"%d\" to always select
+               a character based off a weight random value of all characters. 
+               Set to \"%d\" to make a weighted random selection ONLY for the first
+               character after a space and perform greedy sampling otherwise.  
+               Set to \"%d\" to take a weight random selection 
+               amongst only the top 3 characters.
+               """
+    help_msg = help_msg.replace("  ", " ")
+    text_params = (DecisionFunction.ArgMax.value,
+                   DecisionFunction.WeightRand.value,
+                   DecisionFunction.WeightRandAfterSpace.value,
+                   DecisionFunction.WeightRandTopK.value)
     parser.add_argument("--decision", type=int, required=False,
                         default=DecisionFunction.ArgMax.value,
                         help=help_msg % text_params)
@@ -391,12 +402,18 @@ class Config(object):
     Config.model_dir = args.model
 
     import decision_engine  # Prevent circular dependencies
+    dec_func = None
     if args.decision == DecisionFunction.ArgMax.value:
-      Config.DecisionEngine.function = decision_engine.select_max_probability
+      dec_func = decision_engine.select_max_probability
+    elif args.decision == DecisionFunction.WeightRand.value:
+      dec_func = decision_engine.select_weighted_random_probability
     elif args.decision == DecisionFunction.WeightRandAfterSpace.value:
-      Config.DecisionEngine.function = decision_engine.selected_weighted_random_after_space
+      dec_func = decision_engine.select_weighted_random_after_space
+    elif args.decision == DecisionFunction.WeightRandTopK.value:
+      dec_func = decision_engine.select_random_from_top_k
     else:
       raise ValueError("Unknown decision function selected.")
+    Config.DecisionEngine.function = dec_func
 
     Config.Generate.output_len = args.len
     Config.Generate.seed_text = args.seed
