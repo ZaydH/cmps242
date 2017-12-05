@@ -88,6 +88,25 @@ UC, Santa Cruz\\
   \end{frame}}
   %%%%%%%%%%%%%%%%
 
+
+	% introduction slide
+  \section{Introduction}
+  \begin{frame}{\textbf{Quiz}}
+  \onslide<2->{
+    \textbf{Two Quotes}: One computer-generated and one from Donald Trump.  Can you identify the real one?
+  }
+  \vfill
+  \begin{itemize}
+    \onslide<3-3>{
+      \item \textbf{Quote \#1}: \textit{You look at the nuclear deal,} thing that real really bothers me, it would have been so easy and its not - as important as these lives are - nuclear is so powerful. My uncle explained that to me many, many years ago...
+    }
+    \vfill
+    \only<4->{
+      \item \textbf{Quote \#2}: \textit{You look at the nuclear deal,} and it’s going to be great for most of my plan in a country that they don’t know it. We have to be so good and it’s a movement and we will make America strong again. Thank you. Thank you...
+    }
+  \end{itemize}
+  \end{frame}
+
 	% introduction slide
 	\begin{frame}{\textbf{Project Objectives}}
 		
@@ -453,7 +472,7 @@ UC, Santa Cruz\\
 				\begin{itemize}
 					\onslide<+->{\item Always makes a confident choice}
 					\onslide<+->{\item Leads to looping behavior }
-					\onslide<+->{\item \textit{``The media is so dishonest. They want to stop the people of the world. I want to stop the people of the world. I want to stop the people of the world. I want...''}}
+					\onslide<+->{\item \textit{``\textcolor{ucscBlue}{The media is so dishonest.} They want to stop the people of the world. I want to stop the people of the world. I want to stop the people of the world. I want...''}}
 				\end{itemize}
 			}
 			
@@ -464,7 +483,7 @@ UC, Santa Cruz\\
 				\begin{itemize}
 					\onslide<+->{\item Avoids getting into loops}
 					\onslide<+->{\item Has a non-zero probability of doing something ridiculous}
-					\onslide<+->{\item \textit{``The media is so dishonest. And thank you. I trace it. We can change it. We don’t worts out.''}}
+					\onslide<+->{\item \textit{``\textcolor{ucscBlue}{The media is so dishonest.} And thank you. I trace it. We can change it. We don’t worts out.''}}
 				\end{itemize}
 			}
 			
@@ -473,7 +492,7 @@ UC, Santa Cruz\\
 				
 				\begin{itemize}
 					\onslide<+->{\item Throws out ridiculous random choices}
-					\onslide<+->{\item \textit{``The media is so dishonest. And they don’t know where you see it. I'm going to bring back the world.''}}
+					\onslide<+->{\item \textit{``\textcolor{ucscBlue}{The media is so dishonest.} And they don’t know where you see it. I'm going to bring back the world.''}}
 				\end{itemize}
 			}
 			
@@ -495,18 +514,42 @@ UC, Santa Cruz\\
 				\begin{itemize}
 					\onslide<+->{\item Boosts the chance of a making a more probable choice}
 				\end{itemize}
-			
+			\vfill
+		 	\onslide<+->{\item \textbf{Sample with Dropout}}
+					
+				\begin{itemize}
+					\onslide<+->{\item Randomly change the network}
+				\end{itemize}
+			\vfill
+			\onslide<+->{\item \textbf{We can combine these with the algorithms above to create a wide variety of sampling methods}}
 		\end{itemize}
-  
-		\vfill
-		\onslide<+->{\textbf{We can combine these with the algorithms above to create a wide variety of sampling methods}}
-		
 	\end{frame}
 
 	% decision engine/generation process
   \section{Conclusions}
   \begin{frame}{\textbf{Summary and Future Work}}
-  
+    \begin{itemize}
+      \item \textbf{Summary}: We developed a character-level RNN that generated text in the style of President Donald Trump.
+      \vfill
+      \item \textbf{Future Work:}
+      \begin{itemize}
+        \onslide<+->{
+          \item \textbf{New Idea}: Character-Level Generation, Word-Level Decisions
+        }
+        \vfill
+        \onslide<+->{
+          \item \textbf{\textbf{Training Improvements}}: Given more time, we believe we could train better models.
+          \begin{itemize}
+            \item Train longer sequences
+            \item Train entire speeches as a single unit
+            \item Train additional epochs (each additional epoch is about 1~hour of CPU time)
+          \end{itemize}
+        }
+        \vfill
+        \onslide<+->{\item \textbf{Stretch Goal}: A chat bot so you can feel what it is like to have a conversation with Donald Trump.
+        }
+      \end{itemize}
+    \end{itemize}
   \end{frame}
 
   \begin{frame}{\textbf{Download the Source Code}}
