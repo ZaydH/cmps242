@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb}
+\usepackage{fancyhdr}
+\usepackage{fullpage}
+
+\begin{document}
+\author{Benjamin Sherman \& Zayd Hammoudeh}
+\title{Make Deep Learning Great Again}
+
+\maketitle
+
+% abstract
+\begin{abstract}
+A character-level recurrent neural network (RNN) is a statistical language model capable of producing text that superficially resembles a training corpus. The efficacy of these networks in mimicing Shakespeare, \texttt{Linux} source code, and other forms of text have already been demonstrated. In this paper, we show that character level RNNs are capable of very believably mimicing the language of President Donald J. Trump after training on a corpus of speech transcriptions. We believe our most significant contributions to the study of character level statistical language models are in sampling methodologies; specifically we propose that introducing dropout during the text-generation phase introduces randomness that leads to more believable text.
+\end{abstract}
+
+% introduction
+\section{Introduction}
+
+
+% character level RNN overview
+\section{Character Level RNNs}
+
+A character level RNN is a statistical model of language. It is statistical in the sense that it views the behavior of language probabilistically. To better understand this, allow that my brain uses a statistical language model and that my job is to try to finish all of your sentences. You say ``I am going to the grocery-''. I would guess with high probability that you are about to say ``store'', though I have to accept that there is a non-zero chance you will say ``outlet''- or, perhaps you will stub your toe and say ``ouch!'' in the middle of your sentence. What a character level RNN does is really no different, except the inferences it learns to make happen on the character level.
+
+Let $\mathcal{C} : V^L \rightarrow P$ be a character-level recurrent neural network, such that $V$ is a vocabulary of approximately 100 characters, $L$ is an arbitrary sequence length, and $P$ is the set of all probability distributions over $V$. More plainly, we can think of a character-level RNN as a function that takes a sequence of $L$ charcters and gives us a probability distribution; in particular, it gives the probability of the next character given the previous $L$ characters. As an example of how the network will ideally behave, imagine that you let $p = \mathcal{C}(\texttt{(M,a,k,e, ,A,m,e,r,i,c)})$. If the network is well trained you should find that $p$ predicts \texttt{a} as the next character with high probablity.
+
+In order to generate meaningul text with a character level RNN you need to give it a seed, similar to the setntence-to-be-finished from the game described earlier. Prompted with the sequence ``We will build a g'', the RNN will produce a distribution over the vocabulary. We can sample from this distribution and add the resulting character to the sequence. If the sampled character was `r`, as we would hope, then we now have the sequence ``We will build a gr''. We can continue this process for arbitrarily many steps. It is important to note that we can not make networks that accept arbitrarily long sequences as input, so at some point we have to start removing a character from the beginning of the sequence for every character we add to the end of the sequence.
+
+% dataset overview
+\section{Dataset}
+
+% add some statistics and an overview of where we got the data etc.
+
+% loss function
+\section{Loss Function}
+
+% I haven't mentioned character embedding here
+
+Our network trainer has two inputs, $X \in (V^L)^n$ and $y \in V^n$. $X$ is an $n \times L$ matrix representation of our sequences, where $n$ is the number of sequences and $L$ is the number of characters in each sequence;] $y$ is a vector of $n$ target values, meaning that $y_i$ is the character following sequence $X_i$. Let $p$ be an $n \times |V|$ matrix where each row is a probability distribution over $V : p_i(y_i) = 1$.
+
+Our loss per example is the cross-entropy between the distribution given by the network and the true distribution, which is one-hot. Formally, we say that loss on example $i = L_i = H(p_i, \mathcal{C}(X_i))$. Our total loss on inputs $X$ and $y$ is then $ \sum_{i=1}^{n} L_i$.
+
+% architecture
+\section{Network Architecture}
+
+% our training process
+\section{Training}
+
+% text generation
+\section{Sampling Approaches}
+
+\end{document}
