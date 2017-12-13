@@ -1,7 +1,7 @@
 \documentclass{article}
 
 % if you need to pass options to natbib, use, e.g.:
-% \PassOptionsToPackage{numbers, compress}{natbib}
+ \PassOptionsToPackage{numbers, compress}{natbib}
 % before loading nips_2017
 %
 % to avoid loading the natbib package, add option nonatbib:
@@ -23,8 +23,10 @@
 \usepackage{tikz}
 \usetikzlibrary{matrix, positioning, calc, shadows, decorations.markings, arrows.meta} % decorations.markings is used for the bus symbol on the arrow.
 
+\usepackage{mathtools}  % Used for the paired delimiters
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}%
 
-\title{Make Deep Learning Great Again: Character-Level RNN Speech Generation in the Style of Donald Trump}
+\title{Make Deep Learning Great Again: \\ Character-Level RNN Speech Generation \\ in the Style of Donald Trump}
 
 % The \author macro works with any number of authors. There are two
 % commands used to separate the names and addresses of multiple
@@ -87,16 +89,23 @@ Let $\mathcal{C} : V^L \rightarrow P$ be a character-level recurrent neural netw
 
 In order to generate meaningful text with a character level RNN you need to give it a seed, similar to the sentence-to-be-finished from the game described earlier. Prompted with the sequence ``We will build a g'', the RNN will produce a distribution over the vocabulary. We can sample from this distribution and add the resulting character to the sequence. If the sampled character was `r`, as we would hope, then we now have the sequence ``We will build a gr''. We can continue this process for arbitrarily many steps. It is important to note that we can not make networks that accept arbitrarily long sequences as input, so at some point we have to start removing a character from the beginning of the sequence for every character we add to the end of the sequence.
 
+\subsection{Impracticality of Word-Level RNNs}
+
+It is obvious that generating paragraphs of text one character at a time may yield suboptimal results.  As part of the feedback to our initial project proposal, the grader specifically asked why we chose to do a character-level RNN instead of a word-level RNN.  Superficially, a word-level RNN superficially has clear advantages including that it is less likely to produce spelling mistakes and also makes decisions at a coarser granularity which may yield superior results.  When upon a more detail analysis, it is clear that word-level RNNs are impractical.
+
+First, the current Oxford English dictionary has over 170,000 words. A world-level learner would need a separate output node for each of these words.  Such a large output is likely to suffer from underflow and floating point errors that would severely degrade the quality of its predictions.  In addition, training such a large network would be prohibitively long and would extend significantly past the short duration for this project.  Even Google with its near limitless computation and human resources does not do word-level prediction and instead uses morphemes.  
+
+One team in the CMPS242 class chose to use a word-level learner.  To address the output-layer size issue mentioned previously, this team reduced the vocabulary to several hundred words.  They also only generated phrases of approximately 10~words.  Such extreme constraints yield results that significantly underachieve character-level RNNs.
+
+
 % our training process
 \section{Training}
-
-\subsection{Vocabulary}
 
 % dataset overview
 \subsection{Dataset}
 
 % add some statistics and an overview of where we got the data etc.
-Character-level RNNs can be provided any user-supplied text as a seed.  The current Oxford English dictionary has more than 170,000 words.  While some words are substantially more common than others, it does not change the fact that a character-level RNN must be able to generate meaningful outputs from countless many input seeds. Therefore, to achieve acceptable performance, the training set needs to be especially large.
+Character-level RNNs can be provided any user-supplied text as a seed.  While some words are substantially more common than others, it does not change the fact that a character-level RNN must be able to generate meaningful outputs from countless many input seeds. Therefore, to achieve acceptable performance, the training set needs to be especially large.
 
 Although President Trump is credited with being the lead author of over a dozen books~\cite{trumpArtOfTheDeal,trumpSurvivingAtTheTop,trumpArtOfTheComeback,trumpTheAmericaWeDeserve,trumpHowToGetRich,trumpCrippledAmerica,trumpTimeToGetTough,trumpThinkBig,trump101,trumpNeverGiveUp,trumpWhyWeWantYou,trumpBestGolfAdvice,trumpMidasTouch}, we also deliberately chose to exclude them from the training set also for two primary reasons.  First, many of the books featured co-authors or were entirely ghostwritten~\cite{mayerNewYorkerGhostwriter}.  As such, it would be difficult to distinguish Trump's own style from those of his writing partners.  In addition, most of Trump's books date back to the late 1980's through the early 2000's.  Most of the students in the course had not even been born by the time some of these books were written. Hence, the generated text they may yield may not be meaningful to the class's relatively young audience.
 
@@ -106,6 +115,11 @@ Given the deficiencies associated with training on tweets or the president's boo
 
 In total, the training set consisted of more than 115 speeches of varying length.  There were more than 365,000~words and two million training sequences.  We believe the training set size is more than sufficient for a project of this scope, and we are further confident this is shown in the quality of the generated output.
 
+\subsection{Vocabulary}
+
+As with all character-level RNNs, the vocabulary is set of individual characters that may be received as part of an input sequence or generated as part of the output.  Specifically, the vocabulary consists of all letters -- both capitalized and lowercase, digits~(0-9), and punctuation (e.g.,~comma, space, newline, exclamation point, etc.).  
+
+For all practical purposes, the set of characters,~$v$, that make up the vocabulary is dictated by the training data set.  In this project, the size of the vocabulary,~$|v|$, 
 
 % architecture
 \subsection{Learner Architecture}
@@ -162,25 +176,25 @@ In total, the training set consisted of more than 115 speeches of varying length
   \node [every netbox, left of=softmax, xshift=-0.35in, drop shadow] (feedforward) {\small Feed Forward Network};
   \node [every netbox, left of=feedforward, xshift=-0.45in, drop shadow] (lstmbox) {\small LSTM};
   \node [every neuron, left of=lstmbox, xshift=-0.25in, drop shadow] (matmul) {\Large$\times$};
-  \matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.2in, yshift = -0.5in] {\tiny
-    0 \\
-    1 \\
-    0 \\[-1.5ex]
-    \vdots \\
-    0\\};
-  \matrix (oneHotSecond) [bmatrix, left of = oneHotFirst, xshift=0.1in] {\tiny
-    0 \\
-    1 \\
-    0 \\[-1.5ex]
-    \vdots \\
-    0\\};
+  \matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.2in, yshift = -0.5in] {\scriptstyle
+    \scriptstyle0 \\
+    \scriptstyle1 \\
+    \scriptstyle0 \\[-1.5ex]
+    \scriptstyle\vdots \\
+    \scriptstyle0\\};
+  \matrix (oneHotSecond) [bmatrix, left of = oneHotFirst, xshift=0.1in] {\scriptstyle
+    \scriptstyle0 \\
+    \scriptstyle1 \\
+    \scriptstyle0 \\[-1.5ex]
+    \scriptstyle\vdots \\
+    \scriptstyle0\\};
   \node [left of=oneHotSecond, xshift=0.1in] (oneHotContinue) {\Large $\cdots$};
-  \matrix (oneHotLast) [bmatrix,left of = oneHotContinue, xshift=0.05in] {\tiny
-    1 \\
-    0 \\
-    0 \\[-1.5ex]
-    \vdots \\
-    0\\};
+  \matrix (oneHotLast) [bmatrix,left of = oneHotContinue, xshift=0.05in] {\scriptstyle
+    \scriptstyle1 \\
+    \scriptstyle0 \\
+    \scriptstyle0 \\[-1.5ex]
+    \scriptstyle\vdots \\
+    \scriptstyle0\\};
   \node [above of=oneHotContinue, text centered, xshift=0.1in, yshift=0.16in] (onehotlabel) {\small One-Hot Vector Inputs};
   
   \matrix (embedding) [bmatrix, above left of = matmul, xshift=-0.7in, yshift=0.6in,ampersand replacement=\&] {
@@ -206,14 +220,27 @@ In total, the training set consisted of more than 115 speeches of varying length
   \caption{Trump Character RNN Training Architecture}
 \end{figure}
 
-\subsubsection{Embedding Matrix}
+\subsubsection{One-Hot Vector Input}
 
 \subsubsection{Embedding Matrix}
+
+\subsubsection{Long Short-Term Memory}
 
 % It would be good if you could add stuff about why we stack LSTM and the theory behind that.
 
 
 \subsubsection{Feed-Forward Network}
+
+
+\subsubsection{Softmax Layer}
+
+A softmax layer is function, $\sigma$, that a real-valued vector,~$\mathbf{z}$, of fixed sized,~$\abs{v}$, and returns an equal-sized vector,~$\mathbf{p}$ whose elements are between $0$~and $1$~inclusive.  Hence, $\sigma : \mathbb{R}^{\abs{v}} \rightarrow [0,1]^{\abs{v}}$.  The magnitude of each element $z_k \in \mathbf{z}$, is normalized to create value $p_k \in \mathbf{p}$ using the softmax function where:
+
+\begin{equation}
+  p_k = \frac{\exp(z_k)}{\sum_{j=1}^{\abs{v}} \exp(z_j)}\textrm{.}
+\end{equation}
+
+Therefore, the softmax layer creates a probability vector as the sum of all its elements is necessarily~$1$. This standardized output is then used by the loss function as described in the next section.
 
 % loss function
 \subsection{Loss Function}
@@ -281,25 +308,25 @@ Our loss per example is the cross-entropy between the distribution given by the 
     \node [every netbox, left of=softmax, xshift=-0.35in, drop shadow] (feedforward) {\small Feed Forward Network};
     \node [every netbox, left of=feedforward, xshift=-0.45in, drop shadow] (lstmbox) {\small LSTM};
     \node [every neuron, left of=lstmbox, xshift=-0.25in, drop shadow] (matmul) {\Large$\times$};
-    \matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.2in, yshift = -0.5in] {\tiny
-      0 \\
-      1 \\
-      0 \\[-1.5ex]
-      \vdots \\
-      0\\};
-    \matrix (oneHotSecond) [bmatrix, left of = oneHotFirst, xshift=0.1in] {\tiny
-      0 \\
-      1 \\
-      0 \\[-1.5ex]
-      \vdots \\
-      0\\};
+    \matrix (oneHotFirst) [bmatrix, below left of = matmul, xshift=-0.2in, yshift = -0.5in] {\scriptstyle
+      \scriptstyle0 \\
+      \scriptstyle1 \\
+      \scriptstyle0 \\[-1.5ex]
+      \scriptstyle\vdots \\
+      \scriptstyle0\\};
+    \matrix (oneHotSecond) [bmatrix, left of = oneHotFirst, xshift=0.1in] {\scriptstyle
+      \scriptstyle0 \\
+      \scriptstyle1 \\
+      \scriptstyle0 \\[-1.5ex]
+      \scriptstyle\vdots \\
+      \scriptstyle0\\};
     \node [left of=oneHotSecond, xshift=0.1in] (oneHotContinue) {\Large $\cdots$};
-    \matrix (oneHotLast) [bmatrix,left of = oneHotContinue, xshift=0.05in] {\tiny
-      1 \\
-      0 \\
-      0 \\[-1.5ex]
-      \vdots \\
-      0\\};
+    \matrix (oneHotLast) [bmatrix,left of = oneHotContinue, xshift=0.05in] {\scriptstyle
+      \scriptstyle1 \\
+      \scriptstyle0 \\
+      \scriptstyle0 \\[-1.5ex]
+      \scriptstyle\vdots \\
+      \scriptstyle0\\};
     \node [above of=oneHotContinue, text centered, xshift=0.1in, yshift=0.16in] (onehotlabel) {\small One-Hot Vector Inputs};
     
     \matrix (embedding) [bmatrix, above left of = matmul, xshift=-0.7in, yshift=0.6in,ampersand replacement=\&] {
