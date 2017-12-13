@@ -93,7 +93,7 @@ In order to generate meaningful text with a character level RNN you need to give
 
 It is obvious that generating paragraphs of text one character at a time may yield suboptimal results.  As part of the feedback to our initial project proposal, the grader specifically asked why we chose to do a character-level RNN instead of a word-level RNN.  Superficially, a word-level RNN superficially has clear advantages including that it is less likely to produce spelling mistakes and also makes decisions at a coarser granularity which may yield superior results.  When upon a more detail analysis, it is clear that word-level RNNs are impractical.
 
-First, the current Oxford English dictionary has over 170,000 words. A world-level learner would need a separate output node for each of these words.  Such a large output is likely to suffer from underflow and floating point errors that would severely degrade the quality of its predictions.  In addition, training such a large network would be prohibitively long and would extend significantly past the short duration for this project.  Even Google with its near limitless computation and human resources does not do word-level prediction and instead uses morphemes.  
+First, the current Oxford English dictionary has over 170,000 words. A world-level learner would need a separate output node for each of these words.  Such a large output is likely to suffer from underflow and floating point errors that would severely degrade the quality of its predictions.  In addition, training such a large network would be prohibitively long and would extend significantly past the short duration for this project.  Even Google with its near limitless computation and human resources does not do word-level prediction and instead uses morphemes.
 
 One team in the CMPS242 class chose to use a word-level learner.  To address the output-layer size issue mentioned previously, this team reduced the vocabulary to several hundred words.  They also only generated phrases of approximately 10~words.  Such extreme constraints yield results that significantly underachieve character-level RNNs.
 
@@ -117,9 +117,9 @@ In total, the training set consisted of more than 115 speeches of varying length
 
 \subsection{Vocabulary}
 
-As with all character-level RNNs, the vocabulary is set of individual characters that may be received as part of an input sequence or generated as part of the output.  Specifically, the vocabulary consists of all letters -- both capitalized and lowercase, digits~(0-9), and punctuation (e.g.,~comma, space, newline, exclamation point, etc.).  
+As with all character-level RNNs, the vocabulary is set of individual characters that may be received as part of an input sequence or generated as part of the output.  Specifically, the vocabulary consists of all letters -- both capitalized and lowercase, digits~(0-9), and punctuation (e.g.,~comma, space, newline, exclamation point, etc.).
 
-For all practical purposes, the set of characters,~$v$, that make up the vocabulary is dictated by the training data set.  In this project, the size of the vocabulary,~$|v|$, 
+For all practical purposes, the set of characters,~$v$, that make up the vocabulary is dictated by the training data set.  In this project, the size of the vocabulary,~$|v|$,
 
 % architecture
 \subsection{Learner Architecture}
@@ -170,7 +170,7 @@ For all practical purposes, the set of characters,~$v$, that make up the vocabul
       mark= at position 0.5 with {\node {/};}
     }
   }
-  \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth] 
+  \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
   % Must define nodes in the list before they can be used.
   \node [neuron output, drop shadow] (softmax) {};
   \node [every netbox, left of=softmax, xshift=-0.35in, drop shadow] (feedforward) {\small Feed Forward Network};
@@ -196,13 +196,13 @@ For all practical purposes, the set of characters,~$v$, that make up the vocabul
     \scriptstyle\vdots \\
     \scriptstyle0\\};
   \node [above of=oneHotContinue, text centered, xshift=0.1in, yshift=0.16in] (onehotlabel) {\small One-Hot Vector Inputs};
-  
+
   \matrix (embedding) [bmatrix, above left of = matmul, xshift=-0.7in, yshift=0.6in,ampersand replacement=\&] {
     w_{1,1} \& \cdots \& w_{1,|v|}\\[-1ex]
     \vdots  \& \ddots \& \vdots\\
     w_{d,1} \& \cdots \& w_{d,|v|}\\};
   \node [above of=embedding, yshift=0.1in] (embeddinglabel) {\small Embedding Matrix};
-  
+
   % Draw arrows
   \draw [->,thick,line width=0.4mm] (embedding) -- (matmul);
   \draw [->,thick,line width=0.4mm] (oneHotFirst) -- (matmul);
@@ -301,7 +301,7 @@ Our loss per example is the cross-entropy between the distribution given by the 
       mark= at position 0.5 with {\node {/};}
     }
   }
-  \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth] 
+  \begin{tikzpicture}[x=1.5cm, y=1.5cm, >=stealth]
     % Must define nodes in the list before they can be used.
     \node [every netbox, drop shadow] (output) {\small Decision Engine};
     \node [neuron output, left of=output, xshift=-0.35in,  drop shadow] (softmax) {};
@@ -328,13 +328,13 @@ Our loss per example is the cross-entropy between the distribution given by the 
       \scriptstyle\vdots \\
       \scriptstyle0\\};
     \node [above of=oneHotContinue, text centered, xshift=0.1in, yshift=0.16in] (onehotlabel) {\small One-Hot Vector Inputs};
-    
+
     \matrix (embedding) [bmatrix, above left of = matmul, xshift=-0.7in, yshift=0.6in,ampersand replacement=\&] {
       w_{1,1} \& \cdots \& w_{1,|v|}\\[-1ex]
       \vdots \& \ddots \& \vdots\\
       w_{d,1} \& \cdots \& w_{d,|v|}\\};
     \node [above of=embedding, yshift=0.1in] (embeddinglabel) {\small Embedding Matrix};
-    
+
     % Draw arrows
     \draw [->,thick,line width=0.4mm] (embedding) -- (matmul);
     \draw [->,thick,line width=0.4mm] (oneHotFirst) -- (matmul);
@@ -357,11 +357,20 @@ Our loss per example is the cross-entropy between the distribution given by the 
 % text generation
 \section{Decision Engine}
 
+We refer to the post-training text generation algorithm as the decision engine. The name is apt because the problem of generation is: given a distribution of `the next character`, how do you decide what the next character is going to be? An obvious answer would be ``take the most likely choice''. What if the distribution you receive is nearly uniform? What if the distribution you receive is not accurate? In this section we will evaluate the merits and drawbacks of greedy, randomized, and mixed decision engines.
+
 \subsection{Greedy Sampling}
+The greedy decision engine is in some sense the most obvious: just take the most likely character. A clear advantage is that you are always making the choice that you are always making the most confident choice possible. An issue is that you are not allowing for spontaneity. Text generated with the greedy decision engine tends to enter infinite loops, which we can escape only with the injection of randomness. For example, when we give our best model the seed \textit{``The media is so dishonest.''} and generate with the greedy decision engine, the output is \textit{``They want to stop the people of the world. I want to stop the people of the world. I want to stop the people of the world. I want to stop the...''} etc.
 
 \subsection{Random First, Greedy Finish}
+To get out of infinite loops, we need to make our decision engine stochastic. The obvious way to do this would to sample from the distribution returned to us by the network; in other words, the network is giving us a weighted die, so let's roll it. Let's call this the basic random engine.
+
+The problem with the basic random engine is its randomness. The benefit of the greedy engine is that it always makes a confident choice, but the random engine makes no such guarantee. Every time we roll the die given the sequence ``My name is Donald Trum'' there is non-zero chance it will come up \texttt{`Q'}, and this is a huge problem.
+
+One solution is the random-first greedy-finish engine, or RFGF. The basic idea is: always start a new word with a random choice, but in the middle of a word make greedy choices. In practice this means that you use the basic random engine if and only if the last character generated was whitespace, else you use the greedy engine. This gives you the best of both worlds. It is random enough to avoid infinite looping behavior, yet it does not mangle worlds with absurd characters.
 
 \subsection{Top-K First, Greedy Finish}
+Observe that with the RFGF engine, it is still possible to make absurd random choices. Because softmax can not assign 0 probability to any character, you might randomly add a space or exlamation mark immediately following whitespace. This illustrates that even though we get a distribution over a large vocabulary, we should assign 0 probability to some things. Our approach is to do a top-k operation before we sample. This means that before you sample from the distribution you throw away everything but the k most likely values. You then renormalize this sub-distribution so that the probabilities sum to 1. Now you have a k-sided that die that you can roll. We call this the top-k first greedy finish engine, or TFGF.
 
 \subsection{Randomization through LSTM Dropout}
 
