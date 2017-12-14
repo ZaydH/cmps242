@@ -253,22 +253,22 @@ In addition, it is common for the number of elements in the training set to vary
 
 \paragraph{Dropout}\label{sec:dropout}
 
-Dropout is a computationally inexpensive technique to provide regularization in a neural network.  It mimics the bagging technique used when training an ensemble classifier by temporarily deleting units within the network.\cite{goodfellow2016}  TensorFlow supports input, state, and output dropout, which may be used independently or in conjunction with one another.  We experimented with different dropout modes and probability.  We did not see a significant difference between the settings and settled on output dropout with probability~0.8.
+Dropout is a computationally inexpensive technique to provide regularization during neural network training.  It approximates the bagging technique of an ensemble classifier by training different \textit{versions} of the learner through the temporary deletion of units within the network.\cite{goodfellow2016}  TensorFlow supports input, state, and output dropout, which may be used independently or in conjunction with one another.  We experimented with different dropout modes and deletion probabilities.  We did not see a significant difference between the settings and settled on output dropout with a keep probability~0.8.
 
 \subsubsection{Feed-Forward Network}
 
-In the same way that the embedding matrix maps the input to the network to the input of the LSTM, the feed-forward network maps the output of the LSTM to the output of network (i.e.,~the softmax layer).  Most of the power of a character-level RNN comes from its LSTM; hence, to prevent extreme overfitting, we opted for a simple feed-forward output network with only a single hidden layer of 256~fully-connected neurons.   We also observed that we achieved superior results if we used the rectified linear activation function for both the hidden and output layers.
+In the same way that the embedding matrix maps the network's input to the LSTM's input, the feed-forward network maps the output of the LSTM to the output of network (i.e.,~the softmax layer).  Most of the power of a character-level RNN comes from its LSTM; hence, to prevent extreme overfitting, we opted for a simple feed-forward network with only a single hidden layer of 256~fully-connected neurons.   We also observed that we achieved superior results if we used the rectified linear (relu)~activation function for both the hidden and output layers.  We believe this is believe this is because relu allows for greater differentiation between likely characters.
 
 
 \subsubsection{Softmax Layer}
 
-A softmax layer is a function,~$\sigma$, that a real-valued vector,~$\mathbf{x}$, of fixed sized,~$\abs*{v}$, and returns an equal-sized vector,~$\mathbf{p}$ whose elements are between $0$~and $1$~inclusive.  Hence, $\sigma : \mathbb{R}^{\abs*{v}} \rightarrow [0,1]^{\abs*{v}}$.  The magnitude of each element $z_k \in \mathbf{z}$, is normalized to create value $p_k \in \mathbf{p}$ using the softmax function where:
+A softmax layer is a function,~$\sigma$, that takes a real-valued vector,~$\mathbf{x}$, of fixed sized,~$\abs*{v}$, and returns an equal-sized vector,~$\mathbf{p}$ whose elements are between $0$~and $1$~inclusive.  Hence, $\sigma : \mathbb{R}^{\abs*{v}} \rightarrow [0,1]^{\abs*{v}}$. For each element~$k$, the softmax normalizes element's magnitude using the Softmax formula, defined as:
 
 \begin{equation}
   p_k = \frac{\exp(x_k)}{\sum_{j=1}^{\abs*{v}} \exp(x_j)}\textrm{.}
 \end{equation}
 
-Therefore, the softmax layer creates a probability vector as the sum of all its elements is necessarily~$1$. This standardized output is then used by the loss function as described in the next section.
+Therefore, the output vector~$\mathbf{y}$ is necessarily a probability vector, the sum of whose elements adds to one. The softmax function has multiple advantages including that it creates a standardized output and that it enables the use of well studied loss functions, such as cross-entropy which is described in the next section.
 
 % loss function
 \subsection{Loss Function}
@@ -435,7 +435,7 @@ We have observed that the best form of randomization may in fact be dropout \tex
 
 \section{Conclusions}
 
-As demonstrated in class, we successfully implemented a character-level RNN that produces text in the style of President.  The generated output was so realistic that it could not be distinguished from a real speech by Mr. Trump.  It is important to note that not all text produced by the system is coherent; the example presented in class was specifically selected since it significantly superior to the more general output.  It is not uncommon that the generator produces incoherent sentences, meaning improvements can still be made to the system.  The next section describes a new approach to character-level RNNs that we believe has the potential to significantly improve output quality.
+As demonstrated in class, we successfully implemented a character-level RNN that produces text in the style of Donald J. Trump.  The generated output was so realistic that many in the class could not distinguish it from the real thing.  It is important to note that not all text produced by our system is coherent; the example presented in class was specifically selected since it was significantly superior to the typical output.  It is not uncommon that the generator produces incoherent sentences, which means that possible improvements to our system remain.  The next section describes a new approach to character-level RNNs that we believe has the potential to significantly improve output quality.
 
 \subsection{Future Work}
 
